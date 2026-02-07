@@ -3,16 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { API_BASE } from "../lib/api";
+import { useI18n } from "../context/I18nContext";
+import { formatCurrency } from "../lib/format";
 
 export default function Cart() {
   const [cart, setCart] = useState(null);
   const { token, user } = useAuth();
   const navigate = useNavigate();
 const { refreshCart } = useCart();
+  const { t, lang } = useI18n();
 
  // ✅ FIRST GUARD
   if (!user || !token) {
-    return <div className="p-10">Loading cart...</div>;
+    return <div className="p-10">{t("Loading cart...")}</div>;
   }
 
   // ✅ SAFE NOW
@@ -74,7 +77,7 @@ const { refreshCart } = useCart();
 
 
   if (!cart) {
-    return <div className="p-10">Loading cart...</div>;
+    return <div className="p-10">{t("Loading cart...")}</div>;
   }
 
   const total = cart.items.reduce(
@@ -84,9 +87,9 @@ const { refreshCart } = useCart();
 
   return (
     <div className="max-w-5xl mx-auto p-6 md:p-10">
-      <h1 className="text-3xl font-bold mb-6">Your Cart</h1>
+      <h1 className="text-3xl font-bold mb-6">{t("Your Cart")}</h1>
 
-      {cart.items.length === 0 && <p>Cart is empty</p>}
+      {cart.items.length === 0 && <p>{t("Cart is empty")}</p>}
 
       {cart.items.map(({ productId, qty, variant }) => (
         <div
@@ -100,7 +103,9 @@ const { refreshCart } = useCart();
                 {variant?.color || ""} {variant?.size || ""}
               </p>
             )}
-            <p className="text-gray-500">₹{productId.price}</p>
+            <p className="text-gray-500">
+              {formatCurrency(productId.price, lang)}
+            </p>
           </div>
 
           <div className="flex items-center gap-4">
@@ -125,21 +130,21 @@ const { refreshCart } = useCart();
               onClick={() => removeItem(productId._id, variant)}
               className="text-red-600 text-sm"
             >
-              Remove
+              {t("Remove")}
             </button>
           </div>
         </div>
       ))}
 
       <div className="text-right mt-6 text-xl font-bold">
-        Total: ₹{total}
+        {t("Total:")} {formatCurrency(total, lang)}
       </div>
 
       <button
         onClick={() => navigate("/checkout")}
         className="mt-6 btn-primary"
       >
-        Proceed to Checkout
+        {t("Proceed to Checkout")}
       </button>
     </div>
   );

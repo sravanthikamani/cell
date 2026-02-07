@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
+import { useI18n } from "../context/I18nContext";
 
 export default function Profile() {
   const { token } = useAuth();
   const [profile, setProfile] = useState(null);
   const [msg, setMsg] = useState("");
+  const { t } = useI18n();
 
   useEffect(() => {
     fetch(`${API_BASE}/api/users/me`, {
@@ -16,7 +18,7 @@ export default function Profile() {
       .catch(console.error);
   }, [token]);
 
-  if (!profile) return <div className="p-10">Loading...</div>;
+  if (!profile) return <div className="p-10">{t("Loading...")}</div>;
 
   const updateField = (key, value) =>
     setProfile((p) => ({ ...p, [key]: value }));
@@ -43,63 +45,63 @@ export default function Profile() {
     });
     const data = await res.json();
     if (!res.ok) {
-      setMsg(data.error || "Failed to save profile");
+      setMsg(data.error || t("Failed to save profile"));
       return;
     }
     setProfile(data);
-    setMsg("Profile saved");
+    setMsg(t("Profile saved"));
   };
 
   return (
     <div className="max-w-3xl mx-auto p-10 card">
-      <h1 className="text-2xl font-bold mb-6">My Profile</h1>
+      <h1 className="text-2xl font-bold mb-6">{t("My Profile")}</h1>
 
       <div className="grid grid-cols-2 gap-4">
         <input
           className="border p-2"
-          placeholder="Name"
+          placeholder={t("Name")}
           value={profile.name || ""}
           onChange={(e) => updateField("name", e.target.value)}
         />
         <input
           className="border p-2"
-          placeholder="Phone"
+          placeholder={t("Phone")}
           value={profile.phone || ""}
           onChange={(e) => updateField("phone", e.target.value)}
         />
       </div>
 
-      <h2 className="text-xl font-bold mt-8 mb-3">Addresses</h2>
+      <h2 className="text-xl font-bold mt-8 mb-3">{t("Addresses")}</h2>
       {(profile.addresses || []).map((addr, i) => (
         <div key={i} className="border p-3 mb-3">
           <div className="grid grid-cols-2 gap-3">
             <input
               className="border p-2"
-              placeholder="Name"
+              placeholder={t("Name")}
               value={addr.name || ""}
               onChange={(e) => updateAddress(i, "name", e.target.value)}
             />
             <input
               className="border p-2"
-              placeholder="Phone"
+              placeholder={t("Phone")}
               value={addr.phone || ""}
               onChange={(e) => updateAddress(i, "phone", e.target.value)}
             />
             <input
               className="border p-2 col-span-2"
-              placeholder="Street"
+              placeholder={t("Street")}
               value={addr.street || ""}
               onChange={(e) => updateAddress(i, "street", e.target.value)}
             />
             <input
               className="border p-2"
-              placeholder="City"
+              placeholder={t("City")}
               value={addr.city || ""}
               onChange={(e) => updateAddress(i, "city", e.target.value)}
             />
             <input
               className="border p-2"
-              placeholder="Pincode"
+              placeholder={t("Pincode")}
               value={addr.pincode || ""}
               onChange={(e) => updateAddress(i, "pincode", e.target.value)}
             />
@@ -112,7 +114,7 @@ export default function Profile() {
               updateField("addresses", next);
             }}
           >
-            Remove
+            {t("Remove")}
           </button>
         </div>
       ))}
@@ -126,7 +128,7 @@ export default function Profile() {
           ])
         }
       >
-        + Add Address
+        {t("+ Add Address")}
       </button>
 
       {msg && <div className="text-sm text-green-700">{msg}</div>}
@@ -135,7 +137,7 @@ export default function Profile() {
         className="mt-3 bg-teal-600 text-white px-6 py-2"
         onClick={save}
       >
-        Save Profile
+        {t("Save Profile")}
       </button>
     </div>
   );

@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
+import { useI18n } from "../context/I18nContext";
+import { formatCurrency } from "../lib/format";
 
 export default function Orders() {
   const { user, token } = useAuth();
   const [orders, setOrders] = useState([]);
+  const { t, lang } = useI18n();
 
   // ✅ STOP until user exists
   if (!user) {
-    return <div className="p-10">Loading orders...</div>;
+    return <div className="p-10">{t("Loading orders...")}</div>;
   }
 
   useEffect(() => {
@@ -28,9 +31,9 @@ export default function Orders() {
 
   return (
     <div className="max-w-5xl mx-auto p-6 md:p-10">
-      <h1 className="text-3xl font-bold mb-6">My Orders</h1>
+      <h1 className="text-3xl font-bold mb-6">{t("My Orders")}</h1>
 
-      {orders.length === 0 && <p>No orders yet</p>}
+      {orders.length === 0 && <p>{t("No orders yet")}</p>}
 
       {orders.map((order) => (
         <div
@@ -38,28 +41,34 @@ export default function Orders() {
           className="card p-4 mb-4"
         >
           <p className="font-semibold">
-            Order ID: {order._id}
+            {t("Order ID:")} {order._id}
           </p>
-          <p>Status: {order.status}</p>
+          <p>{t("Status:")} {order.status}</p>
           {order.carrier && order.trackingNumber && (
             <p className="text-sm text-gray-600">
               {order.carrier}: {order.trackingNumber}
             </p>
           )}
           <div className="text-sm text-gray-700 mt-2">
-            <div>Subtotal: ₹{order.subtotal ?? order.total}</div>
+            <div>
+              {t("Subtotal:")} {formatCurrency(order.subtotal ?? order.total, lang)}
+            </div>
             {order.discount > 0 && (
-              <div>Discount: -₹{order.discount}</div>
+              <div>
+                {t("Discount:")} -{formatCurrency(order.discount, lang)}
+              </div>
             )}
             {order.couponCode && (
-              <div>Coupon: {order.couponCode}</div>
+              <div>{t("Coupon:")} {order.couponCode}</div>
             )}
-            {order.tax > 0 && <div>Tax: ₹{order.tax}</div>}
+            {order.tax > 0 && (
+              <div>{t("Tax:")} {formatCurrency(order.tax, lang)}</div>
+            )}
             {order.shipping > 0 && (
-              <div>Shipping: ₹{order.shipping}</div>
+              <div>{t("Shipping:")} {formatCurrency(order.shipping, lang)}</div>
             )}
             <div className="font-semibold">
-              Total: ₹{order.grandTotal ?? order.total}
+              {t("Total:")} {formatCurrency(order.grandTotal ?? order.total, lang)}
             </div>
           </div>
           <button
@@ -89,7 +98,7 @@ export default function Orders() {
               }
             }}
           >
-            Download Invoice
+            {t("Download Invoice")}
           </button>
 
           <div className="mt-2">
@@ -104,7 +113,7 @@ export default function Orders() {
                     {item.variant?.color || ""} {item.variant?.size || ""}
                   </span>
                 )}
-                <span>Qty: {item.qty}</span>
+                <span>{t("Qty:")} {item.qty}</span>
               </div>
             ))}
           </div>

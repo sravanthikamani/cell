@@ -2,11 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
+import { useI18n } from "../context/I18nContext";
+import { formatCurrency } from "../lib/format";
 
 export default function Admin() {
   const { user, token } = useAuth();
+  const { t, lang } = useI18n();
 
-  if (!user) return <div className="p-10">Loading...</div>;
+  if (!user) return <div className="p-10">{t("Loading...")}</div>;
   if (user.role !== "admin") return <Navigate to="/" replace />;
 const [editingId, setEditingId] = useState(null);
 
@@ -92,7 +95,7 @@ const [editingId, setEditingId] = useState(null);
   const data = await res.json(); // ✅ THIS WAS MISSING
   console.log("Added product:", data);
 
-  alert("Product added");
+  alert(t("Product added"));
 };
 
 const updateProduct = async () => {
@@ -115,13 +118,13 @@ const updateProduct = async () => {
     }
   );
 
-  alert("Product updated");
+  alert(t("Product updated"));
   setEditingId(null);
 };
 
   return (
     <div className="max-w-5xl mx-auto p-6 md:p-10">
-      <h1 className="text-2xl font-bold mb-4">Admin – Add Product</h1>
+      <h1 className="text-2xl font-bold mb-4">{t("Admin – Add Product")}</h1>
 
       <div className="mb-3 card p-4">
         <input
@@ -155,19 +158,19 @@ const updateProduct = async () => {
 
       <div className="card p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
         <input
-          placeholder="name"
+          placeholder={t("Name")}
           className="border p-2"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
         />
         <input
-          placeholder="price"
+          placeholder={t("Price")}
           className="border p-2"
           value={form.price}
           onChange={(e) => setForm({ ...form, price: e.target.value })}
         />
         <input
-          placeholder="brand"
+          placeholder={t("Brand")}
           className="border p-2"
           value={form.brand}
           onChange={(e) => setForm({ ...form, brand: e.target.value })}
@@ -200,25 +203,25 @@ const updateProduct = async () => {
           ))}
         </select>
         <input
-          placeholder="stock"
+          placeholder={t("Stock")}
           className="border p-2"
           value={form.stock}
           onChange={(e) => setForm({ ...form, stock: e.target.value })}
         />
         <input
-          placeholder="images (comma URLs)"
+          placeholder={t("Images (comma URLs)")}
           className="border p-2 md:col-span-2"
           value={form.images}
           onChange={(e) => setForm({ ...form, images: e.target.value })}
         />
         <input
-          placeholder="sizes (comma)"
+          placeholder={t("Sizes (comma)")}
           className="border p-2"
           value={form.sizes}
           onChange={(e) => setForm({ ...form, sizes: e.target.value })}
         />
         <input
-          placeholder="colors (comma)"
+          placeholder={t("Colors (comma)")}
           className="border p-2"
           value={form.colors}
           onChange={(e) => setForm({ ...form, colors: e.target.value })}
@@ -229,11 +232,11 @@ const updateProduct = async () => {
   onClick={editingId ? updateProduct : addProduct}
   className="w-full bg-black text-white py-2 mt-3"
 >
-  {editingId ? "Update Product" : "Add Product"}
+  {editingId ? t("Update Product") : t("Add Product")}
 </button>
 
 
-      <h2 className="text-xl font-bold mt-10">All Products</h2>
+      <h2 className="text-xl font-bold mt-10">{t("All Products")}</h2>
 
     {products.map(p => (
   <div
@@ -273,7 +276,7 @@ const updateProduct = async () => {
         }}
         className="text-blue-600"
       >
-        Edit
+        {t("Edit")}
       </button>
 
       {/* 🗑 DELETE BUTTON */}
@@ -288,16 +291,16 @@ const updateProduct = async () => {
         }
         className="text-red-600"
       >
-        Delete
+        {t("Delete")}
       </button>
     </div>
   </div>
 ))}
 
-      <h2 className="text-xl font-bold mt-10">Coupons</h2>
+      <h2 className="text-xl font-bold mt-10">{t("Coupons")}</h2>
       <div className="card p-4 mt-3">
         <input
-          placeholder="CODE"
+          placeholder={t("CODE")}
           className="w-full border p-2 mb-2"
           value={couponForm.code}
           onChange={(e) =>
@@ -311,11 +314,11 @@ const updateProduct = async () => {
             setCouponForm({ ...couponForm, type: e.target.value })
           }
         >
-          <option value="percent">Percent</option>
-          <option value="fixed">Fixed</option>
+          <option value="percent">{t("Percent")}</option>
+          <option value="fixed">{t("Fixed")}</option>
         </select>
         <input
-          placeholder="Value"
+          placeholder={t("Value")}
           className="w-full border p-2 mb-2"
           value={couponForm.value}
           onChange={(e) =>
@@ -323,7 +326,7 @@ const updateProduct = async () => {
           }
         />
         <input
-          placeholder="Min Total"
+          placeholder={t("Min Total")}
           className="w-full border p-2 mb-2"
           value={couponForm.minTotal}
           onChange={(e) =>
@@ -331,7 +334,7 @@ const updateProduct = async () => {
           }
         />
         <input
-          placeholder="Max Discount"
+          placeholder={t("Max Discount")}
           className="w-full border p-2 mb-2"
           value={couponForm.maxDiscount}
           onChange={(e) =>
@@ -375,7 +378,7 @@ const updateProduct = async () => {
             }
           }}
         >
-          Create Coupon
+          {t("Create Coupon")}
         </button>
       </div>
 
@@ -405,16 +408,16 @@ const updateProduct = async () => {
         </div>
       ))}
 
-      <h2 className="text-xl font-bold mt-10">Analytics</h2>
-      {!analytics && <div className="text-sm">Loading analytics...</div>}
+      <h2 className="text-xl font-bold mt-10">{t("Analytics")}</h2>
+      {!analytics && <div className="text-sm">{t("Loading analytics...")}</div>}
       {analytics && (
         <div className="card p-4 mt-3">
-          <div>Total Orders: {analytics.totalOrders}</div>
-          <div>Total Sales: ₹{analytics.totalSales}</div>
+          <div>{t("Total Orders:")} {analytics.totalOrders}</div>
+          <div>{t("Total Sales:")} {formatCurrency(analytics.totalSales, lang)}</div>
 
-          <h3 className="font-semibold mt-3">Top Products</h3>
+          <h3 className="font-semibold mt-3">{t("Top Products")}</h3>
           {analytics.topProducts?.length === 0 && (
-            <div className="text-sm">No data</div>
+            <div className="text-sm">{t("No data")}</div>
           )}
           {analytics.topProducts?.map((p) => (
             <div key={p._id} className="text-sm flex items-center gap-2">
@@ -441,7 +444,7 @@ const updateProduct = async () => {
             </div>
           ))}
 
-          <h3 className="font-semibold mt-3">Orders by Day</h3>
+          <h3 className="font-semibold mt-3">{t("Orders by Day")}</h3>
           {analytics.ordersByDay?.map((d) => (
             <div key={d._id} className="text-sm flex items-center gap-2">
               <span className="w-24">{d._id}</span>

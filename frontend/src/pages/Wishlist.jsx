@@ -3,11 +3,14 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { API_BASE } from "../lib/api";
+import { useI18n } from "../context/I18nContext";
+import { formatCurrency } from "../lib/format";
 
 export default function Wishlist() {
   const { token, user } = useAuth();
   const { refreshCart } = useCart();
   const [items, setItems] = useState([]);
+  const { t, lang } = useI18n();
 
   useEffect(() => {
     if (!user || !token) return;
@@ -44,8 +47,8 @@ export default function Wishlist() {
 
   return (
     <div className="max-w-5xl mx-auto p-10">
-      <h1 className="text-3xl font-bold mb-6">Wishlist</h1>
-      {items.length === 0 && <p>No items in wishlist</p>}
+      <h1 className="text-3xl font-bold mb-6">{t("Wishlist")}</h1>
+      {items.length === 0 && <p>{t("No items in wishlist")}</p>}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {items.map((p) => (
           <div key={p._id} className="card p-4">
@@ -61,19 +64,19 @@ export default function Wishlist() {
               />
               <h2 className="font-bold mt-2">{p.name}</h2>
             </Link>
-            <p className="mt-1">₹{p.price}</p>
+            <p className="mt-1">{formatCurrency(p.price, lang)}</p>
             <div className="mt-3 flex gap-3">
               <button
                 className="bg-black text-white px-4 py-1"
                 onClick={() => addToCart(p._id)}
               >
-                Add to Cart
+                {t("Add to Cart")}
               </button>
               <button
                 className="text-red-600"
                 onClick={() => remove(p._id)}
               >
-                Remove
+                {t("Remove")}
               </button>
             </div>
           </div>
