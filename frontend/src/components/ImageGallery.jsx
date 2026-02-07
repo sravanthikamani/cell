@@ -1,16 +1,21 @@
 import { useState } from "react";
+import { API_BASE } from "../lib/api";
 
 export default function ImageGallery({ images }) {
   const [active, setActive] = useState(0);
   const [zoom, setZoom] = useState(false);
 
   if (!images || images.length === 0) return null;
+  const resolveSrc = (src) =>
+    src && src.startsWith("/uploads")
+      ? `${API_BASE}${src}`
+      : src;
 
   return (
     <>
       {/* MAIN IMAGE */}
       <img
-        src={images[active]}
+        src={resolveSrc(images[active])}
         alt=""
         className="w-full h-96 object-contain border cursor-zoom-in"
         onClick={() => setZoom(true)}
@@ -21,7 +26,7 @@ export default function ImageGallery({ images }) {
         {images.map((img, i) => (
           <img
             key={i}
-            src={img}
+            src={resolveSrc(img)}
             onClick={() => setActive(i)}
             className={`w-16 h-16 object-cover border cursor-pointer ${
               i === active ? "border-black" : ""
@@ -37,7 +42,7 @@ export default function ImageGallery({ images }) {
           onClick={() => setZoom(false)}
         >
           <img
-            src={images[active]}
+            src={resolveSrc(images[active])}
             className="max-h-[90vh] max-w-[90vw]"
           />
         </div>

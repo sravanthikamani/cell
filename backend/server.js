@@ -2,6 +2,9 @@ require("dotenv").config();
 require("./db"); 
 const express = require("express");
 const cors = require("cors");
+const rateLimit = require("express-rate-limit");
+const path = require("path");
+const fs = require("fs");
 const Product = require("./models/Product");
 const Cart = require("./models/Cart"); 
 const checkoutRoutes = require("./routes/checkout");
@@ -11,17 +14,45 @@ const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
 const auth = require("./middleware/auth");
 const paymentRoutes = require("./routes/payments");
+const reviewRoutes = require("./routes/reviews");
+const userRoutes = require("./routes/users");
+const couponRoutes = require("./routes/coupons");
+const wishlistRoutes = require("./routes/wishlist");
 
 const app = express();
 
 /* 🔹 Middlewares */
 app.use(cors());
 app.use(express.json()); // ✅ REQUIRED for POST requests
-app.use("/api/checkout", checkoutRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/payments", paymentRoutes);
+
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
+app.use("/uploads", express.static(uploadsDir));
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api/checkout", apiLimiter, checkoutRoutes);
+app.use("/api/orders", apiLimiter, orderRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/admin", apiLimiter, adminRoutes);
+app.use("/api/payments", apiLimiter, paymentRoutes);
+app.use("/api/reviews", apiLimiter, reviewRoutes);
+app.use("/api/users", apiLimiter, userRoutes);
+app.use("/api/coupons", apiLimiter, couponRoutes);
+app.use("/api/wishlist", apiLimiter, wishlistRoutes);
 
 
 
@@ -45,11 +76,19 @@ app.get("/api/cart/:userId", async (req, res) => {
 });
 
 app.post("/api/cart/update", async (req, res) => {
-  const { userId, productId, qty } = req.body;
+  const { userId, productId, qty, variant } = req.body;
 
   const cart = await Cart.findOne({ userId });
+  const product = await Product.findById(productId);
+  if (!product) return res.status(404).json({ error: "Product not found" });
+  if (qty > product.stock) {
+    return res.status(400).json({ error: "Not enough stock" });
+  }
   const item = cart.items.find(
-    (i) => i.productId._id.toString() === productId
+    (i) =>
+      i.productId._id.toString() === productId &&
+      (i.variant?.size || "") === (variant?.size || "") &&
+      (i.variant?.color || "") === (variant?.color || "")
   );
 
   if (item) item.qty = qty;
@@ -58,11 +97,16 @@ app.post("/api/cart/update", async (req, res) => {
   res.json(cart);
 });
 app.post("/api/cart/remove", async (req, res) => {
-  const { userId, productId } = req.body;
+  const { userId, productId, variant } = req.body;
 
   const cart = await Cart.findOne({ userId });
   cart.items = cart.items.filter(
-    (i) => i.productId._id.toString() !== productId
+    (i) =>
+      !(
+        i.productId._id.toString() === productId &&
+        (i.variant?.size || "") === (variant?.size || "") &&
+        (i.variant?.color || "") === (variant?.color || "")
+      )
   );
 
   await cart.save();
@@ -112,6 +156,45 @@ app.get("/api/menu", (req, res) => {
   });
 });
 
+app.get("/api/products/search", async (req, res) => {
+  try {
+    const {
+      q,
+      brand,
+      group,
+      type,
+      priceMin,
+      priceMax,
+    } = req.query;
+
+    const filter = {};
+
+    if (q) {
+      const safe = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      filter.$or = [
+        { name: new RegExp(safe, "i") },
+        { brand: new RegExp(safe, "i") },
+      ];
+    }
+    if (brand) filter.brand = new RegExp(`^${brand}$`, "i");
+    if (group) filter.group = new RegExp(`^${group}$`, "i");
+    if (type) filter.type = new RegExp(`^${type}$`, "i");
+
+    const min = Number(priceMin);
+    const max = Number(priceMax);
+    if (!Number.isNaN(min) || !Number.isNaN(max)) {
+      filter.price = {};
+      if (!Number.isNaN(min)) filter.price.$gte = min;
+      if (!Number.isNaN(max)) filter.price.$lte = max;
+    }
+
+    const products = await Product.find(filter);
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get("/api/catalog", async (req, res) => {
   const products = await Product.find();
 
@@ -131,22 +214,30 @@ app.get("/api/catalog", async (req, res) => {
 
 
 app.post("/api/cart/add", async (req, res) => {
-  const { userId, productId } = req.body;
+  const { userId, productId, variant } = req.body;
 
   let cart = await Cart.findOne({ userId });
   if (!cart) {
     cart = await Cart.create({ userId, items: [] });
   }
 
+  const product = await Product.findById(productId);
+  if (!product) return res.status(404).json({ error: "Product not found" });
+
   const item = cart.items.find(
-    (i) => i.productId.toString() === productId
+    (i) =>
+      i.productId.toString() === productId &&
+      (i.variant?.size || "") === (variant?.size || "") &&
+      (i.variant?.color || "") === (variant?.color || "")
   );
 
-  if (item) {
-    item.qty += 1;
-  } else {
-    cart.items.push({ productId, qty: 1 });
+  const currentQty = item ? item.qty : 0;
+  if (currentQty + 1 > product.stock) {
+    return res.status(400).json({ error: "Out of stock" });
   }
+
+  if (item) item.qty += 1;
+  else cart.items.push({ productId, qty: 1, variant: variant || {} });
 
   await cart.save();
   res.json(cart);
@@ -156,7 +247,7 @@ app.post("/api/cart/add", async (req, res) => {
 /* =========================
    SERVER
 ========================= */
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Backend running on http://localhost:${PORT}`);
 });

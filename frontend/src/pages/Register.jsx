@@ -1,63 +1,54 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
 
-export default function Login() {
+export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login } = useAuth();
+  const [msg, setMsg] = useState("");
   const navigate = useNavigate();
 
   const submit = async () => {
-    const res = await fetch(`${API_BASE}/api/auth/login`, {
+    setMsg("");
+    const res = await fetch(`${API_BASE}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: email.trim(), password }),
     });
-
     const data = await res.json();
-    if (data.token) {
-      login(data);
-      navigate("/");
-    } else {
-      alert(data.error || "Login failed");
+    if (!res.ok) {
+      setMsg(data.error || "Registration failed");
+      return;
     }
+    setMsg("Registration successful. You can login now.");
+    setTimeout(() => navigate("/login"), 800);
   };
 
   return (
     <div className="max-w-sm mx-auto p-10 card">
-      <h1 className="text-2xl font-bold mb-4">Login</h1>
+      <h1 className="text-2xl font-bold mb-4">Register</h1>
 
       <input
         placeholder="Email"
         className="w-full border p-2 mb-3"
+        value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
       <input
         type="password"
         placeholder="Password"
         className="w-full border p-2 mb-3"
+        value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
+
+      {msg && <div className="text-sm text-gray-700 mb-3">{msg}</div>}
 
       <button
         onClick={submit}
         className="w-full bg-black text-white py-2"
       >
-        Login
-      </button>
-      <button
-        onClick={() => navigate("/forgot-password")}
-        className="w-full mt-3 text-sm text-blue-600"
-      >
-        Forgot password?
-      </button>
-      <button
-        onClick={() => navigate("/register")}
-        className="w-full mt-2 text-sm text-blue-600"
-      >
-        Create an account
+        Register
       </button>
     </div>
   );

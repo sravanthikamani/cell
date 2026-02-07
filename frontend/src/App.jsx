@@ -10,6 +10,11 @@ import AdminOrders from "./pages/AdminOrders";
 import Products from "./pages/Products";
 import Login from "./pages/Login";
 import AdminRoute from "./routes/AdminRoute";
+import Profile from "./pages/Profile";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import Register from "./pages/Register";
+import Wishlist from "./pages/Wishlist";
 
 
 const Home = lazy(() => import("./pages/Home"));
@@ -41,6 +46,9 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/faq/:item" element={<FAQ />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Protected */}
           <Route
@@ -54,6 +62,22 @@ export default function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/orders" element={<Orders />} />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wishlist"
+            element={
+              <ProtectedRoute>
+                <Wishlist />
+              </ProtectedRoute>
+            }
+          />
               <Route path="*" element={<div>Page Not Found</div>} />
             <Route path="/products" element={<Products />} />
 <Route

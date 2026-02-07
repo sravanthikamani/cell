@@ -10,6 +10,10 @@ const orderSchema = new mongoose.Schema(
           type: mongoose.Schema.Types.ObjectId,
           ref: "Product",
         },
+        variant: {
+          size: String,
+          color: String,
+        },
         qty: Number,
         price: Number,
       },
@@ -24,12 +28,35 @@ const orderSchema = new mongoose.Schema(
     },
 
     total: Number,
-status: {
-  type: String,
-  enum: ["pending", "paid", "shipped", "delivered"],
-  default: "pending",
-},
-paymentId: String,
+    subtotal: Number,
+    discount: Number,
+    couponCode: String,
+    shipping: {
+      type: Number,
+      default: 0,
+    },
+    tax: {
+      type: Number,
+      default: 0,
+    },
+    grandTotal: Number,
+    status: {
+      type: String,
+      enum: ["pending", "paid", "shipped", "delivered", "cancelled", "placed"],
+      default: "pending",
+    },
+    statusHistory: [
+      {
+        status: String,
+        at: Date,
+      },
+    ],
+    paymentId: String,
+    shippedAt: Date,
+    deliveredAt: Date,
+    cancelledAt: Date,
+    trackingNumber: String,
+    carrier: String,
   },
   { timestamps: true }
 );
