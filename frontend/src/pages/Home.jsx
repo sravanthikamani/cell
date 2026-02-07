@@ -27,7 +27,7 @@ export default function Home() {
     <div className="relative">
       <div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/images/home-hero.jpg')" }}
+        style={{ backgroundImage: "url('/images/home-hero.jpeg')" }}
       />
       <div className="absolute inset-0 bg-white/85 backdrop-blur-[1px]" />
       <div className="relative px-6 md:px-10 py-8">
@@ -36,7 +36,7 @@ export default function Home() {
         className="relative overflow-hidden rounded-3xl bg-cover bg-center text-white p-8 md:p-14"
         style={{
           backgroundImage:
-            "linear-gradient(135deg, rgba(13,148,136,0.88), rgba(15,23,42,0.9)), url('/images/home-hero.jpg')",
+            "linear-gradient(135deg, rgba(13,148,136,0.88), rgba(15,23,42,0.9)), url('/images/home-hero.jpeg')",
         }}
       >
         <div className="max-w-2xl">
