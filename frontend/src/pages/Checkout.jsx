@@ -4,6 +4,8 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import StripeWrapper from "../components/StripeWrapper";
 import { API_BASE } from "../lib/api";
+import { useI18n } from "../context/I18nContext";
+import { formatCurrency } from "../lib/format";
 import {
   PaymentElement,
   useStripe,
@@ -16,13 +18,14 @@ function CheckoutForm({ clientSecret, couponCode }) {
   const navigate = useNavigate();
   const { token, user } = useAuth();
   const { refreshCart } = useCart();
+  const { t } = useI18n();
   const [errorMsg, setErrorMsg] = useState("");
   const [isPaying, setIsPaying] = useState(false);
 
   const handlePay = async () => {
     setErrorMsg("");
     if (!stripe || !elements) {
-      setErrorMsg("Stripe is not ready yet. Please try again.");
+      setErrorMsg(t("Stripe is not ready yet. Please try again."));
       return;
     }
     setIsPaying(true);
@@ -34,7 +37,7 @@ function CheckoutForm({ clientSecret, couponCode }) {
 
     if (error) {
       console.error("Stripe confirmPayment error:", error);
-      setErrorMsg(error.message || "Payment failed. Please try again.");
+      setErrorMsg(error.message || t("Payment failed. Please try again."));
       setIsPaying(false);
       return;
     }
@@ -55,14 +58,18 @@ function CheckoutForm({ clientSecret, couponCode }) {
       });
       if (!orderRes.ok) {
         const data = await orderRes.json().catch(() => ({}));
-        throw new Error(data.message || data.error || "Order failed");
+        throw new Error(
+          data.message || data.error || t("Order failed")
+        );
       }
 
       refreshCart();
       navigate("/orders");
     } catch (err) {
       console.error("Order creation failed:", err);
-      setErrorMsg(err.message || "Order creation failed. Please try again.");
+      setErrorMsg(
+        err.message || t("Order creation failed. Please try again.")
+      );
     } finally {
       setIsPaying(false);
     }
@@ -80,7 +87,7 @@ function CheckoutForm({ clientSecret, couponCode }) {
         className="w-full mt-6 bg-teal-600 text-white py-2 disabled:opacity-60"
         disabled={isPaying || !stripe || !elements}
       >
-        {isPaying ? "Processing..." : "Pay Now"}
+        {isPaying ? t("Processing...") : t("Pay Now")}
       </button>
     </>
   );
@@ -91,6 +98,7 @@ export default function Checkout() {
   const [clientSecret, setClientSecret] = useState(null);
   const [couponCode, setCouponCode] = useState("");
   const [couponMsg, setCouponMsg] = useState("");
+  const { t, lang } = useI18n();
   const [totals, setTotals] = useState({
     subtotal: 0,
     discount: 0,
@@ -130,34 +138,40 @@ export default function Checkout() {
     createIntent("").catch(() => {});
   }, [user, token]);
 
-  if (!clientSecret) return <div className="p-10">Loading payment...</div>;
+  if (!clientSecret) return <div className="p-10">{t("Loading payment...")}</div>;
 
   return (
     <div className="max-w-xl mx-auto p-6 md:p-10">
-      <h1 className="text-2xl font-bold mb-4">Payment</h1>
+      <h1 className="text-2xl font-bold mb-4">{t("Payment")}</h1>
 
       <div className="card p-4 mb-4 animate-fade-up">
-        <div className="text-sm">Subtotal: ₹{totals.subtotal}</div>
+        <div className="text-sm">
+          {t("Subtotal:")} {formatCurrency(totals.subtotal, lang)}
+        </div>
         {totals.discount > 0 && (
           <div className="text-sm text-green-700">
-            Discount: -₹{totals.discount}
+            {t("Discount:")} -{formatCurrency(totals.discount, lang)}
           </div>
         )}
         {totals.tax > 0 && (
-          <div className="text-sm">Tax: ₹{totals.tax}</div>
+          <div className="text-sm">
+            {t("Tax:")} {formatCurrency(totals.tax, lang)}
+          </div>
         )}
         {totals.shipping > 0 && (
-          <div className="text-sm">Shipping: ₹{totals.shipping}</div>
+          <div className="text-sm">
+            {t("Shipping:")} {formatCurrency(totals.shipping, lang)}
+          </div>
         )}
         <div className="font-semibold mt-2">
-          Total: ₹{totals.total}
+          {t("Total:")} {formatCurrency(totals.total, lang)}
         </div>
       </div>
 
       <div className="flex gap-2 mb-4">
         <input
           className="border px-3 py-2 flex-1 rounded"
-          placeholder="Coupon code"
+          placeholder={t("Coupon code")}
           value={couponCode}
           onChange={(e) => setCouponCode(e.target.value)}
         />
@@ -166,13 +180,13 @@ export default function Checkout() {
           onClick={async () => {
             try {
               await createIntent(couponCode);
-              setCouponMsg("Coupon applied");
+              setCouponMsg(t("Coupon applied"));
             } catch (e) {
               setCouponMsg(e.message);
             }
           }}
         >
-          Apply
+          {t("Apply")}
         </button>
       </div>
       {couponMsg && (

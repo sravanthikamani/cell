@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
+import { useI18n } from "../context/I18nContext";
 
 export default function AdminOrders() {
   const { user, token } = useAuth();
   const [orders, setOrders] = useState([]);
+  const { t } = useI18n();
 
   // 🔐 Auth guard
-  if (!user) return <div className="p-10">Loading...</div>;
+  if (!user) return <div className="p-10">{t("Loading...")}</div>;
   if (user.role !== "admin") return <Navigate to="/" replace />;
 
   // 📥 Fetch all orders
@@ -26,11 +28,13 @@ export default function AdminOrders() {
   }, [token]);
   return (
     <div className="max-w-5xl mx-auto p-6 md:p-10">
-      <h1 className="text-2xl font-bold mb-6">Admin – Orders</h1>
+      <h1 className="text-2xl font-bold mb-6">{t("Admin – Orders")}</h1>
 
       {orders.map(order => (
         <div key={order._id} className="card p-4 mb-4">
-          <p className="font-semibold">Order ID: {order._id}</p>
+          <p className="font-semibold">
+            {t("Order ID:")} {order._id}
+          </p>
           <p>User: {order.userId}</p>
           <button
             className="mt-2 text-sm text-teal-700 underline"
@@ -59,7 +63,7 @@ export default function AdminOrders() {
               }
             }}
           >
-            Download Invoice
+            {t("Download Invoice")}
           </button>
 
           {/* ✅ THIS IS WHERE YOUR <select> GOES */}

@@ -14,12 +14,14 @@ import { useCart } from "../context/CartContext";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
+import { useI18n } from "../context/I18nContext";
 
 export default function Navbar() {
   /* ✅ CONTEXTS (ONLY ONCE, AT TOP) */
   const { cartCount } = useCart();
   const { dark, setDark } = useTheme();
   const { user, login, logout } = useAuth(); // ✅ ADD HERE
+  const { lang, setLang, t } = useI18n();
   const [wishlistCount, setWishlistCount] = useState(0);
 
   /* ✅ STATE */
@@ -114,7 +116,7 @@ export default function Navbar() {
             {searchable && (
               <input
                 className="w-full px-3 py-2 border-b text-sm outline-none"
-                placeholder="Search FAQ..."
+                placeholder={t("Search FAQ...")}
                 value={faqSearch}
                 onChange={(e) => setFaqSearch(e.target.value)}
               />
@@ -138,7 +140,7 @@ export default function Navbar() {
                       }}
                     >
                       <span>{item.icon}</span>
-                      {item.label}
+                      {t(item.label)}
                     </button>
                   </li>
                 );
@@ -165,10 +167,10 @@ export default function Navbar() {
         </button>
         <span className="text-center flex-1">
           {[
-            "ROHS | REACH | SVHC | CE COMPLIANT",
-            "Free shipping above ₹999",
-            "1‑year warranty on select devices",
-            "24/7 support for all orders",
+            t("ROHS | REACH | SVHC | CE COMPLIANT"),
+            t("Free shipping above ?999"),
+            t("1-year warranty on select devices"),
+            t("24/7 support for all orders"),
           ][topIndex]}
         </span>
         <button
@@ -184,7 +186,9 @@ export default function Navbar() {
 
         {/* LOGO */}
         <Link to="/">
-          <h1 className="text-3xl font-bold text-teal-700 heading tracking-tight">CELL</h1>
+          <h1 className="text-3xl font-bold text-blue-600 heading tracking-tight">
+            {t("CELL")}
+          </h1>
         </Link>
 
         {/* DESKTOP MENU */}
@@ -192,24 +196,24 @@ export default function Navbar() {
   <NavLink to="/" className={({ isActive }) =>
     isActive ? "text-teal-600" : ""
   }>
-    HOME
+    {t("HOME")}
   </NavLink>
 
-  <Dropdown title="DEVICE" items={menuData.device} basePath="device" />
-  <Dropdown title="CATEGORY" items={menuData.category} basePath="category" />
-  <NavLink to="/products">PRODUCTS</NavLink>
+  <Dropdown title={t("DEVICE")} items={menuData.device} basePath="device" />
+  <Dropdown title={t("CATEGORY")} items={menuData.category} basePath="category" />
+  <NavLink to="/products">{t("PRODUCTS")}</NavLink>
 
 {user?.role === "admin" && (
   <>
-  <NavLink to="/admin">ADMIN</NavLink>
-      <NavLink to="/admin/orders">ADMIN ORDERS</NavLink>
+  <NavLink to="/admin">{t("ADMIN")}</NavLink>
+      <NavLink to="/admin/orders">{t("ADMIN ORDERS")}</NavLink>
       </>
 )}
-  <NavLink to="/orders">MY ORDERS</NavLink>
-  {user && <NavLink to="/profile">PROFILE</NavLink>}
+  <NavLink to="/orders">{t("MY ORDERS")}</NavLink>
+  {user && <NavLink to="/profile">{t("PROFILE")}</NavLink>}
   {user && (
     <NavLink to="/wishlist" className="relative">
-      WISHLIST
+      {t("WISHLIST")}
       {wishlistCount > 0 && (
         <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs px-1.5 rounded-full">
           {wishlistCount}
@@ -218,16 +222,16 @@ export default function Navbar() {
     </NavLink>
   )}
 
-  <NavLink to="/warranty">WARRANTY</NavLink>
+  <NavLink to="/warranty">{t("WARRANTY")}</NavLink>
 
   <Dropdown
-    title="FAQ"
+    title={t("FAQ")}
     items={menuData.faq}
     basePath="faq"
     searchable
   />
 
-  <NavLink to="/about">ABOUT US</NavLink>
+  <NavLink to="/about">{t("ABOUT US")}</NavLink>
 </nav>
 
 
@@ -241,14 +245,14 @@ export default function Navbar() {
     onClick={() => navigate("/login")}
     className="px-3 py-1 bg-slate-900 text-white rounded-full text-sm"
   >
-    Login
+    {t("Login")}
   </button>
 ) : (
   <button
     onClick={logout}
     className="px-3 py-1 border rounded-full text-sm"
   >
-    Logout
+    {t("Logout")}
   </button>
 )}
 
@@ -266,6 +270,15 @@ export default function Navbar() {
   <button onClick={() => setDark(!dark)}>
     {dark ? "🌙" : "☀️"}
   </button>
+  <select
+    className="text-xs border rounded px-2 py-1"
+    value={lang}
+    onChange={(e) => setLang(e.target.value)}
+    aria-label="Language"
+  >
+    <option value="en">{t("English")}</option>
+    <option value="it">{t("Italian")}</option>
+  </select>
 </div>
 
 
@@ -279,25 +292,25 @@ export default function Navbar() {
       {/* 🔹 MOBILE MENU */}
 {mobileOpen && (
   <div className="md:hidden bg-white shadow-lg px-6 py-4 space-y-4">
-    <NavLink to="/">HOME</NavLink>
+    <NavLink to="/">{t("HOME")}</NavLink>
 
-    <Dropdown title="DEVICE" items={menuData.device} basePath="device" />
-    <Dropdown title="CATEGORY" items={menuData.category} basePath="category" />
-    <NavLink to="/products">PRODUCTS</NavLink>
+    <Dropdown title={t("DEVICE")} items={menuData.device} basePath="device" />
+    <Dropdown title={t("CATEGORY")} items={menuData.category} basePath="category" />
+    <NavLink to="/products">{t("PRODUCTS")}</NavLink>
 
-    <NavLink to="/orders">MY ORDERS</NavLink>
-    {user && <NavLink to="/profile">PROFILE</NavLink>}
-    {user && <NavLink to="/wishlist">WISHLIST</NavLink>}
+    <NavLink to="/orders">{t("MY ORDERS")}</NavLink>
+    {user && <NavLink to="/profile">{t("PROFILE")}</NavLink>}
+    {user && <NavLink to="/wishlist">{t("WISHLIST")}</NavLink>}
     {user?.role === "admin" && (
       <>
-        <NavLink to="/admin">ADMIN</NavLink>
-        <NavLink to="/admin/orders">ADMIN ORDERS</NavLink>
+        <NavLink to="/admin">{t("ADMIN")}</NavLink>
+        <NavLink to="/admin/orders">{t("ADMIN ORDERS")}</NavLink>
       </>
     )}
 
-    <NavLink to="/warranty">WARRANTY</NavLink>
-    <Dropdown title="FAQ" items={menuData.faq} basePath="faq" searchable />
-    <NavLink to="/about">ABOUT US</NavLink>
+    <NavLink to="/warranty">{t("WARRANTY")}</NavLink>
+    <Dropdown title={t("FAQ")} items={menuData.faq} basePath="faq" searchable />
+    <NavLink to="/about">{t("ABOUT US")}</NavLink>
   </div>
 )}
 

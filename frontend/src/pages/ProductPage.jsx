@@ -4,11 +4,14 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import ImageGallery from "../components/ImageGallery";
 import { API_BASE } from "../lib/api";
+import { useI18n } from "../context/I18nContext";
+import { formatCurrency } from "../lib/format";
 
 export default function ProductPage() {
   const { id } = useParams();
   const { user, token } = useAuth();
   const { refreshCart } = useCart();
+  const { t, lang } = useI18n();
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [rating, setRating] = useState(5);
@@ -51,20 +54,20 @@ export default function ProductPage() {
       .catch(() => {});
   }, [id, user, token]);
 
-  if (!product) return <div className="p-10">Loading...</div>;
+  if (!product) return <div className="p-10">{t("Loading...")}</div>;
 
   // 🔹 Add to cart from product page
   const addToCart = async () => {
     if (!user) {
-      alert("Login first");
+      alert(t("Login first"));
       return;
     }
     if (product.colors?.length > 0 && !selectedColor) {
-      alert("Please select a color");
+      alert(t("Please select a color"));
       return;
     }
     if (product.sizes?.length > 0 && !selectedSize) {
-      alert("Please select a size");
+      alert(t("Please select a size"));
       return;
     }
 
@@ -82,12 +85,12 @@ export default function ProductPage() {
     });
 
     await refreshCart();
-    alert("Added to cart");
+    alert(t("Added to cart"));
   };
 
   const submitReview = async () => {
     if (!user) {
-      setReviewMsg("Login first to leave a review.");
+      setReviewMsg(t("Login first to leave a review."));
       return;
     }
     setReviewMsg("");
@@ -114,15 +117,15 @@ export default function ProductPage() {
       setReviews(updated);
       setComment("");
       setRating(5);
-      setReviewMsg("Review submitted.");
+      setReviewMsg(t("Review submitted."));
     } catch (err) {
-      setReviewMsg(err.error || "Failed to submit review.");
+      setReviewMsg(err.error || t("Failed to submit review."));
     }
   };
 
   const toggleWishlist = async () => {
     if (!user) {
-      alert("Login first");
+      alert(t("Login first"));
       return;
     }
     const url = isWishlisted
@@ -158,12 +161,16 @@ export default function ProductPage() {
 
         <div className="card p-6">
           <h1 className="text-3xl font-bold">{product.name}</h1>
-          <p className="text-xl text-gray-600 mt-1">₹{product.price}</p>
-          <p className="mt-2 text-sm text-gray-600">
-            Rating: {avgRating} / 5 ({reviews.length})
+          <p className="text-xl text-gray-600 mt-1">
+            {formatCurrency(product.price, lang)}
           </p>
           <p className="mt-2 text-sm text-gray-600">
-            {product.stock > 0 ? `Stock: ${product.stock}` : "Out of stock"}
+            {t("Rating:")} {avgRating} / 5 ({reviews.length})
+          </p>
+          <p className="mt-2 text-sm text-gray-600">
+            {product.stock > 0
+              ? t("Stock: {count}", { count: product.stock })
+              : t("Out of stock")}
           </p>
 
           {(product.colors?.length > 0 || product.sizes?.length > 0) && (
@@ -203,21 +210,21 @@ export default function ProductPage() {
               className="btn-primary disabled:opacity-50"
               disabled={product.stock <= 0}
             >
-              Add to Cart
+              {t("Add to Cart")}
             </button>
             <button onClick={toggleWishlist} className="btn-secondary">
-              {isWishlisted ? "Remove Wishlist" : "Add to Wishlist"}
+              {isWishlisted ? t("Remove Wishlist") : t("Add to Wishlist")}
             </button>
           </div>
         </div>
       </div>
 
       <div className="mt-10 card p-6">
-        <h2 className="text-2xl font-bold mb-4">Reviews</h2>
+        <h2 className="text-2xl font-bold mb-4">{t("Reviews")}</h2>
 
         <div className="border rounded p-4 mb-6">
           <div className="flex gap-4 items-center">
-            <label className="text-sm">Rating</label>
+            <label className="text-sm">{t("Rating:")}</label>
             <select
               value={rating}
               onChange={(e) => setRating(e.target.value)}
@@ -234,7 +241,7 @@ export default function ProductPage() {
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             className="border w-full mt-3 p-2"
-            placeholder="Write your review..."
+            placeholder={t("Write your review...")}
             rows={3}
           />
           {reviewMsg && (
@@ -246,12 +253,12 @@ export default function ProductPage() {
             onClick={submitReview}
             className="mt-3 bg-teal-600 text-white px-4 py-2"
           >
-            Submit Review
+            {t("Submit Review")}
           </button>
         </div>
 
         {reviews.length === 0 && (
-          <p className="text-sm text-gray-600">No reviews yet.</p>
+          <p className="text-sm text-gray-600">{t("No reviews yet.")}</p>
         )}
 
         {reviews.map((r) => (
@@ -259,7 +266,9 @@ export default function ProductPage() {
             <div className="text-sm text-gray-700">
               {r.userId?.email || "User"}
             </div>
-            <div className="text-sm">Rating: {r.rating} / 5</div>
+            <div className="text-sm">
+              {t("Rating:")} {r.rating} / 5
+            </div>
             {r.comment && (
               <div className="text-sm mt-2">{r.comment}</div>
             )}

@@ -4,12 +4,15 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { Helmet } from "react-helmet-async";
 import { API_BASE } from "../lib/api";
+import { useI18n } from "../context/I18nContext";
+import { formatCurrency } from "../lib/format";
 
 export default function BrandPage() {
   const { group, type, brand } = useParams();
   const navigate = useNavigate();
   const { refreshCart } = useCart();
   const { user, token } = useAuth();
+  const { t, lang } = useI18n();
 
   const [products, setProducts] = useState([]);
   const [filters, setFilters] = useState({
@@ -45,7 +48,7 @@ export default function BrandPage() {
   return (
     <div className="max-w-6xl mx-auto p-10">
       <Helmet>
-        <title>{brand} {type} | CELL</title>
+        <title>{brand} {t(type)} | HI-TECH</title>
       </Helmet>
 
       <h1 className="text-3xl font-bold mb-6 capitalize">
@@ -58,7 +61,7 @@ export default function BrandPage() {
           className="border p-2"
           onChange={e => setFilters(f => ({ ...f, ram: e.target.value }))}
         >
-          <option value="">RAM</option>
+          <option value="">{t("RAM")}</option>
           <option>8GB</option>
           <option>12GB</option>
         </select>
@@ -67,14 +70,14 @@ export default function BrandPage() {
           className="border p-2"
           onChange={e => setFilters(f => ({ ...f, storage: e.target.value }))}
         >
-          <option value="">Storage</option>
+          <option value="">{t("Storage")}</option>
           <option>128GB</option>
           <option>256GB</option>
         </select>
 
         <input
           type="number"
-          placeholder="Max Price"
+          placeholder={t("Max Price")}
           className="border p-2"
           onChange={e =>
             setFilters(f => ({ ...f, maxPrice: e.target.value }))
@@ -90,7 +93,9 @@ export default function BrandPage() {
             className="border rounded-lg p-4 hover:shadow-lg"
           >
             <h2 className="font-semibold text-lg">{product.name}</h2>
-            <p className="text-gray-600">₹{product.price}</p>
+            <p className="text-gray-600">
+              {formatCurrency(product.price, lang)}
+            </p>
             <p className="text-sm">
               {product.ram} | {product.storage}
             </p>
@@ -100,12 +105,12 @@ export default function BrandPage() {
                 onClick={() => navigate(`/product/${product._id}`)}
                 className="border px-4 py-1"
               >
-                View
+                {t("View")}
               </button>
 
               <button
                 onClick={async () => {
-                  if (!user) return alert("Login first");
+                  if (!user) return alert(t("Login first"));
                   await fetch(`${API_BASE}/api/cart/add`, {
                     method: "POST",
                     headers: {
@@ -121,7 +126,7 @@ export default function BrandPage() {
                 }}
                 className="bg-teal-600 text-white px-4 py-1"
               >
-                Add to Cart
+                {t("Add to Cart")}
               </button>
             </div>
           </div>

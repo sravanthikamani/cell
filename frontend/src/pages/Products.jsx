@@ -3,11 +3,14 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { API_BASE } from "../lib/api";
+import { useI18n } from "../context/I18nContext";
+import { formatCurrency } from "../lib/format";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
   const { user, token } = useAuth();
   const { refreshCart } = useCart();
+  const { t, lang } = useI18n();
   const [q, setQ] = useState("");
   const [brand, setBrand] = useState("");
   const [group, setGroup] = useState("");
@@ -113,7 +116,7 @@ export default function Products() {
   // 🔹 Add to cart
   const addToCart = async (productId) => {
     if (!user) {
-      alert("Login first");
+      alert(t("Login first"));
       return;
     }
 
@@ -130,18 +133,18 @@ export default function Products() {
     });
 
     await refreshCart(); // ✅ cart icon updates
-    alert("Added to cart");
+    alert(t("Added to cart"));
   };
 
   return (
     <div className="max-w-6xl mx-auto p-6 md:p-10">
-      <h1 className="text-3xl font-bold mb-6">Products</h1>
+      <h1 className="text-3xl font-bold mb-6">{t("Products")}</h1>
 
       <div className="card p-4 md:p-5 mb-8 animate-fade-up">
         <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
         <input
           className="md:col-span-2 border px-3 py-2"
-          placeholder="Search by name or brand..."
+          placeholder={t("Search by name or brand...")}
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
@@ -150,7 +153,7 @@ export default function Products() {
           value={brand}
           onChange={(e) => setBrand(e.target.value)}
         >
-          <option value="">All Brands</option>
+          <option value="">{t("All Brands")}</option>
           {getBrandOptions().map((b) => (
             <option key={b} value={b}>
               {b}
@@ -162,7 +165,7 @@ export default function Products() {
           value={group}
           onChange={(e) => setGroup(e.target.value)}
         >
-          <option value="">All Groups</option>
+          <option value="">{t("All Groups")}</option>
           {catalogOptions.groups.map((g) => (
             <option key={g} value={g}>
               {g}
@@ -174,7 +177,7 @@ export default function Products() {
           value={type}
           onChange={(e) => setType(e.target.value)}
         >
-          <option value="">All Types</option>
+          <option value="">{t("All Types")}</option>
           {getTypeOptions().map((t) => (
             <option key={t} value={t}>
               {t}
@@ -184,13 +187,13 @@ export default function Products() {
         <div className="md:col-span-6 grid grid-cols-1 md:grid-cols-6 gap-3">
           <input
             className="border px-3 py-2"
-            placeholder="Min ₹"
+            placeholder={t("Min €")}
             value={priceMin}
             onChange={(e) => setPriceMin(e.target.value)}
           />
           <input
             className="border px-3 py-2"
-            placeholder="Max ₹"
+            placeholder={t("Max €")}
             value={priceMax}
             onChange={(e) => setPriceMax(e.target.value)}
           />
@@ -205,7 +208,7 @@ export default function Products() {
               setPriceMax("");
             }}
           >
-            Clear Filters
+            {t("Clear Filters")}
           </button>
         </div>
         </div>
@@ -229,9 +232,11 @@ export default function Products() {
               <h2 className="font-bold mt-2">{p.name}</h2>
             </Link>
 
-            <p className="mt-1">₹{p.price}</p>
+            <p className="mt-1">{formatCurrency(p.price, lang)}</p>
             <p className="mt-1 text-sm text-gray-600">
-              {p.stock > 0 ? `Stock: ${p.stock}` : "Out of stock"}
+              {p.stock > 0
+                ? t("Stock: {count}", { count: p.stock })
+                : t("Out of stock")}
             </p>
 
             <button
@@ -239,7 +244,7 @@ export default function Products() {
               className="mt-3 btn-primary disabled:opacity-50"
               disabled={p.stock <= 0}
             >
-              Add to Cart
+              {t("Add to Cart")}
             </button>
           </div>
         ))}
