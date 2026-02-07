@@ -1,12 +1,15 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import { Helmet } from "react-helmet-async";
+import { API_BASE } from "../lib/api";
 
 export default function BrandPage() {
   const { group, type, brand } = useParams();
   const navigate = useNavigate();
-  const { updateCart } = useCart();
+  const { refreshCart } = useCart();
+  const { user, token } = useAuth();
 
   const [products, setProducts] = useState([]);
   const [filters, setFilters] = useState({
@@ -16,11 +19,17 @@ export default function BrandPage() {
   });
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/catalog")
+    fetch(`${API_BASE}/api/catalog`)
       .then(res => res.json())
       .then(data => {
-        const list =
-          data[group]?.[type]?.[brand] || [];
+        const findKey = (obj, key) =>
+          Object.keys(obj || {}).find(
+            (k) => k.toLowerCase() === key.toLowerCase()
+          );
+        const groupKey = findKey(data, group);
+        const typeKey = findKey(data?.[groupKey], type);
+        const brandKey = findKey(data?.[groupKey]?.[typeKey], brand);
+        const list = data?.[groupKey]?.[typeKey]?.[brandKey] || [];
         setProducts(list);
       });
   }, [group, type, brand]);
@@ -77,7 +86,7 @@ export default function BrandPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {filtered.map(product => (
           <div
-            key={product.id}
+            key={product._id}
             className="border rounded-lg p-4 hover:shadow-lg"
           >
             <h2 className="font-semibold text-lg">{product.name}</h2>
@@ -88,14 +97,28 @@ export default function BrandPage() {
 
             <div className="flex gap-3 mt-4">
               <button
-                onClick={() => navigate(`/product/${product.id}`)}
+                onClick={() => navigate(`/product/${product._id}`)}
                 className="border px-4 py-1"
               >
                 View
               </button>
 
               <button
-                onClick={() => updateCart(1)}
+                onClick={async () => {
+                  if (!user) return alert("Login first");
+                  await fetch(`${API_BASE}/api/cart/add`, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                      userId: user.id,
+                      productId: product._id,
+                    }),
+                  });
+                  await refreshCart();
+                }}
                 className="bg-teal-600 text-white px-4 py-1"
               >
                 Add to Cart

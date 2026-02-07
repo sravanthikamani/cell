@@ -13,12 +13,14 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE } from "../lib/api";
 
 export default function Navbar() {
   /* ✅ CONTEXTS (ONLY ONCE, AT TOP) */
   const { cartCount } = useCart();
   const { dark, setDark } = useTheme();
   const { user, login, logout } = useAuth(); // ✅ ADD HERE
+  const [wishlistCount, setWishlistCount] = useState(0);
 
   /* ✅ STATE */
   const [menuData, setMenuData] = useState({
@@ -29,13 +31,14 @@ export default function Navbar() {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [faqSearch, setFaqSearch] = useState("");
+  const [topIndex, setTopIndex] = useState(0);
 
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
   /* ✅ FETCH MENU */
   useEffect(() => {
-    fetch("http://localhost:5000/api/menu")
+    fetch(`${API_BASE}/api/menu`)
       .then((res) => res.json())
       .then(setMenuData)
       .catch(() => {
@@ -43,12 +46,30 @@ export default function Navbar() {
       });
   }, []);
 
+  useEffect(() => {
+    if (!user) {
+      setWishlistCount(0);
+      return;
+    }
+    const load = () => {
+      fetch(`${API_BASE}/api/wishlist`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      })
+        .then((res) => res.json())
+        .then((data) => setWishlistCount((data.products || []).length))
+        .catch(() => setWishlistCount(0));
+    };
+    load();
+    const handler = () => load();
+    window.addEventListener("wishlist:changed", handler);
+    return () => window.removeEventListener("wishlist:changed", handler);
+  }, [user]);
+
   /* ✅ CLOSE DROPDOWN ON OUTSIDE CLICK */
   useEffect(() => {
     const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setOpenDropdown(null);
-      }
+      if (e.target.closest("[data-dropdown='true']")) return;
+      setOpenDropdown(null);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -61,6 +82,13 @@ export default function Navbar() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTopIndex((i) => (i + 1) % 4);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
   /* ✅ DROPDOWN COMPONENT */
   const Dropdown = ({ title, items, basePath, searchable }) => {
     const filteredItems = searchable
@@ -70,7 +98,7 @@ export default function Navbar() {
       : items;
 
     return (
-      <div className="relative" ref={dropdownRef}>
+      <div className="relative" data-dropdown="true" ref={dropdownRef}>
         <button
           onClick={() =>
             setOpenDropdown(openDropdown === title ? null : title)
@@ -93,20 +121,28 @@ export default function Navbar() {
             )}
 
             <ul className="py-2">
-              {filteredItems.map((item) => (
-                <li
-                  key={item.label}
-                  className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  onClick={() => {
-                    navigate(`/${basePath}/${item.label.toLowerCase()}`);
-                    setOpenDropdown(null);
-                    setMobileOpen(false);
-                  }}
-                >
-                  <span>{item.icon}</span>
-                  {item.label}
-                </li>
-              ))}
+              {filteredItems.map((item) => {
+                const path = `/${basePath}/${encodeURIComponent(
+                  item.label.toLowerCase()
+                )}`;
+                return (
+                  <li key={item.label}>
+                    <button
+                      type="button"
+                      className="w-full text-left flex items-center gap-2 px-4 py-2 hover:bg-gray-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(path);
+                        setOpenDropdown(null);
+                        setMobileOpen(false);
+                      }}
+                    >
+                      <span>{item.icon}</span>
+                      {item.label}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
@@ -118,18 +154,37 @@ export default function Navbar() {
     <header className="w-full">
 
       {/* 🔹 TOP BAR */}
-      <div className="flex items-center justify-between bg-teal-500 px-6 py-2 text-white text-sm font-semibold">
-        <ChevronLeft />
-        ROHS | REACH | SVHC | CE COMPLIANT
-        <ChevronRight />
+      <div className="flex items-center justify-between bg-gradient-to-r from-teal-600 to-slate-900 px-6 py-2 text-white text-xs md:text-sm font-semibold">
+        <button
+          className="px-2"
+          onClick={() =>
+            setTopIndex((i) => (i - 1 + 4) % 4)
+          }
+        >
+          <ChevronLeft />
+        </button>
+        <span className="text-center flex-1">
+          {[
+            "ROHS | REACH | SVHC | CE COMPLIANT",
+            "Free shipping above ₹999",
+            "1‑year warranty on select devices",
+            "24/7 support for all orders",
+          ][topIndex]}
+        </span>
+        <button
+          className="px-2"
+          onClick={() => setTopIndex((i) => (i + 1) % 4)}
+        >
+          <ChevronRight />
+        </button>
       </div>
 
       {/* 🔹 NAVBAR */}
-      <div className="flex items-center justify-between bg-white px-6 py-4 shadow-md">
+      <div className="flex items-center justify-between bg-white/90 backdrop-blur px-6 py-4 shadow-md sticky top-0 z-40">
 
         {/* LOGO */}
         <Link to="/">
-          <h1 className="text-3xl font-bold text-teal-600">CELL</h1>
+          <h1 className="text-3xl font-bold text-teal-700 heading tracking-tight">CELL</h1>
         </Link>
 
         {/* DESKTOP MENU */}
@@ -151,6 +206,17 @@ export default function Navbar() {
       </>
 )}
   <NavLink to="/orders">MY ORDERS</NavLink>
+  {user && <NavLink to="/profile">PROFILE</NavLink>}
+  {user && (
+    <NavLink to="/wishlist" className="relative">
+      WISHLIST
+      {wishlistCount > 0 && (
+        <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs px-1.5 rounded-full">
+          {wishlistCount}
+        </span>
+      )}
+    </NavLink>
+  )}
 
   <NavLink to="/warranty">WARRANTY</NavLink>
 
@@ -173,14 +239,14 @@ export default function Navbar() {
 {!user ? (
   <button
     onClick={() => navigate("/login")}
-    className="px-3 py-1 bg-black text-white rounded text-sm"
+    className="px-3 py-1 bg-slate-900 text-white rounded-full text-sm"
   >
     Login
   </button>
 ) : (
   <button
     onClick={logout}
-    className="px-3 py-1 border rounded text-sm"
+    className="px-3 py-1 border rounded-full text-sm"
   >
     Logout
   </button>
@@ -217,8 +283,17 @@ export default function Navbar() {
 
     <Dropdown title="DEVICE" items={menuData.device} basePath="device" />
     <Dropdown title="CATEGORY" items={menuData.category} basePath="category" />
+    <NavLink to="/products">PRODUCTS</NavLink>
 
     <NavLink to="/orders">MY ORDERS</NavLink>
+    {user && <NavLink to="/profile">PROFILE</NavLink>}
+    {user && <NavLink to="/wishlist">WISHLIST</NavLink>}
+    {user?.role === "admin" && (
+      <>
+        <NavLink to="/admin">ADMIN</NavLink>
+        <NavLink to="/admin/orders">ADMIN ORDERS</NavLink>
+      </>
+    )}
 
     <NavLink to="/warranty">WARRANTY</NavLink>
     <Dropdown title="FAQ" items={menuData.faq} basePath="faq" searchable />

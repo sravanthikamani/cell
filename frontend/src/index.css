@@ -1,3 +1,66 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --bg: #f6f7f9;
+  --text: #0f172a;
+  --muted: #6b7280;
+  --brand: #0f766e;
+  --accent: #ff7a1a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Sora", sans-serif;
+  background: radial-gradient(1200px 600px at 80% -10%, #c7fff2 0%, rgba(199,255,242,0) 60%),
+    radial-gradient(900px 500px at -10% 10%, #ffe1c4 0%, rgba(255,225,196,0) 55%),
+    linear-gradient(180deg, #f6f7f9 0%, #eef2f7 100%);
+  color: var(--text);
+}
+
+h1,
+h2,
+h3,
+.heading {
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.card {
+  @apply bg-white/90 backdrop-blur border border-white/60 rounded-2xl shadow-sm hover:shadow-lg transition;
+}
+
+.btn-primary {
+  @apply bg-teal-600 text-white px-5 py-2 rounded-full font-semibold hover:bg-teal-700 transition;
+}
+
+.btn-secondary {
+  @apply border border-slate-900/10 bg-white px-5 py-2 rounded-full text-slate-900 hover:bg-slate-50 transition;
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.5s ease both;
+}
+.animate-fade-in {
+  animation: fadeIn 0.4s ease both;
+}
+.animate-pop {
+  animation: pop 0.35s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pop {
+  0% { transform: scale(0.98); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}

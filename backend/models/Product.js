@@ -10,6 +10,13 @@ const productSchema = new mongoose.Schema(
     images: [String],
     ram: String,
     storage: String,
+    sizes: [String],
+    colors: [String],
+    stock: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     status: {
       type: String,
       default: "active",

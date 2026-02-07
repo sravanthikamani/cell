@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
+import { API_BASE } from "../lib/api";
 
 export default function CatalogPage() {
   const { group, type } = useParams(); // device/category + smartphones/audio
@@ -8,11 +9,17 @@ export default function CatalogPage() {
   const [brands, setBrands] = useState({});
 
   useEffect(() => {
-   // fetch("http://localhost:5000/api/catalog")
-     // .then(res => res.json())
-      //.then(data => {
-      //  setBrands(data[group]?.[type] || {});
-     // });
+    fetch(`${API_BASE}/api/catalog`)
+      .then((res) => res.json())
+      .then((data) => {
+        const findKey = (obj, key) =>
+          Object.keys(obj || {}).find(
+            (k) => k.toLowerCase() === key.toLowerCase()
+          );
+        const groupKey = findKey(data, group);
+        const typeKey = findKey(data?.[groupKey], type);
+        setBrands(data?.[groupKey]?.[typeKey] || {});
+      });
   }, [group, type]);
 
   const title = `${type.toUpperCase()} | ${group.toUpperCase()} | CELL`;
@@ -31,7 +38,20 @@ export default function CatalogPage() {
         {type}
       </h1>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      {Object.keys(brands).length === 0 && (
+        <div className="card p-4 text-sm text-gray-600">
+          No brands found for this category. Try{" "}
+          <span
+            className="text-teal-700 cursor-pointer"
+            onClick={() => navigate("/products")}
+          >
+            browsing all products
+          </span>
+          .
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-6">
         {Object.keys(brands).map((brand) => (
           <div
             key={brand}

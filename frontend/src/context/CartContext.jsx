@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
+import { API_BASE } from "../lib/api";
 
 const CartContext = createContext();
 
@@ -14,7 +15,7 @@ export function CartProvider({ children }) {
     }
 
     const res = await fetch(
-      `http://localhost:5000/api/cart/${user.id}`,
+      `${API_BASE}/api/cart/${user.id}`,
       {
         headers: { Authorization: token },
       }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import { API_BASE } from "../lib/api";
 
 export default function Cart() {
   const [cart, setCart] = useState(null);
@@ -18,9 +19,9 @@ const { refreshCart } = useCart();
   const USER_ID = user.id;
 
   const fetchCart = () => {
-    fetch(`http://localhost:5000/api/cart/${USER_ID}`, {
+    fetch(`${API_BASE}/api/cart/${USER_ID}`, {
       headers: {
-        Authorization: token,
+        Authorization: `Bearer ${token}`,
       },
     })
       .then((res) => res.json())
@@ -33,17 +34,18 @@ const { refreshCart } = useCart();
     }
   }, [USER_ID, token]);
 
-  const updateQty = (productId, qty) => {
-  fetch("http://localhost:5000/api/cart/update", {
+  const updateQty = (productId, qty, variant) => {
+  fetch(`${API_BASE}/api/cart/update`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: token,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
       userId: USER_ID,
       productId,
       qty,
+      variant,
     }),
   }).then(() => {
     fetchCart();
@@ -52,16 +54,17 @@ const { refreshCart } = useCart();
 };
 
 
- const removeItem = (productId) => {
-  fetch("http://localhost:5000/api/cart/remove", {
+ const removeItem = (productId, variant) => {
+  fetch(`${API_BASE}/api/cart/remove`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: token,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
       userId: USER_ID,
       productId,
+      variant,
     }),
   }).then(() => {
     fetchCart();
@@ -80,26 +83,31 @@ const { refreshCart } = useCart();
   );
 
   return (
-    <div className="max-w-5xl mx-auto p-10">
+    <div className="max-w-5xl mx-auto p-6 md:p-10">
       <h1 className="text-3xl font-bold mb-6">Your Cart</h1>
 
       {cart.items.length === 0 && <p>Cart is empty</p>}
 
-      {cart.items.map(({ productId, qty }) => (
+      {cart.items.map(({ productId, qty, variant }) => (
         <div
-          key={productId._id}
-          className="flex items-center justify-between border-b py-4"
+          key={`${productId._id}-${variant?.color || ""}-${variant?.size || ""}`}
+          className="card p-4 mb-3 flex items-center justify-between"
         >
           <div>
             <h2 className="font-semibold">{productId.name}</h2>
+            {(variant?.color || variant?.size) && (
+              <p className="text-sm text-gray-600">
+                {variant?.color || ""} {variant?.size || ""}
+              </p>
+            )}
             <p className="text-gray-500">₹{productId.price}</p>
           </div>
 
           <div className="flex items-center gap-4">
             <button
-              onClick={() => updateQty(productId._id, qty - 1)}
+              onClick={() => updateQty(productId._id, qty - 1, variant)}
               disabled={qty === 1}
-              className="px-3 py-1 border"
+              className="px-3 py-1 border rounded"
             >
               −
             </button>
@@ -107,15 +115,15 @@ const { refreshCart } = useCart();
             <span>{qty}</span>
 
             <button
-              onClick={() => updateQty(productId._id, qty + 1)}
-              className="px-3 py-1 border"
+              onClick={() => updateQty(productId._id, qty + 1, variant)}
+              className="px-3 py-1 border rounded"
             >
               +
             </button>
 
             <button
-              onClick={() => removeItem(productId._id)}
-              className="text-red-600"
+              onClick={() => removeItem(productId._id, variant)}
+              className="text-red-600 text-sm"
             >
               Remove
             </button>
@@ -129,7 +137,7 @@ const { refreshCart } = useCart();
 
       <button
         onClick={() => navigate("/checkout")}
-        className="mt-6 bg-black text-white px-6 py-2"
+        className="mt-6 btn-primary"
       >
         Proceed to Checkout
       </button>
