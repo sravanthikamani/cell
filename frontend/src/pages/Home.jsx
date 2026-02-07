@@ -26,7 +26,13 @@ export default function Home() {
   return (
     <div className="px-6 md:px-10 py-8">
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-700 via-teal-600 to-slate-900 text-white p-8 md:p-14">
+      <div
+        className="relative overflow-hidden rounded-3xl bg-cover bg-center text-white p-8 md:p-14"
+        style={{
+          backgroundImage:
+            "linear-gradient(135deg, rgba(13,148,136,0.88), rgba(15,23,42,0.9)), url('/images/home-hero.jpg')",
+        }}
+      >
         <div className="max-w-2xl">
           <p className="uppercase tracking-widest text-xs text-teal-100 mb-2">
             {t("New Season Tech")}

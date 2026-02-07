@@ -23,6 +23,25 @@ body {
   color: var(--text);
 }
 
+.dark body {
+  background: radial-gradient(1200px 600px at 80% -10%, rgba(15,118,110,0.35) 0%, rgba(0,0,0,0) 60%),
+    radial-gradient(900px 500px at -10% 10%, rgba(255,122,26,0.2) 0%, rgba(0,0,0,0) 55%),
+    linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
+  color: #e5e7eb;
+}
+
+.dark .card {
+  @apply bg-slate-900/70 border-slate-800 text-slate-100;
+}
+
+.dark .btn-primary {
+  @apply bg-teal-500 hover:bg-teal-400;
+}
+
+.dark .btn-secondary {
+  @apply bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800;
+}
+
 h1,
 h2,
 h3,
