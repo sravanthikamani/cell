@@ -80,10 +80,11 @@ const { refreshCart } = useCart();
     return <div className="p-10">{t("Loading cart...")}</div>;
   }
 
-  const total = cart.items.reduce(
-    (sum, item) => sum + item.productId.price * item.qty,
-    0
-  );
+  const total = cart.items.reduce((sum, item) => {
+    const price = item.productId?.price;
+    if (price == null) return sum;
+    return sum + price * item.qty;
+  }, 0);
 
   return (
     <div className="max-w-5xl mx-auto p-6 md:p-10">
@@ -91,7 +92,20 @@ const { refreshCart } = useCart();
 
       {cart.items.length === 0 && <p>{t("Cart is empty")}</p>}
 
-      {cart.items.map(({ productId, qty, variant }) => (
+      {cart.items.map(({ productId, qty, variant }) => {
+        if (!productId) {
+          return (
+            <div
+              key={`missing-${Math.random()}`}
+              className="card p-4 mb-3 flex items-center justify-between"
+            >
+              <div className="text-sm text-gray-600">
+                {t("Product not found")}
+              </div>
+            </div>
+          );
+        }
+        return (
         <div
           key={`${productId._id}-${variant?.color || ""}-${variant?.size || ""}`}
           className="card p-4 mb-3 flex items-center justify-between"
@@ -134,7 +148,8 @@ const { refreshCart } = useCart();
             </button>
           </div>
         </div>
-      ))}
+        );
+      })}
 
       <div className="text-right mt-6 text-xl font-bold">
         {t("Total:")} {formatCurrency(total, lang)}

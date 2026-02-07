@@ -152,6 +152,42 @@ export default function Navbar() {
     );
   };
 
+  const SimpleDropdown = ({ title, items }) => (
+    <div className="relative" data-dropdown="true" ref={dropdownRef}>
+      <button
+        onClick={() =>
+          setOpenDropdown(openDropdown === title ? null : title)
+        }
+        className="flex items-center gap-1 hover:text-teal-600"
+      >
+        {title}
+        <ChevronDown size={16} />
+      </button>
+      {openDropdown === title && (
+        <div className="absolute left-0 mt-2 w-56 bg-white shadow-lg rounded-md z-50">
+          <ul className="py-2">
+            {items.map((item) => (
+              <li key={item.label}>
+                <button
+                  type="button"
+                  className="w-full text-left flex items-center gap-2 px-4 py-2 hover:bg-gray-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(item.path);
+                    setOpenDropdown(null);
+                    setMobileOpen(false);
+                  }}
+                >
+                  {item.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <header className="w-full">
 
@@ -204,10 +240,13 @@ export default function Navbar() {
   <NavLink to="/products">{t("PRODUCTS")}</NavLink>
 
 {user?.role === "admin" && (
-  <>
-  <NavLink to="/admin">{t("ADMIN")}</NavLink>
-      <NavLink to="/admin/orders">{t("ADMIN ORDERS")}</NavLink>
-      </>
+  <SimpleDropdown
+    title={t("ADMIN")}
+    items={[
+      { label: t("ADMIN"), path: "/admin" },
+      { label: t("ADMIN ORDERS"), path: "/admin/orders" },
+    ]}
+  />
 )}
   <NavLink to="/orders">{t("MY ORDERS")}</NavLink>
   {user && <NavLink to="/profile">{t("PROFILE")}</NavLink>}
@@ -302,10 +341,13 @@ export default function Navbar() {
     {user && <NavLink to="/profile">{t("PROFILE")}</NavLink>}
     {user && <NavLink to="/wishlist">{t("WISHLIST")}</NavLink>}
     {user?.role === "admin" && (
-      <>
-        <NavLink to="/admin">{t("ADMIN")}</NavLink>
-        <NavLink to="/admin/orders">{t("ADMIN ORDERS")}</NavLink>
-      </>
+      <SimpleDropdown
+        title={t("ADMIN")}
+        items={[
+          { label: t("ADMIN"), path: "/admin" },
+          { label: t("ADMIN ORDERS"), path: "/admin/orders" },
+        ]}
+      />
     )}
 
     <NavLink to="/warranty">{t("WARRANTY")}</NavLink>
