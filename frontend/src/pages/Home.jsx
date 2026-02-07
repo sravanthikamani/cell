@@ -24,7 +24,13 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="px-6 md:px-10 py-8">
+    <div className="relative">
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('/images/home-hero.jpg')" }}
+      />
+      <div className="absolute inset-0 bg-white/85 backdrop-blur-[1px]" />
+      <div className="relative px-6 md:px-10 py-8">
       {/* Hero */}
       <div
         className="relative overflow-hidden rounded-3xl bg-cover bg-center text-white p-8 md:p-14"
@@ -161,6 +167,7 @@ export default function Home() {
             </button>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
