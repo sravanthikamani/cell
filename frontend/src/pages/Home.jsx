@@ -39,7 +39,10 @@ export default function Home() {
             "linear-gradient(135deg, rgba(13,148,136,0.88), rgba(15,23,42,0.9)), url('/images/home-hero.jpeg')",
         }}
       >
-        <div className="max-w-2xl">
+        <div
+          className="max-w-2xl bg-cover bg-center rounded-2xl p-6 md:p-8"
+          style={{ backgroundImage: "url('/images/home-hero.jpeg')" }}
+        >
           <p className="uppercase tracking-widest text-xs text-teal-100 mb-2">
             {t("New Season Tech")}
           </p>
