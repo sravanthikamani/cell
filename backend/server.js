@@ -22,7 +22,23 @@ const wishlistRoutes = require("./routes/wishlist");
 const app = express();
 
 /* 🔹 Middlewares */
-app.use(cors());
+const corsOrigins = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((v) => v.trim())
+  .filter(Boolean);
+const corsOptions = {
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    if (corsOrigins.length === 0) return cb(null, true);
+    if (corsOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error("CORS blocked"));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json()); // ✅ REQUIRED for POST requests
 
 const uploadsDir = path.join(__dirname, "uploads");
