@@ -1,7 +1,7 @@
 import { BrowserRouter } from "react-router-dom";
 import { createRoot } from "react-dom/client";
 import App from "./App";
-import "./index.css"; // ✅ REQUIRED
+import "./index.css"; 
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { ThemeProvider } from "./context/ThemeContext";

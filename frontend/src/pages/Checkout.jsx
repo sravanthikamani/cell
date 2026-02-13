@@ -12,7 +12,7 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 
-function CheckoutForm({ clientSecret, couponCode }) {
+function CheckoutForm({ couponCode, paymentMethod }) {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -52,7 +52,7 @@ function CheckoutForm({ clientSecret, couponCode }) {
         body: JSON.stringify({
           userId: user?.id,
           address: {},
-          paymentMethod: "stripe",
+          paymentMethod,
           couponCode,
         }),
       });
@@ -96,6 +96,7 @@ function CheckoutForm({ clientSecret, couponCode }) {
 export default function Checkout() {
   const { user, token } = useAuth();
   const [clientSecret, setClientSecret] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("stripe");
   const [couponCode, setCouponCode] = useState("");
   const [couponMsg, setCouponMsg] = useState("");
   const { t, lang } = useI18n();
@@ -107,7 +108,7 @@ export default function Checkout() {
     total: 0,
   });
 
-  const createIntent = async (code = "") => {
+  const createIntent = async (code = "", method = paymentMethod) => {
     const res = await fetch(
       `${API_BASE}/api/payments/create-intent`,
       {
@@ -116,7 +117,11 @@ export default function Checkout() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ userId: user?.id, couponCode: code }),
+        body: JSON.stringify({
+          userId: user?.id,
+          couponCode: code,
+          paymentMethod: method,
+        }),
       }
     );
     const data = await res.json();
@@ -135,8 +140,8 @@ export default function Checkout() {
 
   useEffect(() => {
     if (!user || !token) return;
-    createIntent("").catch(() => {});
-  }, [user, token]);
+    createIntent(couponCode, paymentMethod).catch(() => {});
+  }, [user, token, paymentMethod]);
 
   if (!clientSecret) return <div className="p-10">{t("Loading payment...")}</div>;
 
@@ -193,8 +198,37 @@ export default function Checkout() {
         <div className="text-sm text-gray-600 mb-4">{couponMsg}</div>
       )}
 
-      <StripeWrapper clientSecret={clientSecret}>
-        <CheckoutForm clientSecret={clientSecret} couponCode={couponCode} />
+      <div className="mb-4">
+        <div className="text-sm font-medium mb-2">Payment Method</div>
+        <div className="flex gap-4">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="stripe"
+              checked={paymentMethod === "stripe"}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            />
+            Card
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="klarna"
+              checked={paymentMethod === "klarna"}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            />
+            Klarna
+          </label>
+        </div>
+      </div>
+
+      <StripeWrapper clientSecret={clientSecret} key={clientSecret}>
+        <CheckoutForm
+          couponCode={couponCode}
+          paymentMethod={paymentMethod}
+        />
       </StripeWrapper>
     </div>
   );
