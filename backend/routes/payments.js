@@ -5,6 +5,7 @@ const auth = require("../middleware/auth");
 const { body, validationResult } = require("express-validator");
 const Cart = require("../models/Cart");
 const Coupon = require("../models/Coupon");
+const { normalizePrice } = require("../utils/price");
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -35,7 +36,7 @@ router.post(
 
       let subtotal = 0;
       cart.items.forEach((i) => {
-        subtotal += i.productId.price * i.qty;
+        subtotal += normalizePrice(i.productId.price) * i.qty;
       });
 
       let discount = 0;

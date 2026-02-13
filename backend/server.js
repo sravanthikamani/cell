@@ -18,6 +18,13 @@ const reviewRoutes = require("./routes/reviews");
 const userRoutes = require("./routes/users");
 const couponRoutes = require("./routes/coupons");
 const wishlistRoutes = require("./routes/wishlist");
+const {
+  normalizePrice,
+  normalizeProductPrice,
+  normalizeCartProductPrices,
+  INR_TO_EUR_RATE,
+  PRICE_AUTO_CONVERT_THRESHOLD,
+} = require("./utils/price");
 
 const app = express();
 
@@ -70,6 +77,34 @@ app.use("/api/users", apiLimiter, userRoutes);
 app.use("/api/coupons", apiLimiter, couponRoutes);
 app.use("/api/wishlist", apiLimiter, wishlistRoutes);
 
+async function autoNormalizeProductPrices() {
+  const enabled = String(process.env.AUTO_NORMALIZE_PRICES || "true").toLowerCase() === "true";
+  if (!enabled) return;
+
+  const maxPriceDoc = await Product.findOne({}, { price: 1 }).sort({ price: -1 }).lean();
+  const maxPrice = Number(maxPriceDoc?.price || 0);
+  if (maxPrice <= PRICE_AUTO_CONVERT_THRESHOLD) return;
+
+  const products = await Product.find({}, { _id: 1, price: 1 }).lean();
+  const ops = products.map((p) => ({
+    updateOne: {
+      filter: { _id: p._id },
+      update: { $set: { price: normalizePrice(p.price) } },
+    },
+  }));
+
+  if (ops.length) {
+    const result = await Product.bulkWrite(ops);
+    console.log(
+      `Auto-normalized ${result.modifiedCount || 0} product prices using 1 EUR = ${INR_TO_EUR_RATE} INR`
+    );
+  }
+}
+
+autoNormalizeProductPrices().catch((err) => {
+  console.error("Auto-normalize prices failed:", err.message);
+});
+
 
 
 app.get("/api/orders/:userId", async (req, res) => {
@@ -77,18 +112,33 @@ app.get("/api/orders/:userId", async (req, res) => {
     .populate("items.productId")
     .sort({ createdAt: -1 });
 
-  res.json(orders);
+  const normalizedOrders = orders.map((order) => {
+    const plain = order.toObject();
+    plain.items = (plain.items || []).map((item) => ({
+      ...item,
+      price: normalizePrice(item.price ?? item.productId?.price ?? 0),
+    }));
+    plain.subtotal = normalizePrice(plain.subtotal ?? plain.total ?? 0);
+    plain.discount = normalizePrice(plain.discount ?? 0);
+    plain.shipping = normalizePrice(plain.shipping ?? 0);
+    plain.tax = normalizePrice(plain.tax ?? 0);
+    plain.total = normalizePrice(plain.total ?? 0);
+    plain.grandTotal = normalizePrice(plain.grandTotal ?? plain.total ?? 0);
+    return plain;
+  });
+
+  res.json(normalizedOrders);
 });
 
 app.get("/api/product/:id", async (req, res) => {
   const product = await Product.findById(req.params.id);
-  res.json(product);
+  res.json(normalizeProductPrice(product));
 });
 app.get("/api/cart/:userId", async (req, res) => {
   const cart = await Cart.findOne({ userId: req.params.userId })
     .populate("items.productId");
 
-  res.json(cart || { items: [] });
+  res.json(normalizeCartProductPrices(cart) || { items: [] });
 });
 
 app.post("/api/cart/update", async (req, res) => {
@@ -198,13 +248,15 @@ app.get("/api/products/search", async (req, res) => {
 
     const min = Number(priceMin);
     const max = Number(priceMax);
-    if (!Number.isNaN(min) || !Number.isNaN(max)) {
-      filter.price = {};
-      if (!Number.isNaN(min)) filter.price.$gte = min;
-      if (!Number.isNaN(max)) filter.price.$lte = max;
-    }
 
-    const products = await Product.find(filter);
+    let products = await Product.find(filter).lean();
+    products = products
+      .map((p) => ({ ...p, price: normalizePrice(p.price) }))
+      .filter((p) => {
+        if (!Number.isNaN(min) && p.price < min) return false;
+        if (!Number.isNaN(max) && p.price > max) return false;
+        return true;
+      });
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -212,7 +264,7 @@ app.get("/api/products/search", async (req, res) => {
 });
 
 app.get("/api/catalog", async (req, res) => {
-  const products = await Product.find();
+  const products = await Product.find().lean();
 
   const catalog = {};
 
@@ -222,7 +274,10 @@ app.get("/api/catalog", async (req, res) => {
     if (!catalog[p.group][p.type][p.brand])
       catalog[p.group][p.type][p.brand] = [];
 
-    catalog[p.group][p.type][p.brand].push(p);
+    catalog[p.group][p.type][p.brand].push({
+      ...p,
+      price: normalizePrice(p.price),
+    });
   });
 
   res.json(catalog);
