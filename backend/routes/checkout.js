@@ -119,7 +119,7 @@ router.post(
         await sendMail({
           to: user.email,
           subject: "Order confirmation",
-          text: `Your order ${order._id} has been placed. Total: ₹${total}.`,
+          text: `Your order ${order._id} has been placed. Total: EUR ${total}.`,
         });
       }
     } catch {
@@ -133,3 +133,4 @@ router.post(
 });
 
 module.exports = router;
+

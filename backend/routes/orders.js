@@ -15,10 +15,7 @@ router.post("/place", auth, async (req, res) => {
     return res.status(400).json({ error: "Cart empty" });
   }
 
-  const total = cart.items.reduce(
-    (sum, i) => sum + i.productId.price * i.qty,
-    0
-  );
+  const total = cart.items.reduce((sum, i) => sum + i.productId.price * i.qty, 0);
 
   const orderItems = cart.items.map((i) => ({
     productId: i.productId._id || i.productId,
@@ -35,9 +32,8 @@ router.post("/place", auth, async (req, res) => {
     status: "pending",
   });
 
-  res.json(order); // ❗ DO NOT CLEAR CART YET
+  res.json(order);
 });
-
 
 /* GET USER ORDERS */
 router.get("/:userId", auth, async (req, res) => {
@@ -55,9 +51,7 @@ router.get("/:userId", auth, async (req, res) => {
 /* INVOICE PDF */
 router.get("/:orderId/invoice", auth, async (req, res) => {
   try {
-    const order = await Order.findById(req.params.orderId).populate(
-      "items.productId"
-    );
+    const order = await Order.findById(req.params.orderId).populate("items.productId");
     if (!order) return res.status(404).json({ error: "Order not found" });
 
     const isOwner = String(order.userId) === String(req.user.id);
@@ -70,10 +64,7 @@ router.get("/:orderId/invoice", auth, async (req, res) => {
     const filename = `invoice-${order._id}.pdf`;
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${filename}"`
-    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
 
     doc.pipe(res);
 
@@ -98,7 +89,7 @@ router.get("/:orderId/invoice", auth, async (req, res) => {
         ? ` (${item.variant.color || ""} ${item.variant.size || ""})`
         : "";
 
-      doc.text(`${name}${variantText}  x${qty}  -  ₹${lineTotal}`);
+      doc.text(`${name}${variantText}  x${qty}  -  EUR ${lineTotal}`);
     });
 
     doc.moveDown();
@@ -108,14 +99,14 @@ router.get("/:orderId/invoice", auth, async (req, res) => {
     const grandTotal =
       order.grandTotal || Math.max(0, subtotal - discount) + shipping + tax;
 
-    doc.fontSize(12).text(`Subtotal: ₹${subtotal}`);
+    doc.fontSize(12).text(`Subtotal: EUR ${subtotal}`);
     if (discount > 0) {
-      doc.text(`Discount: -₹${discount}`);
+      doc.text(`Discount: -EUR ${discount}`);
       if (order.couponCode) doc.text(`Coupon: ${order.couponCode}`);
     }
-    if (tax > 0) doc.text(`Tax: ₹${tax}`);
-    if (shipping > 0) doc.text(`Shipping: ₹${shipping}`);
-    doc.text(`Total: ₹${grandTotal}`);
+    if (tax > 0) doc.text(`Tax: EUR ${tax}`);
+    if (shipping > 0) doc.text(`Shipping: EUR ${shipping}`);
+    doc.text(`Total: EUR ${grandTotal}`);
 
     doc.end();
   } catch (err) {
