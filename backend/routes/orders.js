@@ -4,6 +4,7 @@ const auth = require("../middleware/auth");
 const Order = require("../models/Order");
 const Cart = require("../models/Cart");
 const PDFDocument = require("pdfkit");
+const { normalizePrice } = require("../utils/price");
 
 /* PLACE ORDER */
 router.post("/place", auth, async (req, res) => {
@@ -15,12 +16,15 @@ router.post("/place", auth, async (req, res) => {
     return res.status(400).json({ error: "Cart empty" });
   }
 
-  const total = cart.items.reduce((sum, i) => sum + i.productId.price * i.qty, 0);
+  const total = cart.items.reduce(
+    (sum, i) => sum + normalizePrice(i.productId.price) * i.qty,
+    0
+  );
 
   const orderItems = cart.items.map((i) => ({
     productId: i.productId._id || i.productId,
     qty: i.qty,
-    price: i.productId.price,
+    price: normalizePrice(i.productId.price),
     variant: i.variant || {},
   }));
 
@@ -45,7 +49,22 @@ router.get("/:userId", auth, async (req, res) => {
     .populate("items.productId")
     .sort({ createdAt: -1 });
 
-  res.json(orders);
+  const normalizedOrders = orders.map((order) => {
+    const plain = order.toObject();
+    plain.items = (plain.items || []).map((item) => ({
+      ...item,
+      price: normalizePrice(item.price ?? item.productId?.price ?? 0),
+    }));
+    plain.subtotal = normalizePrice(plain.subtotal ?? plain.total ?? 0);
+    plain.discount = normalizePrice(plain.discount ?? 0);
+    plain.shipping = normalizePrice(plain.shipping ?? 0);
+    plain.tax = normalizePrice(plain.tax ?? 0);
+    plain.total = normalizePrice(plain.total ?? 0);
+    plain.grandTotal = normalizePrice(plain.grandTotal ?? plain.total ?? 0);
+    return plain;
+  });
+
+  res.json(normalizedOrders);
 });
 
 /* INVOICE PDF */
@@ -81,7 +100,7 @@ router.get("/:orderId/invoice", auth, async (req, res) => {
     let subtotal = 0;
     order.items.forEach((item) => {
       const name = item.productId?.name || "Item";
-      const price = item.productId?.price || 0;
+      const price = normalizePrice(item.price ?? item.productId?.price ?? 0);
       const qty = item.qty || 0;
       const lineTotal = price * qty;
       subtotal += lineTotal;

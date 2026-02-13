@@ -7,6 +7,7 @@ const auth = require("../middleware/auth");
 const User = require("../models/User");
 const { sendMail } = require("../utils/mailer");
 const Coupon = require("../models/Coupon");
+const { normalizePrice } = require("../utils/price");
 
 /* PLACE ORDER */
 router.post(
@@ -41,7 +42,7 @@ router.post(
           .status(400)
           .json({ message: "Insufficient stock for some items" });
       }
-      subtotal += i.productId.price * i.qty;
+      subtotal += normalizePrice(i.productId.price) * i.qty;
     }
 
     let discount = 0;
@@ -82,7 +83,7 @@ router.post(
     const orderItems = cart.items.map((i) => ({
       productId: i.productId._id || i.productId,
       qty: i.qty,
-      price: i.productId.price,
+      price: normalizePrice(i.productId.price),
       variant: i.variant || {},
     }));
 
