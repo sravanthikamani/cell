@@ -6,6 +6,10 @@ const { body, validationResult } = require("express-validator");
 const Cart = require("../models/Cart");
 const Coupon = require("../models/Coupon");
 const { normalizePrice } = require("../utils/price");
+const {
+  computeOrderTotals,
+  normalizeShippingOption,
+} = require("../utils/checkoutPricing");
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -22,6 +26,7 @@ router.post(
     body("userId").isString().notEmpty(),
     body("couponCode").optional().isString(),
     body("paymentMethod").optional().isString(),
+    body("shippingOption").optional().isIn(["standard", "express", "pickup"]),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -35,7 +40,12 @@ router.post(
       });
     }
     try {
-      const { userId, couponCode, paymentMethod = "stripe" } = req.body;
+      const {
+        userId,
+        couponCode,
+        paymentMethod = "stripe",
+        shippingOption = "standard",
+      } = req.body;
       if (String(req.user.id) !== String(userId)) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -77,14 +87,16 @@ router.post(
         appliedCode = coupon.code;
       }
 
-      const SHIPPING_FLAT = Number(process.env.SHIPPING_FLAT || 0);
-      const TAX_RATE = Number(process.env.TAX_RATE || 0);
-
-      const taxable = Math.max(0, subtotal - discount);
-      const tax = Math.round((taxable * TAX_RATE) / 100);
-      const shipping = Math.round(SHIPPING_FLAT);
-      const total = taxable + tax + shipping;
+      const totals = computeOrderTotals({
+        subtotal,
+        discount,
+        shippingOption: normalizeShippingOption(shippingOption),
+      });
+      const { tax, shipping, total, shippingOption: appliedShippingOption } = totals;
       const amount = Math.round(total * 100);
+      if (amount <= 0) {
+        return res.status(400).json({ error: "Invalid order total" });
+      }
 
       const baseCurrency = String(
         process.env.STRIPE_CURRENCY || "eur"
@@ -116,6 +128,7 @@ router.post(
         total,
         tax,
         shipping,
+        shippingOption: appliedShippingOption,
         couponCode: appliedCode,
       });
     } catch (err) {

@@ -67,6 +67,36 @@ router.get("/:userId", auth, async (req, res) => {
   res.json(normalizedOrders);
 });
 
+/* GET SINGLE ORDER (owner/admin) */
+router.get("/details/:orderId", auth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId).populate("items.productId");
+    if (!order) return res.status(404).json({ error: "Order not found" });
+
+    const isOwner = String(order.userId) === String(req.user.id);
+    const isAdmin = req.user.role === "admin";
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const plain = order.toObject();
+    plain.items = (plain.items || []).map((item) => ({
+      ...item,
+      price: normalizePrice(item.price ?? item.productId?.price ?? 0),
+    }));
+    plain.subtotal = normalizePrice(plain.subtotal ?? plain.total ?? 0);
+    plain.discount = normalizePrice(plain.discount ?? 0);
+    plain.shipping = normalizePrice(plain.shipping ?? 0);
+    plain.tax = normalizePrice(plain.tax ?? 0);
+    plain.total = normalizePrice(plain.total ?? 0);
+    plain.grandTotal = normalizePrice(plain.grandTotal ?? plain.total ?? 0);
+
+    return res.json(plain);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 /* INVOICE PDF */
 router.get("/:orderId/invoice", auth, async (req, res) => {
   try {
