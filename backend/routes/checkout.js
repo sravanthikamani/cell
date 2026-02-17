@@ -8,6 +8,10 @@ const User = require("../models/User");
 const { sendMail } = require("../utils/mailer");
 const Coupon = require("../models/Coupon");
 const { normalizePrice } = require("../utils/price");
+const {
+  computeOrderTotals,
+  normalizeShippingOption,
+} = require("../utils/checkoutPricing");
 
 /* PLACE ORDER */
 router.post(
@@ -18,6 +22,7 @@ router.post(
     body("paymentMethod").optional().isString(),
     body("address").optional().isObject(),
     body("couponCode").optional().isString(),
+    body("shippingOption").optional().isIn(["standard", "express", "pickup"]),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -25,9 +30,25 @@ router.post(
       return res.status(400).json({ message: "Invalid request" });
     }
   try {
-    const { userId, address, paymentMethod, couponCode } = req.body;
+    const {
+      userId,
+      address,
+      paymentMethod,
+      couponCode,
+      shippingOption = "standard",
+    } = req.body;
     if (String(req.user.id) !== String(userId)) {
       return res.status(403).json({ message: "Forbidden" });
+    }
+    if (!address || typeof address !== "object") {
+      return res.status(400).json({ message: "Shipping address is required" });
+    }
+    const requiredAddressFields = ["name", "phone", "street", "city", "pincode"];
+    const missingAddressField = requiredAddressFields.find(
+      (field) => !String(address[field] || "").trim()
+    );
+    if (missingAddressField) {
+      return res.status(400).json({ message: `Address ${missingAddressField} is required` });
     }
 
     const cart = await Cart.findOne({ userId }).populate("items.productId");
@@ -72,13 +93,12 @@ router.post(
       appliedCode = coupon.code;
     }
 
-    const SHIPPING_FLAT = Number(process.env.SHIPPING_FLAT || 0);
-    const TAX_RATE = Number(process.env.TAX_RATE || 0);
-
-    const taxable = Math.max(0, subtotal - discount);
-    const tax = Math.round((taxable * TAX_RATE) / 100);
-    const shipping = Math.round(SHIPPING_FLAT);
-    const total = taxable + tax + shipping;
+    const totals = computeOrderTotals({
+      subtotal,
+      discount,
+      shippingOption: normalizeShippingOption(shippingOption),
+    });
+    const { tax, shipping, total, shippingOption: appliedShippingOption } = totals;
 
     const orderItems = cart.items.map((i) => ({
       productId: i.productId._id || i.productId,
@@ -95,6 +115,7 @@ router.post(
       discount,
       couponCode: appliedCode,
       shipping,
+      shippingOption: appliedShippingOption,
       tax,
       grandTotal: total,
       address,
