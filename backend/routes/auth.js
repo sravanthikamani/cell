@@ -68,49 +68,65 @@ router.post(
       .withMessage("Password must be at least 6 characters"),
   ],
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      console.warn("Register validation failed:", errors.array()[0].msg);
-      return res.status(400).json({ error: errors.array()[0].msg });
-    }
-  const email = normalizeEmail(req.body.email);
-  const { password } = req.body;
-
-  const exists = await User.findOne({ email });
-  if (exists) return res.status(400).json({ error: "User exists" });
-
-  const hashed = await bcrypt.hash(password, 10);
-
-  const verifyToken = crypto.randomBytes(32).toString("hex");
-  const verifyTokenHash = crypto
-    .createHash("sha256")
-    .update(verifyToken)
-    .digest("hex");
-
-  const user = await User.create({
-    email,
-    password: hashed,
-    isEmailVerified: false,
-    emailVerificationTokenHash: verifyTokenHash,
-    emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  });
-
-    const verifyUrl = `${buildFrontendBase(req)}/verify-email?token=${verifyToken}&email=${encodeURIComponent(email)}`;
-
+    let createdUser = null;
     try {
-      await sendMail({
-        to: email,
-        subject: "Verify your email",
-        text: `Verify your account using this link: ${verifyUrl}`,
-      });
-      return res.json({ success: true });
-    } catch (err) {
-      if (process.env.NODE_ENV !== "production") {
-        console.warn("Verification email skipped:", err.message);
-        console.info("Email verification URL:", verifyUrl);
-        return res.json({ success: true, devVerificationUrl: verifyUrl });
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        console.warn("Register validation failed:", errors.array()[0].msg);
+        return res.status(400).json({ error: errors.array()[0].msg });
       }
-      return res.status(500).json({ error: "Failed to send verification email" });
+
+      const email = normalizeEmail(req.body.email);
+      const { password } = req.body;
+
+      const exists = await User.findOne({ email });
+      if (exists) return res.status(400).json({ error: "User exists" });
+
+      const hashed = await bcrypt.hash(password, 10);
+
+      const verifyToken = crypto.randomBytes(32).toString("hex");
+      const verifyTokenHash = crypto
+        .createHash("sha256")
+        .update(verifyToken)
+        .digest("hex");
+
+      createdUser = await User.create({
+        email,
+        password: hashed,
+        isEmailVerified: false,
+        emailVerificationTokenHash: verifyTokenHash,
+        emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+
+      const verifyUrl = `${buildFrontendBase(req)}/verify-email?token=${verifyToken}&email=${encodeURIComponent(email)}`;
+
+      try {
+        await sendMail({
+          to: email,
+          subject: "Verify your email",
+          text: `Verify your account using this link: ${verifyUrl}`,
+        });
+        return res.json({ success: true });
+      } catch (err) {
+        if (process.env.NODE_ENV !== "production") {
+          console.warn("Verification email skipped:", err.message);
+          console.info("Email verification URL:", verifyUrl);
+          return res.json({ success: true, devVerificationUrl: verifyUrl });
+        }
+
+        if (createdUser?._id) {
+          await User.deleteOne({ _id: createdUser._id }).catch(() => {});
+        }
+
+        console.error("Register email send failed:", err.message);
+        return res.status(503).json({
+          error:
+            "Registration temporarily unavailable. Email service is not configured.",
+        });
+      }
+    } catch (err) {
+      console.error("Register failed:", err.message);
+      return res.status(500).json({ error: "Registration failed" });
     }
   }
 );
