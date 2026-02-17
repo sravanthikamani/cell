@@ -96,6 +96,7 @@ function CheckoutForm({ couponCode, paymentMethod }) {
 export default function Checkout() {
   const { user, token } = useAuth();
   const [clientSecret, setClientSecret] = useState(null);
+  const [loadError, setLoadError] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("stripe");
   const [couponCode, setCouponCode] = useState("");
   const [couponMsg, setCouponMsg] = useState("");
@@ -109,6 +110,7 @@ export default function Checkout() {
   });
 
   const createIntent = async (code = "", method = paymentMethod) => {
+    setLoadError("");
     const res = await fetch(
       `${API_BASE}/api/payments/create-intent`,
       {
@@ -140,8 +142,19 @@ export default function Checkout() {
 
   useEffect(() => {
     if (!user || !token) return;
-    createIntent(couponCode, paymentMethod).catch(() => {});
+    createIntent(couponCode, paymentMethod).catch((e) => {
+      setLoadError(e.message || "Failed to initialize payment");
+    });
   }, [user, token, paymentMethod]);
+
+  if (loadError) {
+    return (
+      <div className="max-w-xl mx-auto p-6 md:p-10">
+        <h1 className="text-2xl font-bold mb-3">{t("Payment")}</h1>
+        <div className="text-sm text-red-600">{loadError}</div>
+      </div>
+    );
+  }
 
   if (!clientSecret) return <div className="p-10">{t("Loading payment...")}</div>;
 

@@ -3,7 +3,6 @@ import { lazy, Suspense } from "react";
 import Navbar from "./components/Navbar";
 import Breadcrumbs from "./components/Breadcrumbs";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import Admin from "./pages/Admin";
 import AdminOrders from "./pages/AdminOrders";
@@ -13,6 +12,7 @@ import AdminRoute from "./routes/AdminRoute";
 import Profile from "./pages/Profile";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import VerifyEmail from "./pages/VerifyEmail";
 import Register from "./pages/Register";
 import Wishlist from "./pages/Wishlist";
 
@@ -27,6 +27,7 @@ const CatalogPage = lazy(() => import("./pages/CatalogPage"));
 const BrandPage = lazy(() => import("./pages/BrandPage"));
 const ProductPage = lazy(() => import("./pages/ProductPage"));
 const Cart = lazy(() => import("./pages/Cart"));
+const Checkout = lazy(() => import("./pages/Checkout"));
 export default function App() {
   return (
     <>
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="/faq/:item" element={<FAQ />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 

@@ -9,6 +9,11 @@ const { normalizePrice } = require("../utils/price");
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+function isStripeConfigured() {
+  const key = String(process.env.STRIPE_SECRET_KEY || "").trim();
+  return key.startsWith("sk_");
+}
+
 /* CREATE PAYMENT INTENT */
 router.post(
   "/create-intent",
@@ -22,6 +27,12 @@ router.post(
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ error: "Invalid request" });
+    }
+    if (!isStripeConfigured()) {
+      return res.status(500).json({
+        error:
+          "Stripe is not configured. Set backend STRIPE_SECRET_KEY to a valid sk_test/sk_live key.",
+      });
     }
     try {
       const { userId, couponCode, paymentMethod = "stripe" } = req.body;
@@ -108,6 +119,7 @@ router.post(
         couponCode: appliedCode,
       });
     } catch (err) {
+      console.error("create-intent failed:", err.message);
       res.status(500).json({ error: err.message });
     }
   }
