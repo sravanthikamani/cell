@@ -7,23 +7,30 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
+  const [devVerificationUrl, setDevVerificationUrl] = useState("");
   const navigate = useNavigate();
   const { t } = useI18n();
 
   const submit = async () => {
     setMsg("");
+    setDevVerificationUrl("");
     const res = await fetch(`${API_BASE}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email.trim(), password }),
+      body: JSON.stringify({ email: email.trim(), password: password.trim() }),
     });
     const data = await res.json();
     if (!res.ok) {
       setMsg(data.error || t("Registration failed"));
       return;
     }
-    setMsg(t("Registration successful. You can login now."));
-    setTimeout(() => navigate("/login"), 800);
+    if (data.devVerificationUrl) {
+      setDevVerificationUrl(data.devVerificationUrl);
+      setMsg("Registration successful. Verify your email using the link below.");
+      return;
+    }
+    setMsg("Registration successful. Please check your email to verify your account.");
+    setTimeout(() => navigate("/login"), 1200);
   };
 
   return (
@@ -45,6 +52,14 @@ export default function Register() {
       />
 
       {msg && <div className="text-sm text-gray-700 mb-3">{msg}</div>}
+      {devVerificationUrl && (
+        <a
+          href={devVerificationUrl}
+          className="inline-block mb-3 text-sm bg-blue-600 text-white px-3 py-2 rounded"
+        >
+          Open Verification Link
+        </a>
+      )}
 
       <button
         onClick={submit}

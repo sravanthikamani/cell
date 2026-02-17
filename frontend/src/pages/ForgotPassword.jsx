@@ -5,10 +5,12 @@ import { useI18n } from "../context/I18nContext";
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [msg, setMsg] = useState("");
+  const [devResetUrl, setDevResetUrl] = useState("");
   const { t } = useI18n();
 
   const submit = async () => {
     setMsg("");
+    setDevResetUrl("");
     const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -20,6 +22,9 @@ export default function ForgotPassword() {
       return;
     }
     setMsg(t("If the email exists, a reset link was sent."));
+    if (data.devResetUrl) {
+      setDevResetUrl(data.devResetUrl);
+    }
   };
 
   return (
@@ -32,6 +37,16 @@ export default function ForgotPassword() {
         onChange={(e) => setEmail(e.target.value)}
       />
       {msg && <div className="text-sm text-gray-700 mb-3">{msg}</div>}
+      {devResetUrl && (
+        <div className="mb-3">
+          <a
+            href={devResetUrl}
+            className="inline-block text-sm bg-blue-600 text-white px-3 py-2 rounded"
+          >
+            Open Reset Link
+          </a>
+        </div>
+      )}
       <button onClick={submit} className="w-full bg-black text-white py-2">
         {t("Send Reset Link")}
       </button>
