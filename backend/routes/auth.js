@@ -10,6 +10,8 @@ const { sendMail } = require("../utils/mailer");
 const router = express.Router();
 const JWT_SECRET = "CELL_SECRET_KEY";
 const normalizeEmail = (email = "") => String(email).trim().toLowerCase();
+const isEmailVerificationRequired = () =>
+  String(process.env.REQUIRE_EMAIL_VERIFICATION || "true").toLowerCase() !== "false";
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const buildFrontendBase = (req) =>
   (
@@ -83,20 +85,31 @@ router.post(
       if (exists) return res.status(400).json({ error: "User exists" });
 
       const hashed = await bcrypt.hash(password, 10);
+      const requireVerification = isEmailVerificationRequired();
 
-      const verifyToken = crypto.randomBytes(32).toString("hex");
-      const verifyTokenHash = crypto
-        .createHash("sha256")
-        .update(verifyToken)
-        .digest("hex");
+      let verifyToken = "";
+      let verifyTokenHash = "";
+      if (requireVerification) {
+        verifyToken = crypto.randomBytes(32).toString("hex");
+        verifyTokenHash = crypto
+          .createHash("sha256")
+          .update(verifyToken)
+          .digest("hex");
+      }
 
       createdUser = await User.create({
         email,
         password: hashed,
-        isEmailVerified: false,
-        emailVerificationTokenHash: verifyTokenHash,
-        emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        isEmailVerified: !requireVerification,
+        emailVerificationTokenHash: requireVerification ? verifyTokenHash : undefined,
+        emailVerificationExpires: requireVerification
+          ? new Date(Date.now() + 24 * 60 * 60 * 1000)
+          : undefined,
       });
+
+      if (!requireVerification) {
+        return res.json({ success: true });
+      }
 
       const verifyUrl = `${buildFrontendBase(req)}/verify-email?token=${verifyToken}&email=${encodeURIComponent(email)}`;
 
@@ -237,7 +250,7 @@ router.post(
     return res.status(400).json({ error: "Invalid credentials" });
   }
 
-  if (!user.isEmailVerified) {
+  if (isEmailVerificationRequired() && !user.isEmailVerified) {
     return res.status(403).json({ error: "Please verify your email before login" });
   }
 
