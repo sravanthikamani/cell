@@ -27,6 +27,9 @@ const {
 } = require("./utils/price");
 
 const app = express();
+// Render and similar platforms run behind a reverse proxy.
+// Required so express-rate-limit reads client IP safely from X-Forwarded-For.
+app.set("trust proxy", 1);
 
 /* 🔹 Middlewares */
 const corsOrigins = (process.env.CORS_ORIGINS || "")
