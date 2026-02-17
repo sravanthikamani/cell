@@ -3,6 +3,7 @@ const router = express.Router();
 const auth = require("../middleware/auth");
 const Order = require("../models/Order");
 const Cart = require("../models/Cart");
+const Product = require("../models/Product");
 const PDFDocument = require("pdfkit");
 const { normalizePrice } = require("../utils/price");
 
@@ -65,6 +66,52 @@ router.get("/:userId", auth, async (req, res) => {
   });
 
   res.json(normalizedOrders);
+});
+
+/* CANCEL ORDER (USER) */
+router.patch("/:orderId/cancel", auth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId);
+    if (!order) return res.status(404).json({ error: "Order not found" });
+
+    if (String(order.userId) !== String(req.user.id)) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    if (order.status === "cancelled") {
+      return res.status(400).json({ error: "Order already cancelled" });
+    }
+
+    const cancellableStatuses = ["pending", "placed", "paid"];
+    if (!cancellableStatuses.includes(order.status)) {
+      return res.status(400).json({
+        error: "Order cannot be cancelled after shipping",
+      });
+    }
+
+    for (const item of order.items || []) {
+      if (!item?.productId || !item?.qty) continue;
+      await Product.updateOne({ _id: item.productId }, { $inc: { stock: item.qty } });
+    }
+
+    order.status = "cancelled";
+    order.cancelledAt = new Date();
+    order.statusHistory = order.statusHistory || [];
+    order.statusHistory.push({ status: "cancelled", at: new Date() });
+    await order.save();
+
+    const plain = order.toObject();
+    plain.subtotal = normalizePrice(plain.subtotal ?? plain.total ?? 0);
+    plain.discount = normalizePrice(plain.discount ?? 0);
+    plain.shipping = normalizePrice(plain.shipping ?? 0);
+    plain.tax = normalizePrice(plain.tax ?? 0);
+    plain.total = normalizePrice(plain.total ?? 0);
+    plain.grandTotal = normalizePrice(plain.grandTotal ?? plain.total ?? 0);
+
+    return res.json(plain);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 /* GET SINGLE ORDER (owner/admin) */
