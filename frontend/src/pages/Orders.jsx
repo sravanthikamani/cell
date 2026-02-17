@@ -7,6 +7,8 @@ import { formatCurrency } from "../lib/format";
 export default function Orders() {
   const { user, token } = useAuth();
   const [orders, setOrders] = useState([]);
+  const [actionMsg, setActionMsg] = useState("");
+  const [processingId, setProcessingId] = useState("");
   const { t, lang } = useI18n();
 
   // ✅ STOP until user exists
@@ -29,9 +31,36 @@ export default function Orders() {
       .catch(console.error);
   }, [user, token]);
 
+  const canCancel = (status) => ["pending", "placed", "paid"].includes(status);
+
+  const cancelOrder = async (orderId) => {
+    setActionMsg("");
+    setProcessingId(orderId);
+    try {
+      const res = await fetch(`${API_BASE}/api/orders/${orderId}/cancel`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to cancel order");
+
+      setOrders((prev) =>
+        prev.map((o) => (o._id === orderId ? { ...o, ...data } : o))
+      );
+      setActionMsg("Order cancelled successfully");
+    } catch (err) {
+      setActionMsg(err.message || "Unable to cancel order");
+    } finally {
+      setProcessingId("");
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto p-6 md:p-10">
       <h1 className="text-3xl font-bold mb-6">{t("My Orders")}</h1>
+      {actionMsg && <div className="text-sm mb-3">{actionMsg}</div>}
 
       {orders.length === 0 && <p>{t("No orders yet")}</p>}
 
@@ -100,6 +129,20 @@ export default function Orders() {
           >
             {t("Download Invoice")}
           </button>
+          {canCancel(order.status) && (
+            <button
+              className="mt-2 ml-4 text-sm text-red-600 underline disabled:opacity-50"
+              disabled={processingId === order._id}
+              onClick={() => {
+                const ok = window.confirm(
+                  "Are you sure you want to cancel this order?"
+                );
+                if (ok) cancelOrder(order._id);
+              }}
+            >
+              {processingId === order._id ? "Cancelling..." : "Cancel Order"}
+            </button>
+          )}
 
           <div className="mt-2">
             {order.items.map((item) => (
