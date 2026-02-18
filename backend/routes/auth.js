@@ -21,6 +21,9 @@ const buildFrontendBase = (req) =>
   ).replace(/\/+$/, "");
 
 const issueLoginResponse = (res, user) => {
+  if (user.isBlocked) {
+    return res.status(403).json({ error: "Account is blocked. Contact support." });
+  }
   const token = jwt.sign(
     { id: user._id, role: user.role },
     JWT_SECRET,
@@ -175,6 +178,9 @@ router.post(
         email,
         name: String(payload?.name || "").trim(),
       });
+      if (user.isBlocked) {
+        return res.status(403).json({ error: "Account is blocked. Contact support." });
+      }
       return issueLoginResponse(res, user);
     } catch (err) {
       console.error("Google social login error:", err.message);
@@ -215,6 +221,9 @@ router.post(
         email,
         name: String(fbData.name || "").trim(),
       });
+      if (user.isBlocked) {
+        return res.status(403).json({ error: "Account is blocked. Contact support." });
+      }
       return issueLoginResponse(res, user);
     } catch (err) {
       console.error("Facebook social login error:", err.message);
@@ -248,6 +257,9 @@ router.post(
   if (!ok) {
     console.warn("Login failed: password mismatch", { email });
     return res.status(400).json({ error: "Invalid credentials" });
+  }
+  if (user.isBlocked) {
+    return res.status(403).json({ error: "Account is blocked. Contact support." });
   }
 
   if (isEmailVerificationRequired() && !user.isEmailVerified) {
