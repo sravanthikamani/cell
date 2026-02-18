@@ -297,4 +297,77 @@ router.get("/analytics", auth, async (req, res) => {
   });
 });
 
+/* ===============================
+   USER MANAGEMENT (ADMIN)
+================================ */
+router.get("/users", auth, async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  const q = String(req.query.q || "").trim();
+  const role = String(req.query.role || "").trim();
+  const filter = {};
+
+  if (q) {
+    const safe = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    filter.$or = [
+      { email: new RegExp(safe, "i") },
+      { name: new RegExp(safe, "i") },
+      { phone: new RegExp(safe, "i") },
+    ];
+  }
+  if (role && ["admin", "user"].includes(role)) {
+    filter.role = role;
+  }
+
+  const users = await User.find(filter)
+    .select("-password -resetTokenHash -resetTokenExpires -emailVerificationTokenHash -emailVerificationExpires")
+    .sort({ createdAt: -1 });
+  res.json(users);
+});
+
+router.put("/users/:id", auth, async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  const { role, isBlocked } = req.body;
+  const user = await User.findById(req.params.id);
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  if (role !== undefined) {
+    if (!["admin", "user"].includes(role)) {
+      return res.status(400).json({ error: "Invalid role" });
+    }
+    user.role = role;
+  }
+
+  if (isBlocked !== undefined) {
+    user.isBlocked = Boolean(isBlocked);
+  }
+
+  await user.save();
+  const safeUser = user.toObject();
+  delete safeUser.password;
+  delete safeUser.resetTokenHash;
+  delete safeUser.resetTokenExpires;
+  delete safeUser.emailVerificationTokenHash;
+  delete safeUser.emailVerificationExpires;
+  res.json(safeUser);
+});
+
+router.delete("/users/:id", auth, async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+  if (String(req.user.id) === String(req.params.id)) {
+    return res.status(400).json({ error: "Cannot delete your own account" });
+  }
+
+  const deleted = await User.findByIdAndDelete(req.params.id);
+  if (!deleted) return res.status(404).json({ error: "User not found" });
+  res.json({ success: true });
+});
+
 module.exports = router;

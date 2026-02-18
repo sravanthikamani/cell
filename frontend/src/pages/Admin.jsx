@@ -28,6 +28,10 @@ const [editingId, setEditingId] = useState(null);
   const [products, setProducts] = useState([]);
   const [coupons, setCoupons] = useState([]);
   const [analytics, setAnalytics] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [userSearch, setUserSearch] = useState("");
+  const [userRoleFilter, setUserRoleFilter] = useState("");
+  const [userMsg, setUserMsg] = useState("");
   const [couponForm, setCouponForm] = useState({
     code: "",
     type: "percent",
@@ -75,6 +79,27 @@ const [editingId, setEditingId] = useState(null);
       .catch(() => {});
   }, [token]);
 
+  const loadUsers = async (search = userSearch, role = userRoleFilter) => {
+    const params = new URLSearchParams();
+    if (search.trim()) params.set("q", search.trim());
+    if (role.trim()) params.set("role", role.trim());
+    const qs = params.toString();
+    const url = `${API_BASE}/api/admin/users${qs ? `?${qs}` : ""}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setUsers(Array.isArray(data) ? data : []);
+      return;
+    }
+    setUserMsg(data.error || "Failed to load users");
+  };
+
+  useEffect(() => {
+    loadUsers().catch(() => {});
+  }, [token]);
+
   const addProduct = async () => {
   const res = await fetch(`${API_BASE}/api/admin/products`, {
     method: "POST",
@@ -120,6 +145,40 @@ const updateProduct = async () => {
 
   alert(t("Product updated"));
   setEditingId(null);
+};
+
+const updateUser = async (userId, payload) => {
+  setUserMsg("");
+  const res = await fetch(`${API_BASE}/api/admin/users/${userId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    setUserMsg(data.error || "Failed to update user");
+    return;
+  }
+  setUsers((prev) => prev.map((u) => (u._id === userId ? data : u)));
+};
+
+const deleteUser = async (userId) => {
+  setUserMsg("");
+  const ok = window.confirm("Delete this user?");
+  if (!ok) return;
+  const res = await fetch(`${API_BASE}/api/admin/users/${userId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    setUserMsg(data.error || "Failed to delete user");
+    return;
+  }
+  setUsers((prev) => prev.filter((u) => u._id !== userId));
 };
 
   return (
@@ -407,6 +466,73 @@ const updateProduct = async () => {
           </button>
         </div>
       ))}
+
+      <h2 className="text-xl font-bold mt-10">{t("User Management")}</h2>
+      <div className="card p-4 mt-3">
+        <div className="flex gap-2 mb-3">
+          <input
+            className="border p-2 flex-1"
+            placeholder="Search by email/name/phone"
+            value={userSearch}
+            onChange={(e) => setUserSearch(e.target.value)}
+          />
+          <select
+            className="border p-2"
+            value={userRoleFilter}
+            onChange={(e) => setUserRoleFilter(e.target.value)}
+          >
+            <option value="">All roles</option>
+            <option value="admin">admin</option>
+            <option value="user">user</option>
+          </select>
+          <button
+            className="bg-black text-white px-3"
+            onClick={() => loadUsers()}
+          >
+            Search
+          </button>
+        </div>
+
+        {userMsg && <div className="text-sm text-red-600 mb-2">{userMsg}</div>}
+
+        {users.map((u) => (
+          <div key={u._id} className="border rounded p-3 mb-2 flex justify-between gap-3">
+            <div className="text-sm">
+              <div className="font-semibold">{u.email}</div>
+              <div>{u.name || "-"}</div>
+              <div>{u.phone || "-"}</div>
+              <div>Role: {u.role}</div>
+              <div>Status: {u.isBlocked ? "blocked" : "active"}</div>
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                className="border p-1 text-sm"
+                value={u.role}
+                onChange={(e) =>
+                  updateUser(u._id, { role: e.target.value })
+                }
+              >
+                <option value="user">user</option>
+                <option value="admin">admin</option>
+              </select>
+              <button
+                className="text-sm underline"
+                onClick={() =>
+                  updateUser(u._id, { isBlocked: !u.isBlocked })
+                }
+              >
+                {u.isBlocked ? "Unblock" : "Block"}
+              </button>
+              <button
+                className="text-sm text-red-600 underline"
+                onClick={() => deleteUser(u._id)}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
 
       <h2 className="text-xl font-bold mt-10">{t("Analytics")}</h2>
       {!analytics && <div className="text-sm">{t("Loading analytics...")}</div>}
