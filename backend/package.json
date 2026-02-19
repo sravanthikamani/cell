@@ -4,7 +4,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "migrate:prices:eur": "node scripts/convertProductPricesToEur.js"
+    "migrate:prices:eur": "node scripts/convertProductPricesToEur.js",
+    "perf:load": "node scripts/loadTest.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
