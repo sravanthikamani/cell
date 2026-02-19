@@ -8,20 +8,26 @@ const User = require("../models/User");
 const { sendMail } = require("../utils/mailer");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
+const sharp = require("sharp");
 
 const router = express.Router();
 
 const uploadDir = path.join(__dirname, "..", "uploads");
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 6 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype || !file.mimetype.startsWith("image/")) {
+      return cb(new Error("Only image uploads are allowed"));
+    }
+    cb(null, true);
   },
 });
-const upload = multer({ storage });
 
 const parsePagination = (req) => {
   const rawPage = Number(req.query.page || 1);
@@ -246,14 +252,41 @@ router.put("/orders/:id", auth, async (req, res) => {
    IMAGE UPLOAD (ADMIN)
 ================================ */
 router.post("/upload", auth, upload.single("image"), async (req, res) => {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ error: "Forbidden" });
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const fileBase = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    const optimizedName = `${fileBase}.webp`;
+    const thumbName = `${fileBase}-thumb.webp`;
+
+    const optimizedPath = path.join(uploadDir, optimizedName);
+    const thumbPath = path.join(uploadDir, thumbName);
+
+    await sharp(req.file.buffer)
+      .rotate()
+      .resize({ width: 1600, withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .toFile(optimizedPath);
+
+    await sharp(req.file.buffer)
+      .rotate()
+      .resize({ width: 480, withoutEnlargement: true })
+      .webp({ quality: 76 })
+      .toFile(thumbPath);
+
+    return res.json({
+      url: `/uploads/${optimizedName}`,
+      thumbnailUrl: `/uploads/${thumbName}`,
+      format: "webp",
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message || "Upload failed" });
   }
-  if (!req.file) {
-    return res.status(400).json({ error: "No file uploaded" });
-  }
-  const urlPath = `/uploads/${req.file.filename}`;
-  res.json({ url: urlPath });
 });
 
 /* ===============================
