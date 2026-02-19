@@ -17,6 +17,7 @@ export default function Products() {
   const [type, setType] = useState("");
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
   const [catalogOptions, setCatalogOptions] = useState({
     groups: [],
     types: [],
@@ -34,6 +35,7 @@ export default function Products() {
       if (type) params.set("type", type);
       if (priceMin) params.set("priceMin", priceMin);
       if (priceMax) params.set("priceMax", priceMax);
+      if (sortBy) params.set("sort", sortBy);
 
       const url = `${API_BASE}/api/products/search?${params.toString()}`;
       fetch(url)
@@ -43,7 +45,7 @@ export default function Products() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [q, brand, group, type, priceMin, priceMax]);
+  }, [q, brand, group, type, priceMin, priceMax, sortBy]);
 
   // 🔹 Load filter options from catalog
   useEffect(() => {
@@ -197,6 +199,15 @@ export default function Products() {
             value={priceMax}
             onChange={(e) => setPriceMax(e.target.value)}
           />
+          <select
+            className="border px-3 py-2 bg-white"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="newest">{t("Newest")}</option>
+            <option value="price_asc">{t("Price: Low to High")}</option>
+            <option value="popularity">{t("Popularity")}</option>
+          </select>
           <button
             className="bg-gray-100 border px-3 py-2"
             onClick={() => {
@@ -206,6 +217,7 @@ export default function Products() {
               setType("");
               setPriceMin("");
               setPriceMax("");
+              setSortBy("newest");
             }}
           >
             {t("Clear Filters")}
@@ -252,3 +264,6 @@ export default function Products() {
     </div>
   );
 }
+
+
+

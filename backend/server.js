@@ -259,6 +259,7 @@ app.get("/api/products/search", async (req, res) => {
       type,
       priceMin,
       priceMax,
+      sort,
     } = req.query;
 
     const filter = {};
@@ -285,6 +286,39 @@ app.get("/api/products/search", async (req, res) => {
         if (!Number.isNaN(max) && p.price > max) return false;
         return true;
       });
+
+    if (sort === "price_asc") {
+      products.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+    } else if (sort === "popularity") {
+      const ids = products.map((p) => p._id);
+      let soldById = new Map();
+      if (ids.length) {
+        const soldRows = await Order.aggregate([
+          { $match: { status: { $ne: "cancelled" }, "items.productId": { $in: ids } } },
+          { $unwind: "$items" },
+          { $match: { "items.productId": { $in: ids } } },
+          {
+            $group: {
+              _id: "$items.productId",
+              soldQty: { $sum: "$items.qty" },
+            },
+          },
+        ]);
+        soldById = new Map(
+          soldRows.map((r) => [String(r._id), Number(r.soldQty || 0)])
+        );
+      }
+      products.sort((a, b) => {
+        const aSold = soldById.get(String(a._id)) || 0;
+        const bSold = soldById.get(String(b._id)) || 0;
+        if (bSold !== aSold) return bSold - aSold;
+        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      });
+    } else {
+      products.sort(
+        (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+      );
+    }
     setCached(cacheKey, products, 60);
     res.json(products);
   } catch (err) {
