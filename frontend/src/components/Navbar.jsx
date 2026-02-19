@@ -288,7 +288,7 @@ export default function Navbar() {
   </button>
 ) : (
   <button
-    onClick={logout}
+    onClick={() => logout("manual")}
     className="px-3 py-1 border rounded-full text-sm"
   >
     {t("Logout")}

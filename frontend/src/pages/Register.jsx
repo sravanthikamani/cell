@@ -37,36 +37,40 @@ export default function Register() {
     <div className="max-w-sm mx-auto p-10 card">
       <h1 className="text-2xl font-bold mb-4">{t("Register")}</h1>
 
-      <input
-        placeholder={t("Email")}
-        className="w-full border p-2 mb-3"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder={t("Password")}
-        className="w-full border p-2 mb-3"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-
-      {msg && <div className="text-sm text-gray-700 mb-3">{msg}</div>}
-      {devVerificationUrl && (
-        <a
-          href={devVerificationUrl}
-          className="inline-block mb-3 text-sm bg-blue-600 text-white px-3 py-2 rounded"
-        >
-          Open Verification Link
-        </a>
-      )}
-
-      <button
-        onClick={submit}
-        className="w-full bg-black text-white py-2"
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
       >
-        {t("Register")}
-      </button>
+        <input
+          placeholder={t("Email")}
+          className="w-full border p-2 mb-3"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder={t("Password")}
+          className="w-full border p-2 mb-3"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        {msg && <div className="text-sm text-gray-700 mb-3">{msg}</div>}
+        {devVerificationUrl && (
+          <a
+            href={devVerificationUrl}
+            className="inline-block mb-3 text-sm bg-blue-600 text-white px-3 py-2 rounded"
+          >
+            Open Verification Link
+          </a>
+        )}
+
+        <button type="submit" className="w-full bg-black text-white py-2">
+          {t("Register")}
+        </button>
+      </form>
     </div>
   );
 }
