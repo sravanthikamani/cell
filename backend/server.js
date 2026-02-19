@@ -26,6 +26,7 @@ const {
   INR_TO_EUR_RATE,
   PRICE_AUTO_CONVERT_THRESHOLD,
 } = require("./utils/price");
+const { buildCacheKey, getCached, setCached } = require("./utils/cache");
 
 const app = express();
 // Render and similar platforms run behind a reverse proxy.
@@ -229,6 +230,10 @@ app.get("/api/menu", (req, res) => {
 
 app.get("/api/products/search", async (req, res) => {
   try {
+    const cacheKey = buildCacheKey(req, "product-search");
+    const cached = getCached(cacheKey);
+    if (cached) return res.json(cached);
+
     const {
       q,
       brand,
@@ -262,6 +267,7 @@ app.get("/api/products/search", async (req, res) => {
         if (!Number.isNaN(max) && p.price > max) return false;
         return true;
       });
+    setCached(cacheKey, products, 60);
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -269,6 +275,10 @@ app.get("/api/products/search", async (req, res) => {
 });
 
 app.get("/api/catalog", async (req, res) => {
+  const cacheKey = buildCacheKey(req, "catalog");
+  const cached = getCached(cacheKey);
+  if (cached) return res.json(cached);
+
   const products = await Product.find().lean();
 
   const catalog = {};
@@ -285,6 +295,7 @@ app.get("/api/catalog", async (req, res) => {
     });
   });
 
+  setCached(cacheKey, catalog, 120);
   res.json(catalog);
 });
 

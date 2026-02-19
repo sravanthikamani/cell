@@ -10,6 +10,12 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const sharp = require("sharp");
+const {
+  buildCacheKey,
+  getCached,
+  setCached,
+  clearCacheByPrefix,
+} = require("../utils/cache");
 
 const router = express.Router();
 
@@ -71,6 +77,8 @@ router.post(
       ...req.body,
       brand: req.body.brand.toLowerCase(),
     });
+    clearCacheByPrefix("catalog:");
+    clearCacheByPrefix("product-search:");
 
     res.json(product); // ✅ IMPORTANT
   } catch (err) {
@@ -145,6 +153,8 @@ router.put(
       req.body,
       { new: true }
     );
+    clearCacheByPrefix("catalog:");
+    clearCacheByPrefix("product-search:");
 
     res.json(updated);
   } catch (err) {
@@ -162,6 +172,8 @@ router.delete("/products/:id", auth, async (req, res) => {
     }
 
     await Product.findByIdAndDelete(req.params.id);
+    clearCacheByPrefix("catalog:");
+    clearCacheByPrefix("product-search:");
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -231,6 +243,7 @@ router.put("/orders/:id", auth, async (req, res) => {
     order.carrier = req.body.carrier;
   }
   await order.save();
+  clearCacheByPrefix("admin-analytics:");
 
   try {
     const user = await User.findById(order.userId);
@@ -338,6 +351,9 @@ router.get("/analytics", auth, async (req, res) => {
   if (req.user.role !== "admin") {
     return res.status(403).json({ error: "Forbidden" });
   }
+  const cacheKey = buildCacheKey(req, "admin-analytics");
+  const cached = getCached(cacheKey);
+  if (cached) return res.json(cached);
 
   const match = { status: { $ne: "cancelled" } };
 
@@ -389,12 +405,14 @@ router.get("/analytics", auth, async (req, res) => {
     { $sort: { _id: 1 } },
   ]);
 
-  res.json({
+  const payload = {
     totalSales: totals[0]?.totalSales || 0,
     totalOrders: totals[0]?.totalOrders || 0,
     topProducts,
     ordersByDay,
-  });
+  };
+  setCached(cacheKey, payload, 45);
+  res.json(payload);
 });
 
 /* ===============================
