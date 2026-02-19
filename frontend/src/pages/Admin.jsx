@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
@@ -50,6 +50,8 @@ export default function Admin() {
   });
 
   const groupOptions = ["device", "category"];
+  const productFormRef = useRef(null);
+  const productNameInputRef = useRef(null);
   const typeOptions = {
     device: ["smartphones", "tablets", "wearables", "accessories"],
     category: ["audio", "chargers", "cables", "power banks"],
@@ -113,6 +115,12 @@ export default function Admin() {
       .then(setAnalytics)
       .catch(() => {});
   }, [token]);
+
+  useEffect(() => {
+    if (!editingId) return;
+    productFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setTimeout(() => productNameInputRef.current?.focus(), 250);
+  }, [editingId]);
 
   const addProduct = async () => {
     const res = await fetch(`${API_BASE}/api/admin/products`, {
@@ -190,7 +198,7 @@ export default function Admin() {
     <div className="max-w-5xl mx-auto p-6 md:p-10">
       <h1 className="text-2xl font-bold mb-4">{t("Admin - Add Product")}</h1>
 
-      <div className="mb-3 card p-4">
+      <div ref={productFormRef} className="mb-3 card p-4">
         <input
           type="file"
           accept="image/*"
@@ -218,7 +226,7 @@ export default function Admin() {
       </div>
 
       <div className="card p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-        <input className="border p-2" placeholder={t("Name")} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+        <input ref={productNameInputRef} className="border p-2" placeholder={t("Name")} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         <input className="border p-2" placeholder={t("Price")} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
         <input className="border p-2" placeholder={t("Brand")} value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} />
         <select className="border p-2 bg-white" value={form.group} onChange={(e) => setForm({ ...form, group: e.target.value, type: "" })}>
