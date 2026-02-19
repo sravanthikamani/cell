@@ -23,6 +23,18 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+const parsePagination = (req) => {
+  const rawPage = Number(req.query.page || 1);
+  const rawLimit = Number(req.query.limit || 20);
+  const page = Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
+  const limit = Math.min(
+    100,
+    Number.isFinite(rawLimit) && rawLimit > 0 ? Math.floor(rawLimit) : 20
+  );
+  const skip = (page - 1) * limit;
+  return { page, limit, skip };
+};
+
 /* ===============================
    ADD PRODUCT (ADMIN)
 ================================ */
@@ -58,6 +70,42 @@ router.post(
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+/* ===============================
+   LIST PRODUCTS (ADMIN)
+================================ */
+router.get("/products", auth, async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Access denied" });
+  }
+
+  const { page, limit, skip } = parsePagination(req);
+  const q = String(req.query.q || "").trim();
+  const filter = {};
+
+  if (q) {
+    const safe = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    filter.$or = [
+      { name: new RegExp(safe, "i") },
+      { brand: new RegExp(safe, "i") },
+      { type: new RegExp(safe, "i") },
+      { group: new RegExp(safe, "i") },
+    ];
+  }
+
+  const [items, total] = await Promise.all([
+    Product.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+    Product.countDocuments(filter),
+  ]);
+
+  return res.json({
+    items,
+    total,
+    page,
+    limit,
+    totalPages: Math.max(1, Math.ceil(total / limit)),
+  });
 });
 
 /* ===============================
@@ -122,8 +170,27 @@ router.get("/orders/all", auth, async (req, res) => {
     return res.status(403).json({ error: "Forbidden" });
   }
 
-  const orders = await Order.find().populate("items.productId");
-  res.json(orders); // ✅ MUST return array
+  const { page, limit, skip } = parsePagination(req);
+  const status = String(req.query.status || "").trim();
+  const filter = {};
+  if (status) filter.status = status;
+
+  const [orders, total] = await Promise.all([
+    Order.find(filter)
+      .populate("items.productId")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Order.countDocuments(filter),
+  ]);
+
+  res.json({
+    items: orders,
+    total,
+    page,
+    limit,
+    totalPages: Math.max(1, Math.ceil(total / limit)),
+  });
 });
 
 /* ===============================
@@ -305,8 +372,10 @@ router.get("/users", auth, async (req, res) => {
     return res.status(403).json({ error: "Forbidden" });
   }
 
+  const { page, limit, skip } = parsePagination(req);
   const q = String(req.query.q || "").trim();
   const role = String(req.query.role || "").trim();
+  const blocked = String(req.query.blocked || "").trim();
   const filter = {};
 
   if (q) {
@@ -320,11 +389,26 @@ router.get("/users", auth, async (req, res) => {
   if (role && ["admin", "user"].includes(role)) {
     filter.role = role;
   }
+  if (blocked === "true" || blocked === "false") {
+    filter.isBlocked = blocked === "true";
+  }
 
-  const users = await User.find(filter)
-    .select("-password -resetTokenHash -resetTokenExpires -emailVerificationTokenHash -emailVerificationExpires")
-    .sort({ createdAt: -1 });
-  res.json(users);
+  const [users, total] = await Promise.all([
+    User.find(filter)
+      .select("-password -resetTokenHash -resetTokenExpires -emailVerificationTokenHash -emailVerificationExpires")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    User.countDocuments(filter),
+  ]);
+  res.json({
+    items: users,
+    total,
+    page,
+    limit,
+    totalPages: Math.max(1, Math.ceil(total / limit)),
+  });
 });
 
 router.put("/users/:id", auth, async (req, res) => {
