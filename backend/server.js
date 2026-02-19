@@ -33,6 +33,20 @@ const app = express();
 // Required so express-rate-limit reads client IP safely from X-Forwarded-For.
 app.set("trust proxy", 1);
 
+const slowRequestMs = Number(process.env.SLOW_REQUEST_MS || 600);
+app.use((req, res, next) => {
+  const start = process.hrtime.bigint();
+  res.on("finish", () => {
+    const durationMs = Number(process.hrtime.bigint() - start) / 1e6;
+    if (durationMs >= slowRequestMs) {
+      console.warn(
+        `[perf] ${req.method} ${req.originalUrl} -> ${res.statusCode} (${durationMs.toFixed(1)}ms)`
+      );
+    }
+  });
+  next();
+});
+
 /* 🔹 Middlewares */
 const corsOrigins = (process.env.CORS_ORIGINS || "")
   .split(",")
@@ -82,6 +96,10 @@ app.use("/api/reviews", apiLimiter, reviewRoutes);
 app.use("/api/users", apiLimiter, userRoutes);
 app.use("/api/coupons", apiLimiter, couponRoutes);
 app.use("/api/wishlist", apiLimiter, wishlistRoutes);
+
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true, uptime: Math.round(process.uptime()) });
+});
 
 async function autoNormalizeProductPrices() {
   const enabled = String(process.env.AUTO_NORMALIZE_PRICES || "true").toLowerCase() === "true";
