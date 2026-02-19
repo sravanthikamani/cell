@@ -36,17 +36,24 @@ export default function ResetPassword() {
   return (
     <div className="max-w-sm mx-auto p-10">
       <h1 className="text-2xl font-bold mb-4">{t("Reset Password")}</h1>
-      <input
-        type="password"
-        placeholder={t("New Password")}
-        className="w-full border p-2 mb-3"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      {msg && <div className="text-sm text-gray-700 mb-3">{msg}</div>}
-      <button onClick={submit} className="w-full bg-black text-white py-2">
-        {t("Reset Password")}
-      </button>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
+      >
+        <input
+          type="password"
+          placeholder={t("New Password")}
+          className="w-full border p-2 mb-3"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        {msg && <div className="text-sm text-gray-700 mb-3">{msg}</div>}
+        <button type="submit" className="w-full bg-black text-white py-2">
+          {t("Reset Password")}
+        </button>
+      </form>
     </div>
   );
 }

@@ -194,6 +194,40 @@ export default function Admin() {
     setUsers((prev) => prev.filter((u) => u._id !== userId));
   };
 
+  const submitProductForm = () => (editingId ? updateProduct() : addProduct());
+
+  const createCoupon = async () => {
+    const res = await fetch(`${API_BASE}/api/admin/coupons`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        code: couponForm.code,
+        type: couponForm.type,
+        value: Number(couponForm.value),
+        minTotal: Number(couponForm.minTotal || 0),
+        maxDiscount: Number(couponForm.maxDiscount || 0),
+        active: couponForm.active,
+      }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setCoupons([data, ...coupons]);
+      setCouponForm({
+        code: "",
+        type: "percent",
+        value: "",
+        minTotal: "",
+        maxDiscount: "",
+        active: true,
+      });
+    } else {
+      alert(data.error || "Failed to create coupon");
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto p-6 md:p-10">
       <h1 className="text-2xl font-bold mb-4">{t("Admin - Add Product")}</h1>
@@ -225,7 +259,15 @@ export default function Admin() {
         />
       </div>
 
-      <div className="card p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div
+        className="card p-4 grid grid-cols-1 md:grid-cols-2 gap-3"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            submitProductForm();
+          }
+        }}
+      >
         <input ref={productNameInputRef} className="border p-2" placeholder={t("Name")} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         <input className="border p-2" placeholder={t("Price")} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
         <input className="border p-2" placeholder={t("Brand")} value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} />
@@ -243,7 +285,7 @@ export default function Admin() {
         <input className="border p-2" placeholder={t("Colors (comma)")} value={form.colors} onChange={(e) => setForm({ ...form, colors: e.target.value })} />
       </div>
 
-      <button onClick={editingId ? updateProduct : addProduct} className="w-full bg-black text-white py-2 mt-3">
+      <button type="button" onClick={submitProductForm} className="w-full bg-black text-white py-2 mt-3">
         {editingId ? t("Update Product") : t("Add Product")}
       </button>
 
@@ -254,8 +296,14 @@ export default function Admin() {
           placeholder="Search products"
           value={productSearch}
           onChange={(e) => setProductSearch(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              loadProducts(1);
+            }
+          }}
         />
-        <button className="bg-black text-white px-3" onClick={() => loadProducts(1)}>
+        <button type="button" className="bg-black text-white px-3" onClick={() => loadProducts(1)}>
           Search
         </button>
       </div>
@@ -308,7 +356,15 @@ export default function Admin() {
       </div>
 
       <h2 className="text-xl font-bold mt-10">{t("Coupons")}</h2>
-      <div className="card p-4 mt-3">
+      <div
+        className="card p-4 mt-3"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            createCoupon();
+          }
+        }}
+      >
         <input className="w-full border p-2 mb-2" placeholder={t("CODE")} value={couponForm.code} onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value })} />
         <select className="w-full border p-2 mb-2" value={couponForm.type} onChange={(e) => setCouponForm({ ...couponForm, type: e.target.value })}>
           <option value="percent">{t("Percent")}</option>
@@ -317,40 +373,7 @@ export default function Admin() {
         <input className="w-full border p-2 mb-2" placeholder={t("Value")} value={couponForm.value} onChange={(e) => setCouponForm({ ...couponForm, value: e.target.value })} />
         <input className="w-full border p-2 mb-2" placeholder={t("Min Total")} value={couponForm.minTotal} onChange={(e) => setCouponForm({ ...couponForm, minTotal: e.target.value })} />
         <input className="w-full border p-2 mb-2" placeholder={t("Max Discount")} value={couponForm.maxDiscount} onChange={(e) => setCouponForm({ ...couponForm, maxDiscount: e.target.value })} />
-        <button
-          className="w-full bg-black text-white py-2"
-          onClick={async () => {
-            const res = await fetch(`${API_BASE}/api/admin/coupons`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                code: couponForm.code,
-                type: couponForm.type,
-                value: Number(couponForm.value),
-                minTotal: Number(couponForm.minTotal || 0),
-                maxDiscount: Number(couponForm.maxDiscount || 0),
-                active: couponForm.active,
-              }),
-            });
-            const data = await res.json();
-            if (res.ok) {
-              setCoupons([data, ...coupons]);
-              setCouponForm({
-                code: "",
-                type: "percent",
-                value: "",
-                minTotal: "",
-                maxDiscount: "",
-                active: true,
-              });
-            } else {
-              alert(data.error || "Failed to create coupon");
-            }
-          }}
-        >
+        <button type="button" className="w-full bg-black text-white py-2" onClick={createCoupon}>
           {t("Create Coupon")}
         </button>
       </div>
@@ -379,13 +402,24 @@ export default function Admin() {
       <h2 className="text-xl font-bold mt-10">{t("User Management")}</h2>
       <div className="card p-4 mt-3">
         <div className="flex gap-2 mb-3">
-          <input className="border p-2 flex-1" placeholder="Search by email/name/phone" value={userSearch} onChange={(e) => setUserSearch(e.target.value)} />
+          <input
+            className="border p-2 flex-1"
+            placeholder="Search by email/name/phone"
+            value={userSearch}
+            onChange={(e) => setUserSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                loadUsers(1);
+              }
+            }}
+          />
           <select className="border p-2" value={userRoleFilter} onChange={(e) => setUserRoleFilter(e.target.value)}>
             <option value="">All roles</option>
             <option value="admin">admin</option>
             <option value="user">user</option>
           </select>
-          <button className="bg-black text-white px-3" onClick={() => loadUsers(1)}>Search</button>
+          <button type="button" className="bg-black text-white px-3" onClick={() => loadUsers(1)}>Search</button>
         </div>
         {userMsg && <div className="text-sm text-red-600 mb-2">{userMsg}</div>}
         {users.map((u) => (

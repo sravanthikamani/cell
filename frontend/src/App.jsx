@@ -15,6 +15,7 @@ import ResetPassword from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
 import Register from "./pages/Register";
 import Wishlist from "./pages/Wishlist";
+import SessionTimeout from "./pages/SessionTimeout";
 
 
 const Home = lazy(() => import("./pages/Home"));
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/session-timeout" element={<SessionTimeout />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 

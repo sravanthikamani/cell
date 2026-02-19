@@ -367,27 +367,28 @@ export default function Checkout() {
         </div>
       </div>
 
-      <div className="flex gap-2 mb-4">
+      <form
+        className="flex gap-2 mb-4"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          try {
+            await createIntent(couponCode);
+            setCouponMsg(t("Coupon applied"));
+          } catch (err) {
+            setCouponMsg(err.message);
+          }
+        }}
+      >
         <input
           className="border px-3 py-2 flex-1 rounded"
           placeholder={t("Coupon code")}
           value={couponCode}
           onChange={(e) => setCouponCode(e.target.value)}
         />
-        <button
-          className="btn-secondary"
-          onClick={async () => {
-            try {
-              await createIntent(couponCode);
-              setCouponMsg(t("Coupon applied"));
-            } catch (e) {
-              setCouponMsg(e.message);
-            }
-          }}
-        >
+        <button type="submit" className="btn-secondary">
           {t("Apply")}
         </button>
-      </div>
+      </form>
       {couponMsg && <div className="text-sm text-gray-600 mb-4">{couponMsg}</div>}
 
       <div className="mb-4">

@@ -133,30 +133,35 @@ export default function Login() {
     <div className="max-w-sm mx-auto p-10 card">
       <h1 className="text-2xl font-bold mb-4">{t("Login")}</h1>
 
-      <input
-        placeholder={t("Email")}
-        className="w-full border p-2 mb-3"
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder={t("Password")}
-        className="w-full border p-2 mb-3"
-        onChange={(e) => setPassword(e.target.value)}
-      />
-
-      <button
-        onClick={submit}
-        className="w-full bg-black text-white py-2"
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
       >
-        {t("Login")}
-      </button>
+        <input
+          placeholder={t("Email")}
+          className="w-full border p-2 mb-3"
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder={t("Password")}
+          className="w-full border p-2 mb-3"
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        <button type="submit" className="w-full bg-black text-white py-2">
+          {t("Login")}
+        </button>
+      </form>
 
       <div className="my-4 text-center text-sm text-gray-500">or</div>
 
       <div ref={googleBtnRef} className="mb-3 flex justify-center" />
 
       <button
+        type="button"
         onClick={handleFacebookLogin}
         disabled={socialLoading}
         className="w-full bg-[#1877F2] text-white py-2 mb-2 disabled:opacity-60"
@@ -165,12 +170,14 @@ export default function Login() {
       </button>
 
       <button
+        type="button"
         onClick={() => navigate("/forgot-password")}
         className="w-full mt-3 text-sm text-blue-600"
       >
         {t("Forgot password?")}
       </button>
       <button
+        type="button"
         onClick={() => navigate("/register")}
         className="w-full mt-2 text-sm text-blue-600"
       >
