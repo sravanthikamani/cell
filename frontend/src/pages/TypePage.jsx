@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Helmet } from "react-helmet-async";
 import { useI18n } from "../context/I18nContext";
+import Seo from "../components/Seo";
 
 export default function TypePage() {
   const { type } = useParams();
@@ -17,9 +17,10 @@ export default function TypePage() {
 
   return (
     <div className="p-10 max-w-6xl mx-auto">
-      <Helmet>
-        <title>{t(type).toUpperCase()} | HI-TECH</title>
-      </Helmet>
+      <Seo
+        title={`${t(type).toUpperCase()} | HI-TECH`}
+        description={`Explore ${t(type)} categories and brands at HI-TECH.`}
+      />
 
       <h1 className="text-3xl font-bold mb-6 capitalize">{t(type)}</h1>
 

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
+import Seo from "../components/Seo";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -131,6 +132,13 @@ export default function Login() {
 
   return (
     <div className="max-w-sm mx-auto p-10 card">
+      <Seo
+        title="Login"
+        description="Login to your HI-TECH account."
+        canonicalPath="/login"
+        noindex
+      />
+
       <h1 className="text-2xl font-bold mb-4">{t("Login")}</h1>
 
       <form

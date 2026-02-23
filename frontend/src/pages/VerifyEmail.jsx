@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { API_BASE } from "../lib/api";
+import Seo from "../components/Seo";
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
@@ -46,6 +47,13 @@ export default function VerifyEmail() {
 
   return (
     <div className="max-w-sm mx-auto p-10 card">
+      <Seo
+        title="Email Verification"
+        description="Verify your HI-TECH account email address."
+        canonicalPath="/verify-email"
+        noindex
+      />
+
       <h1 className="text-2xl font-bold mb-4">Email Verification</h1>
       <div className="text-sm text-gray-700 mb-4">{msg}</div>
       {done && (

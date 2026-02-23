@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Seo from "../components/Seo";
 
 export default function SessionTimeout() {
   const navigate = useNavigate();
@@ -13,6 +14,13 @@ export default function SessionTimeout() {
 
   return (
     <div className="max-w-xl mx-auto p-10">
+      <Seo
+        title="Session Timed Out"
+        description="Your session has timed out due to inactivity."
+        canonicalPath="/session-timeout"
+        noindex
+      />
+
       <div className="card p-6">
         <h1 className="text-2xl font-bold mb-3">Session Timed Out</h1>
         <p className="text-sm text-gray-700 mb-5">

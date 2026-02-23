@@ -2,10 +2,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { Helmet } from "react-helmet-async";
 import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
 import { formatCurrency } from "../lib/format";
+import Seo from "../components/Seo";
 
 export default function BrandPage() {
   const { group, type, brand } = useParams();
@@ -13,6 +13,12 @@ export default function BrandPage() {
   const { refreshCart } = useCart();
   const { user, token } = useAuth();
   const { t, lang } = useI18n();
+  const normalizeSegment = (value = "") =>
+    String(value)
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
 
   const [products, setProducts] = useState([]);
   const [filters, setFilters] = useState({
@@ -27,7 +33,7 @@ export default function BrandPage() {
       .then(data => {
         const findKey = (obj, key) =>
           Object.keys(obj || {}).find(
-            (k) => k.toLowerCase() === key.toLowerCase()
+            (k) => normalizeSegment(k) === normalizeSegment(key)
           );
         const groupKey = findKey(data, group);
         const typeKey = findKey(data?.[groupKey], type);
@@ -47,9 +53,11 @@ export default function BrandPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-10">
-      <Helmet>
-        <title>{brand} {t(type)} | HI-TECH</title>
-      </Helmet>
+      <Seo
+        title={`${brand} ${t(type)}`}
+        description={`Browse ${brand} ${t(type)} products with filters and pricing.`}
+        canonicalPath={`/${normalizeSegment(group)}/${normalizeSegment(type)}/${normalizeSegment(brand)}`}
+      />
 
       <h1 className="text-3xl font-bold mb-6 capitalize">
         {brand} {type}

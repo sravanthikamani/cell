@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
+import Seo from "../components/Seo";
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -35,6 +36,13 @@ export default function ResetPassword() {
 
   return (
     <div className="max-w-sm mx-auto p-10">
+      <Seo
+        title="Reset Password"
+        description="Set a new password for your HI-TECH account."
+        canonicalPath="/reset-password"
+        noindex
+      />
+
       <h1 className="text-2xl font-bold mb-4">{t("Reset Password")}</h1>
       <form
         onSubmit={(e) => {

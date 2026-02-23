@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
+import Seo from "../components/Seo";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -35,6 +36,13 @@ export default function Register() {
 
   return (
     <div className="max-w-sm mx-auto p-10 card">
+      <Seo
+        title="Register"
+        description="Create your HI-TECH account."
+        canonicalPath="/register"
+        noindex
+      />
+
       <h1 className="text-2xl font-bold mb-4">{t("Register")}</h1>
 
       <form

@@ -1,17 +1,17 @@
-import { Helmet } from "react-helmet-async";
 import { useI18n } from "../context/I18nContext";
+import Seo from "../components/Seo";
 
 export default function About() {
   const { t } = useI18n();
   return (
     <div className="max-w-5xl mx-auto p-10">
-      <Helmet>
-        <title>{t("About Us")} | HI-TECH</title>
-        <meta
-          name="description"
-          content={t("About Us")}
-        />
-      </Helmet>
+      <Seo
+        title={t("About Us")}
+        description={t(
+          "CELL is a modern electronics brand delivering smartphones, accessories, and innovative tech products with quality and trust."
+        )}
+        canonicalPath="/about"
+      />
 
       <h1 className="text-4xl font-bold mb-4 text-teal-600">
         {t("About Us")}

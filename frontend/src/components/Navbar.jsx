@@ -41,6 +41,12 @@ export default function Navbar() {
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
   const navigate = useNavigate();
+  const toSlug = (value = "") =>
+    String(value)
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
 
   useEffect(() => {
     fetch(`${API_BASE}/api/menu`)
@@ -215,21 +221,21 @@ export default function Navbar() {
       ...menuData.device.map((item) => ({
         key: `device-${item.label}`,
         label: t(item.label),
-        path: `/device/${encodeURIComponent(item.label.toLowerCase())}`,
+        path: `/device/${toSlug(item.label)}`,
         icon: item.icon,
         searchIndex: `${item.label} ${t(item.label)} device`,
       })),
       ...menuData.category.map((item) => ({
         key: `category-${item.label}`,
         label: t(item.label),
-        path: `/category/${encodeURIComponent(item.label.toLowerCase())}`,
+        path: `/category/${toSlug(item.label)}`,
         icon: item.icon,
         searchIndex: `${item.label} ${t(item.label)} category`,
       })),
       ...menuData.faq.map((item) => ({
         key: `faq-${item.label}`,
         label: t(item.label),
-        path: `/faq/${encodeURIComponent(item.label.toLowerCase())}`,
+        path: `/faq/${toSlug(item.label)}`,
         icon: item.icon,
         searchIndex: `${item.label} ${t(item.label)} faq support`,
       })),
@@ -311,9 +317,7 @@ export default function Navbar() {
 
             <ul className="py-2">
               {filteredItems.map((item) => {
-                const path = `/${basePath}/${encodeURIComponent(
-                  item.label.toLowerCase()
-                )}`;
+                const path = `/${basePath}/${toSlug(item.label)}`;
                 return (
                   <li key={item.label}>
                     <button
