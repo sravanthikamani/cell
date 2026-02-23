@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { API_BASE } from "../lib/api";
@@ -11,6 +11,7 @@ export default function Products() {
   const { user, token } = useAuth();
   const { refreshCart } = useCart();
   const { t, lang } = useI18n();
+  const location = useLocation();
   const [q, setQ] = useState("");
   const [brand, setBrand] = useState("");
   const [group, setGroup] = useState("");
@@ -24,6 +25,11 @@ export default function Products() {
     brands: [],
   });
   const [catalogTree, setCatalogTree] = useState({});
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setQ(params.get("q") || "");
+  }, [location.search]);
 
   // 🔹 Load products with search + filters
   useEffect(() => {
