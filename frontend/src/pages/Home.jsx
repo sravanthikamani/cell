@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
 import { formatCurrency } from "../lib/format";
+import Seo from "../components/Seo";
 
 export default function Home() {
   const [featured, setFeatured] = useState([]);
@@ -25,6 +26,13 @@ export default function Home() {
 
   return (
     <div className="relative">
+      <Seo
+        title="HI-TECH Electronics Store"
+        description="Shop smartphones, audio devices, accessories, and more with secure checkout and fast delivery."
+        canonicalPath="/"
+        keywords="electronics, smartphones, accessories, audio, tablets"
+      />
+
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url('/images/home-hero.jpeg')" }}

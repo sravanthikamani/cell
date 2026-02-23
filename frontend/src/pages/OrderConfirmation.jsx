@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useI18n } from "../context/I18nContext";
 import { API_BASE } from "../lib/api";
 import { formatCurrency } from "../lib/format";
+import Seo from "../components/Seo";
 
 export default function OrderConfirmation() {
   const { token } = useAuth();
@@ -31,6 +32,12 @@ export default function OrderConfirmation() {
   if (error) {
     return (
       <div className="max-w-2xl mx-auto p-8">
+        <Seo
+          title="Order Confirmation"
+          description="View your order confirmation details."
+          canonicalPath="/order-confirmation"
+          noindex
+        />
         <div className="text-red-600 text-sm">{error}</div>
       </div>
     );
@@ -39,6 +46,12 @@ export default function OrderConfirmation() {
   if (!order) {
     return (
       <div className="max-w-2xl mx-auto p-8">
+        <Seo
+          title="Order Confirmation"
+          description="View your order confirmation details."
+          canonicalPath="/order-confirmation"
+          noindex
+        />
         <div>{t("Loading...")}</div>
       </div>
     );
@@ -46,6 +59,13 @@ export default function OrderConfirmation() {
 
   return (
     <div className="max-w-2xl mx-auto p-6 md:p-10">
+      <Seo
+        title="Order Confirmation"
+        description="View your order confirmation details."
+        canonicalPath="/order-confirmation"
+        noindex
+      />
+
       <div className="card p-5">
         <h1 className="text-2xl font-bold mb-2">Order Confirmed</h1>
         <p className="text-sm text-gray-700 mb-4">

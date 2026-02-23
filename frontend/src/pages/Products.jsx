@@ -5,6 +5,7 @@ import { useCart } from "../context/CartContext";
 import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
 import { formatCurrency } from "../lib/format";
+import Seo from "../components/Seo";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -25,6 +26,7 @@ export default function Products() {
     brands: [],
   });
   const [catalogTree, setCatalogTree] = useState({});
+  const hasSearchQuery = Boolean(q.trim());
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -146,6 +148,18 @@ export default function Products() {
 
   return (
     <div className="max-w-6xl mx-auto p-6 md:p-10">
+      <Seo
+        title={hasSearchQuery ? `Search: ${q.trim()}` : "Products"}
+        description={
+          hasSearchQuery
+            ? `Search results for ${q.trim()} at HI-TECH.`
+            : "Browse all electronics products with filters for brand, group, type, price, and popularity."
+        }
+        canonicalPath="/products"
+        noindex={hasSearchQuery}
+        keywords="products, electronics catalog, smartphones, accessories"
+      />
+
       <h1 className="text-3xl font-bold mb-6">{t("Products")}</h1>
 
       <div className="card p-4 md:p-5 mb-8 animate-fade-up">

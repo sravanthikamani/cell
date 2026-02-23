@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 import Navbar from "./components/Navbar";
 import Breadcrumbs from "./components/Breadcrumbs";
 import ProtectedRoute from "./components/ProtectedRoute";
+import UrlNormalizer from "./components/UrlNormalizer";
 import Orders from "./pages/Orders";
 import Admin from "./pages/Admin";
 import AdminOrders from "./pages/AdminOrders";
@@ -17,35 +18,34 @@ import Register from "./pages/Register";
 import Wishlist from "./pages/Wishlist";
 import SessionTimeout from "./pages/SessionTimeout";
 
-
 const Home = lazy(() => import("./pages/Home"));
 const Warranty = lazy(() => import("./pages/Warranty"));
 const About = lazy(() => import("./pages/About"));
 const FAQ = lazy(() => import("./pages/FAQ"));
-//const Login = lazy(() => import("./pages/Login"));
-
 const CatalogPage = lazy(() => import("./pages/CatalogPage"));
 const BrandPage = lazy(() => import("./pages/BrandPage"));
 const ProductPage = lazy(() => import("./pages/ProductPage"));
 const Cart = lazy(() => import("./pages/Cart"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
 export default function App() {
   return (
     <>
+      <UrlNormalizer />
       <Navbar />
       <Breadcrumbs />
 
       <Suspense fallback={<div className="p-10">Loading...</div>}>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/products" element={<Products />} />
 
-          {/* DEVICE / CATEGORY FLOW */}
           <Route path="/:group/:type" element={<CatalogPage />} />
           <Route path="/:group/:type/:brand" element={<BrandPage />} />
           <Route path="/product/:id" element={<ProductPage />} />
 
-          {/* Static pages */}
           <Route path="/about" element={<About />} />
           <Route path="/faq/:item" element={<FAQ />} />
           <Route path="/login" element={<Login />} />
@@ -55,7 +55,6 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* Protected */}
           <Route
             path="/warranty"
             element={
@@ -101,35 +100,30 @@ export default function App() {
             path="/wishlist"
             element={
               <ProtectedRoute>
-                <Wishlist />
-              </ProtectedRoute>
+              <Wishlist />
+            </ProtectedRoute>
             }
           />
-              <Route path="*" element={<div>Page Not Found</div>} />
-            <Route path="/products" element={<Products />} />
-<Route
-  path="/admin"
-  element={
-    <AdminRoute>
-      <Admin />
-    </AdminRoute>
-  }
-/>
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <Admin />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/orders"
+            element={
+              <AdminRoute>
+                <AdminOrders />
+              </AdminRoute>
+            }
+          />
 
-<Route
-  path="/admin/orders"
-  element={
-    <AdminRoute>
-      <AdminOrders />
-    </AdminRoute>
-  }
-/>
-
-
-          {/* 404 */}
           <Route
             path="*"
-            element={<div className="p-10 text-xl">Page Not Found</div>}
+            element={<NotFound />}
           />
         </Routes>
       </Suspense>

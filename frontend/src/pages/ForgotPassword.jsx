@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
+import Seo from "../components/Seo";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -29,6 +30,13 @@ export default function ForgotPassword() {
 
   return (
     <div className="max-w-sm mx-auto p-10">
+      <Seo
+        title="Forgot Password"
+        description="Request a password reset link for your HI-TECH account."
+        canonicalPath="/forgot-password"
+        noindex
+      />
+
       <h1 className="text-2xl font-bold mb-4">{t("Forgot Password")}</h1>
       <form
         onSubmit={(e) => {

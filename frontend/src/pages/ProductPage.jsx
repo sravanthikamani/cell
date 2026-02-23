@@ -6,6 +6,7 @@ import ImageGallery from "../components/ImageGallery";
 import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
 import { formatCurrency } from "../lib/format";
+import Seo from "../components/Seo";
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -54,7 +55,19 @@ export default function ProductPage() {
       .catch(() => {});
   }, [id, user, token]);
 
-  if (!product) return <div className="p-10">{t("Loading...")}</div>;
+  if (!product) {
+    return (
+      <div className="p-10">
+        <Seo
+          title="Product Details"
+          description="View product details, reviews, and buying options at HI-TECH."
+          canonicalPath={`/product/${id}`}
+          type="product"
+        />
+        {t("Loading...")}
+      </div>
+    );
+  }
 
   // 🔹 Add to cart from product page
   const addToCart = async () => {
@@ -153,6 +166,14 @@ export default function ProductPage() {
 
   return (
     <div className="max-w-5xl mx-auto p-6 md:p-10">
+      <Seo
+        title={product.name || "Product Details"}
+        description={`${product.brand || "Electronics"} product details, stock, reviews, and pricing.`}
+        canonicalPath={`/product/${id}`}
+        type="product"
+        keywords={`${product.brand || ""}, ${product.name || ""}, electronics product`}
+      />
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         {/* 🖼 IMAGE GALLERY + ZOOM */}
         <div className="card p-4">

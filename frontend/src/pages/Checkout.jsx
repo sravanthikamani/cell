@@ -7,6 +7,7 @@ import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
 import { formatCurrency } from "../lib/format";
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import Seo from "../components/Seo";
 
 const emptyAddress = {
   name: "",
@@ -225,16 +226,41 @@ export default function Checkout() {
   if (loadError) {
     return (
       <div className="max-w-xl mx-auto p-6 md:p-10">
+        <Seo
+          title="Checkout"
+          description="Complete your purchase securely."
+          canonicalPath="/checkout"
+          noindex
+        />
         <h1 className="text-2xl font-bold mb-3">{t("Payment")}</h1>
         <div className="text-sm text-red-600">{loadError}</div>
       </div>
     );
   }
 
-  if (!clientSecret) return <div className="p-10">{t("Loading payment...")}</div>;
+  if (!clientSecret) {
+    return (
+      <div className="p-10">
+        <Seo
+          title="Checkout"
+          description="Complete your purchase securely."
+          canonicalPath="/checkout"
+          noindex
+        />
+        {t("Loading payment...")}
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto p-6 md:p-10">
+      <Seo
+        title="Checkout"
+        description="Complete your purchase securely."
+        canonicalPath="/checkout"
+        noindex
+      />
+
       <h1 className="text-2xl font-bold mb-4">{t("Checkout")}</h1>
 
       <div className="card p-4 mb-4">
