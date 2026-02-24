@@ -17,6 +17,43 @@ import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
 
+const DEFAULT_MENU_DATA = {
+  device: [
+    { label: "Smartphones", icon: "" },
+    { label: "Tablets", icon: "" },
+    { label: "Wearables", icon: "" },
+    { label: "Accessories", icon: "" },
+  ],
+  category: [
+    { label: "Audio", icon: "" },
+    { label: "Chargers", icon: "" },
+    { label: "Cables", icon: "" },
+    { label: "Power Banks", icon: "" },
+  ],
+  faq: [
+    { label: "Shipping", icon: "" },
+    { label: "Product", icon: "" },
+    { label: "Warranty", icon: "" },
+    { label: "General", icon: "" },
+  ],
+};
+
+const sanitizeMenuSection = (value, fallback) => {
+  if (!Array.isArray(value)) return fallback;
+  return value
+    .filter((item) => item && typeof item.label === "string" && item.label.trim())
+    .map((item) => ({
+      label: item.label.trim(),
+      icon: typeof item.icon === "string" ? item.icon : "",
+    }));
+};
+
+const normalizeMenuPayload = (payload) => ({
+  device: sanitizeMenuSection(payload?.device, DEFAULT_MENU_DATA.device),
+  category: sanitizeMenuSection(payload?.category, DEFAULT_MENU_DATA.category),
+  faq: sanitizeMenuSection(payload?.faq, DEFAULT_MENU_DATA.faq),
+});
+
 export default function Navbar() {
   const { cartCount } = useCart();
   const { dark, setDark } = useTheme();
@@ -24,11 +61,7 @@ export default function Navbar() {
   const { lang, setLang, t } = useI18n();
   const [wishlistCount, setWishlistCount] = useState(0);
 
-  const [menuData, setMenuData] = useState({
-    device: [],
-    category: [],
-    faq: [],
-  });
+  const [menuData, setMenuData] = useState(DEFAULT_MENU_DATA);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [faqSearch, setFaqSearch] = useState("");
@@ -51,9 +84,9 @@ export default function Navbar() {
   useEffect(() => {
     fetch(`${API_BASE}/api/menu`)
       .then((res) => res.json())
-      .then(setMenuData)
+      .then((data) => setMenuData(normalizeMenuPayload(data)))
       .catch(() => {
-        setMenuData({ device: [], category: [], faq: [] });
+        setMenuData(DEFAULT_MENU_DATA);
       });
   }, []);
 
@@ -77,23 +110,21 @@ export default function Navbar() {
   }, [user]);
 
   useEffect(() => {
-    const handler = (e) => {
-      if (e.target.closest("[data-dropdown='true']")) return;
-      setOpenDropdown(null);
+    const handler = () => {
+      setOpenDropdown((prev) => (prev ? null : prev));
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("pointerdown", handler);
+    return () => document.removeEventListener("pointerdown", handler);
   }, []);
 
   useEffect(() => {
-    const handler = (e) => {
-      if (e.target.closest("[data-global-search='true']")) return;
-      setGlobalSearchOpen(false);
-      setGlobalSearch("");
-      setProductResults([]);
+    const handler = () => {
+      setGlobalSearchOpen((prev) => (prev ? false : prev));
+      setGlobalSearch((prev) => (prev ? "" : prev));
+      setProductResults((prev) => (prev.length ? [] : prev));
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("pointerdown", handler);
+    return () => document.removeEventListener("pointerdown", handler);
   }, []);
 
   useEffect(() => {
@@ -285,7 +316,7 @@ export default function Navbar() {
     navigateFromSearch(`/products?q=${encodeURIComponent(term)}`);
   };
 
-  const Dropdown = ({ title, items, basePath, searchable }) => {
+  const Dropdown = ({ dropdownKey, title, items, basePath, searchable }) => {
     const filteredItems = searchable
       ? items.filter((i) =>
           i.label.toLowerCase().includes(faqSearch.toLowerCase())
@@ -293,18 +324,26 @@ export default function Navbar() {
       : items;
 
     return (
-      <div className="relative" data-dropdown="true" ref={dropdownRef}>
+      <div
+        className="relative"
+        data-dropdown="true"
+        ref={dropdownRef}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
         <button
+          type="button"
           onClick={() =>
-            setOpenDropdown(openDropdown === title ? null : title)
+            setOpenDropdown(openDropdown === dropdownKey ? null : dropdownKey)
           }
           className="flex items-center gap-1 hover:text-teal-600"
+          aria-expanded={openDropdown === dropdownKey}
+          aria-haspopup="menu"
         >
           {title}
           <ChevronDown size={16} />
         </button>
 
-        {openDropdown === title && (
+        {openDropdown === dropdownKey && (
           <div className="absolute left-0 mt-2 w-56 bg-white shadow-lg rounded-md z-50">
             {searchable && (
               <input
@@ -343,18 +382,26 @@ export default function Navbar() {
     );
   };
 
-  const SimpleDropdown = ({ title, items }) => (
-    <div className="relative" data-dropdown="true" ref={dropdownRef}>
+  const SimpleDropdown = ({ dropdownKey, title, items }) => (
+    <div
+      className="relative"
+      data-dropdown="true"
+      ref={dropdownRef}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
       <button
+        type="button"
         onClick={() =>
-          setOpenDropdown(openDropdown === title ? null : title)
+          setOpenDropdown(openDropdown === dropdownKey ? null : dropdownKey)
         }
         className="flex items-center gap-1 hover:text-teal-600"
+        aria-expanded={openDropdown === dropdownKey}
+        aria-haspopup="menu"
       >
         {title}
         <ChevronDown size={16} />
       </button>
-      {openDropdown === title && (
+      {openDropdown === dropdownKey && (
         <div className="absolute left-0 mt-2 w-56 bg-white shadow-lg rounded-md z-50">
           <ul className="py-2">
             {items.map((item) => (
@@ -410,12 +457,23 @@ export default function Navbar() {
             {t("HOME")}
           </NavLink>
 
-          <Dropdown title={t("DEVICE")} items={menuData.device} basePath="device" />
-          <Dropdown title={t("CATEGORY")} items={menuData.category} basePath="category" />
+          <Dropdown
+            dropdownKey="desktop-device"
+            title={t("DEVICE")}
+            items={menuData.device}
+            basePath="device"
+          />
+          <Dropdown
+            dropdownKey="desktop-category"
+            title={t("CATEGORY")}
+            items={menuData.category}
+            basePath="category"
+          />
           <NavLink to="/products">{t("PRODUCTS")}</NavLink>
 
           {user?.role === "admin" && (
             <SimpleDropdown
+              dropdownKey="desktop-admin"
               title={t("ADMIN")}
               items={[
                 { label: t("ADMIN"), path: "/admin" },
@@ -438,13 +496,23 @@ export default function Navbar() {
 
           <NavLink to="/warranty">{t("WARRANTY")}</NavLink>
 
-          <Dropdown title={t("FAQ")} items={menuData.faq} basePath="faq" searchable />
+          <Dropdown
+            dropdownKey="desktop-faq"
+            title={t("FAQ")}
+            items={menuData.faq}
+            basePath="faq"
+            searchable
+          />
 
           <NavLink to="/about">{t("ABOUT US")}</NavLink>
         </nav>
 
         <div className="hidden md:flex items-center gap-6">
-          <div className="relative" data-global-search="true">
+          <div
+            className="relative"
+            data-global-search="true"
+            onPointerDown={(e) => e.stopPropagation()}
+          >
             <button
               type="button"
               className="cursor-pointer hover:text-teal-600"
@@ -570,8 +638,18 @@ export default function Navbar() {
         <div className="md:hidden bg-white shadow-lg px-6 py-4 space-y-4">
           <NavLink to="/">{t("HOME")}</NavLink>
 
-          <Dropdown title={t("DEVICE")} items={menuData.device} basePath="device" />
-          <Dropdown title={t("CATEGORY")} items={menuData.category} basePath="category" />
+          <Dropdown
+            dropdownKey="mobile-device"
+            title={t("DEVICE")}
+            items={menuData.device}
+            basePath="device"
+          />
+          <Dropdown
+            dropdownKey="mobile-category"
+            title={t("CATEGORY")}
+            items={menuData.category}
+            basePath="category"
+          />
           <NavLink to="/products">{t("PRODUCTS")}</NavLink>
 
           <NavLink to="/orders">{t("MY ORDERS")}</NavLink>
@@ -579,6 +657,7 @@ export default function Navbar() {
           {user && <NavLink to="/wishlist">{t("WISHLIST")}</NavLink>}
           {user?.role === "admin" && (
             <SimpleDropdown
+              dropdownKey="mobile-admin"
               title={t("ADMIN")}
               items={[
                 { label: t("ADMIN"), path: "/admin" },
@@ -588,7 +667,13 @@ export default function Navbar() {
           )}
 
           <NavLink to="/warranty">{t("WARRANTY")}</NavLink>
-          <Dropdown title={t("FAQ")} items={menuData.faq} basePath="faq" searchable />
+          <Dropdown
+            dropdownKey="mobile-faq"
+            title={t("FAQ")}
+            items={menuData.faq}
+            basePath="faq"
+            searchable
+          />
           <NavLink to="/about">{t("ABOUT US")}</NavLink>
         </div>
       )}
