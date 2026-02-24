@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
@@ -17,6 +17,49 @@ const emptyAddress = {
   pincode: "",
 };
 
+let paypalSdkPromise = null;
+function loadPayPalSdk(clientId, currency = "EUR") {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("PayPal SDK can only load in browser"));
+  }
+  if (window.paypal?.Buttons) {
+    return Promise.resolve(window.paypal);
+  }
+  if (!clientId) {
+    return Promise.reject(new Error("PayPal client ID is missing"));
+  }
+  if (paypalSdkPromise) return paypalSdkPromise;
+
+  const scriptId = "paypal-sdk-script";
+  const src =
+    `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}` +
+    `&currency=${encodeURIComponent(currency)}&intent=capture&components=buttons`;
+
+  paypalSdkPromise = new Promise((resolve, reject) => {
+    const existing = document.getElementById(scriptId);
+    if (existing) {
+      existing.addEventListener("load", () => resolve(window.paypal), { once: true });
+      existing.addEventListener("error", () => reject(new Error("Failed to load PayPal SDK")), {
+        once: true,
+      });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id = scriptId;
+    script.src = src;
+    script.async = true;
+    script.onload = () => resolve(window.paypal);
+    script.onerror = () => reject(new Error("Failed to load PayPal SDK"));
+    document.body.appendChild(script);
+  }).catch((err) => {
+    paypalSdkPromise = null;
+    throw err;
+  });
+
+  return paypalSdkPromise;
+}
+
 function isAddressValid(addr) {
   return ["name", "phone", "street", "city", "pincode"].every((key) =>
     String(addr?.[key] || "").trim()
@@ -33,7 +76,6 @@ function CheckoutForm({
   const stripe = useStripe();
   const elements = useElements();
   const { token, user } = useAuth();
-  const { refreshCart } = useCart();
   const { t } = useI18n();
   const [errorMsg, setErrorMsg] = useState("");
   const [isPaying, setIsPaying] = useState(false);
@@ -83,7 +125,6 @@ function CheckoutForm({
         throw new Error(orderData.message || orderData.error || t("Order failed"));
       }
 
-      refreshCart();
       onOrderSuccess(orderData);
     } catch (err) {
       console.error("Order creation failed:", err);
@@ -111,6 +152,7 @@ function CheckoutForm({
 export default function Checkout() {
   const navigate = useNavigate();
   const { user, token } = useAuth();
+  const { refreshCart } = useCart();
   const { t, lang } = useI18n();
   const [clientSecret, setClientSecret] = useState(null);
   const [loadError, setLoadError] = useState("");
@@ -131,6 +173,13 @@ export default function Checkout() {
   const [addingAddress, setAddingAddress] = useState(false);
   const [newAddress, setNewAddress] = useState(emptyAddress);
   const [saveAddressToProfile, setSaveAddressToProfile] = useState(true);
+  const [paypalError, setPaypalError] = useState("");
+  const [paypalSdkReady, setPaypalSdkReady] = useState(false);
+  const paypalButtonsRef = useRef(null);
+  const paypalClientId = String(import.meta.env.VITE_PAYPAL_CLIENT_ID || "").trim();
+  const paypalCurrency = String(import.meta.env.VITE_PAYPAL_CURRENCY || "EUR")
+    .trim()
+    .toUpperCase();
 
   const selectedAddress = useMemo(() => {
     if (addingAddress) return newAddress;
@@ -176,13 +225,25 @@ export default function Checkout() {
     if (!res.ok) {
       throw new Error(data.error || "Failed to create payment intent");
     }
-    setClientSecret(data.clientSecret);
+    setClientSecret(data.clientSecret || null);
     setTotals({
       subtotal: data.subtotal || 0,
       discount: data.discount || 0,
       tax: data.tax || 0,
       shipping: data.shipping || 0,
       total: data.total || 0,
+    });
+  };
+
+  const handleOrderSuccess = async (order) => {
+    try {
+      await persistNewAddressIfNeeded();
+    } catch (err) {
+      console.warn("Address save warning:", err.message);
+    }
+    refreshCart();
+    navigate(`/order-confirmation?orderId=${order?._id || ""}`, {
+      state: { order },
     });
   };
 
@@ -223,6 +284,131 @@ export default function Checkout() {
     });
   }, [user, token, paymentMethod, shippingOption]);
 
+  useEffect(() => {
+    if (paymentMethod !== "paypal") return;
+    setPaypalError("");
+    if (!paypalClientId) {
+      setPaypalSdkReady(false);
+      setPaypalError("PayPal is not configured on frontend.");
+      return;
+    }
+
+    let cancelled = false;
+    loadPayPalSdk(paypalClientId, paypalCurrency)
+      .then(() => {
+        if (!cancelled) setPaypalSdkReady(true);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setPaypalSdkReady(false);
+          setPaypalError(err.message || "Failed to load PayPal SDK");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [paymentMethod, paypalClientId, paypalCurrency]);
+
+  useEffect(() => {
+    if (paymentMethod !== "paypal") return;
+    if (!paypalSdkReady || !window.paypal?.Buttons || !paypalButtonsRef.current) return;
+
+    paypalButtonsRef.current.innerHTML = "";
+    const buttons = window.paypal.Buttons({
+      style: { layout: "vertical", shape: "rect", label: "paypal" },
+      createOrder: async () => {
+        setPaypalError("");
+        if (!isAddressValid(selectedAddress)) {
+          const message = "Please select or add a complete shipping address.";
+          setPaypalError(message);
+          throw new Error(message);
+        }
+
+        const res = await fetch(`${API_BASE}/api/payments/paypal/create-order`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userId: user?.id,
+            couponCode,
+            shippingOption,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to create PayPal order");
+        }
+        setTotals({
+          subtotal: data.subtotal || 0,
+          discount: data.discount || 0,
+          tax: data.tax || 0,
+          shipping: data.shipping || 0,
+          total: data.total || 0,
+        });
+        return data.orderId;
+      },
+      onApprove: async (data) => {
+        try {
+          const orderRes = await fetch(`${API_BASE}/api/checkout`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              userId: user?.id,
+              address: selectedAddress,
+              paymentMethod: "paypal",
+              paypalOrderId: data?.orderID,
+              couponCode,
+              shippingOption,
+            }),
+          });
+          const orderData = await orderRes.json().catch(() => ({}));
+          if (!orderRes.ok) {
+            throw new Error(orderData.message || orderData.error || "Order failed");
+          }
+          await handleOrderSuccess(orderData);
+        } catch (err) {
+          setPaypalError(err.message || "PayPal payment failed. Please try again.");
+        }
+      },
+      onCancel: () => {
+        setPaypalError("PayPal payment was cancelled.");
+      },
+      onError: (err) => {
+        setPaypalError(err?.message || "PayPal payment failed. Please try again.");
+      },
+    });
+
+    if (!buttons.isEligible()) {
+      setPaypalError("PayPal is not available for this account/device.");
+      return;
+    }
+    buttons.render(paypalButtonsRef.current).catch((err) => {
+      setPaypalError(err?.message || "Failed to render PayPal button");
+    });
+
+    return () => {
+      try {
+        buttons.close();
+      } catch {
+        // ignore cleanup failures from SDK
+      }
+    };
+  }, [
+    paymentMethod,
+    paypalSdkReady,
+    token,
+    user,
+    couponCode,
+    shippingOption,
+    selectedAddress,
+  ]);
+
   if (loadError) {
     return (
       <div className="max-w-xl mx-auto p-6 md:p-10">
@@ -238,7 +424,7 @@ export default function Checkout() {
     );
   }
 
-  if (!clientSecret) {
+  if (paymentMethod !== "paypal" && !clientSecret) {
     return (
       <div className="p-10">
         <Seo
@@ -440,27 +626,39 @@ export default function Checkout() {
             />
             Klarna
           </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="paypal"
+              checked={paymentMethod === "paypal"}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            />
+            PayPal
+          </label>
         </div>
       </div>
 
-      <StripeWrapper clientSecret={clientSecret} key={clientSecret}>
-        <CheckoutForm
-          couponCode={couponCode}
-          paymentMethod={paymentMethod}
-          shippingOption={shippingOption}
-          selectedAddress={selectedAddress}
-          onOrderSuccess={async (order) => {
-            try {
-              await persistNewAddressIfNeeded();
-            } catch (err) {
-              console.warn("Address save warning:", err.message);
-            }
-            navigate(`/order-confirmation?orderId=${order?._id || ""}`, {
-              state: { order },
-            });
-          }}
-        />
-      </StripeWrapper>
+      {paymentMethod === "paypal" ? (
+        <div className="card p-4">
+          <div className="text-sm text-gray-700 mb-3">Pay securely with PayPal.</div>
+          {paypalError && <div className="mb-3 text-sm text-red-600">{paypalError}</div>}
+          {!paypalSdkReady && !paypalError && (
+            <div className="text-sm text-gray-600">Loading PayPal...</div>
+          )}
+          <div ref={paypalButtonsRef} />
+        </div>
+      ) : (
+        <StripeWrapper clientSecret={clientSecret} key={clientSecret}>
+          <CheckoutForm
+            couponCode={couponCode}
+            paymentMethod={paymentMethod}
+            shippingOption={shippingOption}
+            selectedAddress={selectedAddress}
+            onOrderSuccess={handleOrderSuccess}
+          />
+        </StripeWrapper>
+      )}
     </div>
   );
 }
