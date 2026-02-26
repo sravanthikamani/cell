@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import Navbar from "./components/Navbar";
 import Breadcrumbs from "./components/Breadcrumbs";
+import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
 import UrlNormalizer from "./components/UrlNormalizer";
 import Orders from "./pages/Orders";
@@ -127,6 +128,7 @@ export default function App() {
           />
         </Routes>
       </Suspense>
+      <Footer />
     </>
   );
 }
