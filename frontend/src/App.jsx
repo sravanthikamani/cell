@@ -48,6 +48,7 @@ export default function App() {
           <Route path="/product/:id" element={<ProductPage />} />
 
           <Route path="/about" element={<About />} />
+          <Route path="/faq" element={<FAQ />} />
           <Route path="/faq/:item" element={<FAQ />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
