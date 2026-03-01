@@ -16,7 +16,15 @@ const {
   createPayPalOrder,
 } = require("../utils/paypal");
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+let stripe = null;
+try {
+  stripe = process.env.STRIPE_SECRET_KEY
+    ? new Stripe(process.env.STRIPE_SECRET_KEY)
+    : null;
+} catch (err) {
+  console.warn("Stripe initialization failed:", err.message);
+  stripe = null;
+}
 
 function isStripeConfigured() {
   const key = String(process.env.STRIPE_SECRET_KEY || "").trim();
