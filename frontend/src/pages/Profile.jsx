@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
+import { Edit2, Trash2 } from "lucide-react";
 
 export default function Profile() {
   const { token } = useAuth();
@@ -156,23 +157,27 @@ export default function Profile() {
               </div>
               <div className="flex gap-3">
                 <button
-                  className="text-sm text-blue-600"
+                  className="text-blue-600 hover:text-blue-800"
+                  aria-label={t("Edit")}
+                  title={t("Edit")}
                   onClick={() => {
                     setEditingIndex(i);
                     setEditedAddress({ ...addr });
                   }}
                 >
-                  {t("Edit")}
+                  <Edit2 size={16} />
                 </button>
                 <button
-                  className="text-sm text-red-600"
+                  className="text-red-600 hover:text-red-800"
+                  aria-label={t("Remove")}
+                  title={t("Remove")}
                   onClick={() => {
                     const next = [...(profile.addresses || [])];
                     next.splice(i, 1);
                     updateField("addresses", next);
                   }}
                 >
-                  {t("Remove")}
+                  <Trash2 size={16} />
                 </button>
               </div>
             </div>
