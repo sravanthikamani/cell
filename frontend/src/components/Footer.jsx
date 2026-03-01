@@ -96,9 +96,9 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-slate-300 hover:text-white transition">
+                <Link to="/orders" className="text-slate-300 hover:text-white transition">
                   Shipping & Returns
-                </a>
+                </Link>
               </li>
               <li>
                 <a href="#" className="text-slate-300 hover:text-white transition">
