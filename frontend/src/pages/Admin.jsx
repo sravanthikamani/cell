@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
@@ -9,9 +9,7 @@ export default function Admin() {
   const { user, token } = useAuth();
   const { t, lang } = useI18n();
 
-  if (!user) return <div className="p-10">{t("Loading...")}</div>;
-  if (user.role !== "admin") return <Navigate to="/" replace />;
-
+  // state hooks must always be called unconditionally at the top of the component
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
     name: "",
@@ -24,7 +22,7 @@ export default function Admin() {
     sizes: "",
     colors: "",
   });
-
+  
   const [products, setProducts] = useState([]);
   const [productPage, setProductPage] = useState(1);
   const [productTotalPages, setProductTotalPages] = useState(1);
@@ -57,7 +55,7 @@ export default function Admin() {
     category: ["audio", "chargers", "cables", "power banks"],
   };
 
-  const loadProducts = async (page = productPage, search = productSearch) => {
+  const loadProducts = useCallback(async (page = 1, search = "") => {
     const params = new URLSearchParams({ page: String(page), limit: "20" });
     if (search.trim()) params.set("q", search.trim());
     const res = await fetch(`${API_BASE}/api/admin/products?${params.toString()}`, {
@@ -71,33 +69,35 @@ export default function Admin() {
     setProducts(Array.isArray(data.items) ? data.items : []);
     setProductPage(data.page || 1);
     setProductTotalPages(data.totalPages || 1);
-  };
+  }, [token]);
 
-  const loadUsers = async (
-    page = userPage,
-    search = userSearch,
-    role = userRoleFilter
-  ) => {
-    const params = new URLSearchParams({ page: String(page), limit: "20" });
-    if (search.trim()) params.set("q", search.trim());
-    if (role.trim()) params.set("role", role.trim());
-    const res = await fetch(`${API_BASE}/api/admin/users?${params.toString()}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setUserMsg(data.error || "Failed to load users");
-      return;
-    }
-    setUsers(Array.isArray(data.items) ? data.items : []);
-    setUserPage(data.page || 1);
-    setUserTotalPages(data.totalPages || 1);
-  };
+  const loadUsers = useCallback(
+    async (page = 1, search = "", role = "") => {
+      const params = new URLSearchParams({ page: String(page), limit: "20" });
+      if (search.trim()) params.set("q", search.trim());
+      if (role.trim()) params.set("role", role.trim());
+      const res = await fetch(`${API_BASE}/api/admin/users?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setUserMsg(data.error || "Failed to load users");
+        return;
+      }
+      setUsers(Array.isArray(data.items) ? data.items : []);
+      setUserPage(data.page || 1);
+      setUserTotalPages(data.totalPages || 1);
+    },
+    [token]
+  );
 
   useEffect(() => {
+    // loadProducts and loadUsers trigger state updates; the rule flags the
+    // first call, so we disable it explicitly here.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadProducts(1).catch(() => {});
     loadUsers(1).catch(() => {});
-  }, [token]);
+  }, [token, loadProducts, loadUsers]);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/admin/coupons`, {
@@ -122,6 +122,10 @@ export default function Admin() {
     setTimeout(() => productNameInputRef.current?.focus(), 250);
   }, [editingId]);
 
+  // early return after declaring all hooks
+  if (!user) return <div className="p-10">{t("Loading...")}</div>;
+  if (user.role !== "admin") return <Navigate to="/" replace />;
+
   const addProduct = async () => {
     const res = await fetch(`${API_BASE}/api/admin/products`, {
       method: "POST",
@@ -141,7 +145,7 @@ export default function Admin() {
     const data = await res.json();
     if (!res.ok) return alert(data.error || "Failed to add product");
     alert(t("Product added"));
-    await loadProducts(productPage);
+    await loadProducts(productPage, productSearch);
   };
 
   const updateProduct = async () => {
@@ -164,7 +168,7 @@ export default function Admin() {
     if (!res.ok) return alert(data.error || "Failed to update product");
     alert(t("Product updated"));
     setEditingId(null);
-    await loadProducts(productPage);
+    await loadProducts(productPage, productSearch);
   };
 
   const updateUser = async (userId, payload) => {
@@ -339,7 +343,7 @@ export default function Admin() {
                 fetch(`${API_BASE}/api/admin/products/${p._id}`, {
                   method: "DELETE",
                   headers: { Authorization: `Bearer ${token}` },
-                }).then(() => loadProducts(productPage))
+                }).then(() => loadProducts(productPage, productSearch))
               }
               className="text-red-600"
             >
