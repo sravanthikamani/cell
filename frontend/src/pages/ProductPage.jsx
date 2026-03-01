@@ -7,6 +7,7 @@ import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
 import { formatCurrency } from "../lib/format";
 import Seo from "../components/Seo";
+import { Star, StarHalf } from "lucide-react";
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -248,15 +249,18 @@ export default function ProductPage() {
             <label className="text-sm">{t("Rating:")}</label>
             <select
               value={rating}
-              onChange={(e) => setRating(e.target.value)}
+              onChange={(e) => setRating(Number(e.target.value))}
               className="border px-2 py-1"
             >
-              <option value="5">5</option>
-              <option value="4">4</option>
-              <option value="3">3</option>
-              <option value="2">2</option>
-              <option value="1">1</option>
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+              <option value={3}>3</option>
+              <option value={3.5}>3.5</option>
+              <option value={4}>4</option>
+              <option value={4.5}>4.5</option>
+              <option value={5}>5</option>
             </select>
+            <StarsRow value={Number(rating)} />
           </div>
           <textarea
             value={comment}
@@ -298,4 +302,24 @@ export default function ProductPage() {
       </div>
     </div>
   );
+}
+
+function StarsRow({ value = 0, size = 16 }) {
+  const stars = [];
+  for (let i = 1; i <= 5; i++) {
+    if (value >= i) {
+      stars.push(
+        <Star key={i} size={size} className="text-yellow-400" />
+      );
+    } else if (value >= i - 0.5) {
+      stars.push(
+        <StarHalf key={i} size={size} className="text-yellow-400" />
+      );
+    } else {
+      stars.push(
+        <Star key={i} size={size} className="text-slate-400" />
+      );
+    }
+  }
+  return <div className="flex items-center gap-1">{stars}</div>;
 }
