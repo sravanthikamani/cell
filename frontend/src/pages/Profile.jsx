@@ -8,6 +8,21 @@ export default function Profile() {
   const [profile, setProfile] = useState(null);
   const [msg, setMsg] = useState("");
   const { t } = useI18n();
+  const [newAddress, setNewAddress] = useState({
+    name: "",
+    phone: "",
+    street: "",
+    city: "",
+    pincode: "",
+  });
+  const [editingIndex, setEditingIndex] = useState(-1);
+  const [editedAddress, setEditedAddress] = useState({
+    name: "",
+    phone: "",
+    street: "",
+    city: "",
+    pincode: "",
+  });
 
   useEffect(() => {
     fetch(`${API_BASE}/api/users/me`, {
@@ -23,14 +38,13 @@ export default function Profile() {
   const updateField = (key, value) =>
     setProfile((p) => ({ ...p, [key]: value }));
 
-  const updateAddress = (index, key, value) => {
-    const next = [...(profile.addresses || [])];
-    next[index] = { ...next[index], [key]: value };
-    updateField("addresses", next);
-  };
-
   const save = async () => {
     setMsg("");
+    // include a filled new address (if any) at the top of the addresses list
+    const addressesToSave = [...(profile.addresses || [])];
+    const hasNew = Object.values(newAddress).some((v) => String(v || "").trim() !== "");
+    if (hasNew) addressesToSave.unshift({ ...newAddress });
+
     const res = await fetch(`${API_BASE}/api/users/me`, {
       method: "PUT",
       headers: {
@@ -40,7 +54,7 @@ export default function Profile() {
       body: JSON.stringify({
         name: profile.name,
         phone: profile.phone,
-        addresses: profile.addresses || [],
+        addresses: addressesToSave,
       }),
     });
     const data = await res.json();
@@ -50,6 +64,9 @@ export default function Profile() {
     }
     setProfile(data);
     setMsg(t("Profile saved"));
+
+    // clear new address form if we added one
+    if (hasNew) setNewAddress({ name: "", phone: "", street: "", city: "", pincode: "" });
   };
 
   return (
@@ -74,62 +91,140 @@ export default function Profile() {
       <h2 className="text-xl font-bold mt-8 mb-3">{t("Addresses")}</h2>
       {(profile.addresses || []).map((addr, i) => (
         <div key={i} className="border p-3 mb-3">
-          <div className="grid grid-cols-2 gap-3">
-            <input
-              className="border p-2"
-              placeholder={t("Name")}
-              value={addr.name || ""}
-              onChange={(e) => updateAddress(i, "name", e.target.value)}
-            />
-            <input
-              className="border p-2"
-              placeholder={t("Phone")}
-              value={addr.phone || ""}
-              onChange={(e) => updateAddress(i, "phone", e.target.value)}
-            />
-            <input
-              className="border p-2 col-span-2"
-              placeholder={t("Street")}
-              value={addr.street || ""}
-              onChange={(e) => updateAddress(i, "street", e.target.value)}
-            />
-            <input
-              className="border p-2"
-              placeholder={t("City")}
-              value={addr.city || ""}
-              onChange={(e) => updateAddress(i, "city", e.target.value)}
-            />
-            <input
-              className="border p-2"
-              placeholder={t("Pincode")}
-              value={addr.pincode || ""}
-              onChange={(e) => updateAddress(i, "pincode", e.target.value)}
-            />
-          </div>
-          <button
-            className="mt-2 text-sm text-red-600"
-            onClick={() => {
-              const next = [...(profile.addresses || [])];
-              next.splice(i, 1);
-              updateField("addresses", next);
-            }}
-          >
-            {t("Remove")}
-          </button>
+          {editingIndex === i ? (
+            <div>
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  className="border p-2"
+                  placeholder={t("Name")}
+                  value={editedAddress.name}
+                  onChange={(e) => setEditedAddress((s) => ({ ...s, name: e.target.value }))}
+                />
+                <input
+                  className="border p-2"
+                  placeholder={t("Phone")}
+                  value={editedAddress.phone}
+                  onChange={(e) => setEditedAddress((s) => ({ ...s, phone: e.target.value }))}
+                />
+                <input
+                  className="border p-2 col-span-2"
+                  placeholder={t("Street")}
+                  value={editedAddress.street}
+                  onChange={(e) => setEditedAddress((s) => ({ ...s, street: e.target.value }))}
+                />
+                <input
+                  className="border p-2"
+                  placeholder={t("City")}
+                  value={editedAddress.city}
+                  onChange={(e) => setEditedAddress((s) => ({ ...s, city: e.target.value }))}
+                />
+                <input
+                  className="border p-2"
+                  placeholder={t("Pincode")}
+                  value={editedAddress.pincode}
+                  onChange={(e) => setEditedAddress((s) => ({ ...s, pincode: e.target.value }))}
+                />
+              </div>
+              <div className="flex gap-3 mt-2">
+                <button
+                  className="text-sm text-teal-700"
+                  onClick={() => {
+                    const next = [...(profile.addresses || [])];
+                    next[i] = { ...editedAddress };
+                    updateField("addresses", next);
+                    setEditingIndex(-1);
+                    setEditedAddress({ name: "", phone: "", street: "", city: "", pincode: "" });
+                  }}
+                >
+                  {t("Save")}
+                </button>
+                <button
+                  className="text-sm text-gray-700"
+                  onClick={() => {
+                    setEditingIndex(-1);
+                    setEditedAddress({ name: "", phone: "", street: "", city: "", pincode: "" });
+                  }}
+                >
+                  {t("Cancel")}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex justify-between items-start">
+              <div className="text-sm">
+                {`${addr.name || ""}, ${addr.phone || ""}, ${addr.street || ""}, ${addr.city || ""} - ${addr.pincode || ""}`}
+              </div>
+              <div className="flex gap-3">
+                <button
+                  className="text-sm text-blue-600"
+                  onClick={() => {
+                    setEditingIndex(i);
+                    setEditedAddress({ ...addr });
+                  }}
+                >
+                  {t("Edit")}
+                </button>
+                <button
+                  className="text-sm text-red-600"
+                  onClick={() => {
+                    const next = [...(profile.addresses || [])];
+                    next.splice(i, 1);
+                    updateField("addresses", next);
+                  }}
+                >
+                  {t("Remove")}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ))}
 
-      <button
-        className="mb-6 text-sm text-blue-600"
-        onClick={() =>
-          updateField("addresses", [
-            ...(profile.addresses || []),
-            { name: "", phone: "", street: "", city: "", pincode: "" },
-          ])
-        }
-      >
-        {t("+ Add Address")}
-      </button>
+      {/* New address form */}
+      <div className="border rounded p-4 mb-4">
+        <h3 className="font-semibold mb-2">{t("Add New Address")}</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            className="border p-2"
+            placeholder={t("Name")}
+            value={newAddress.name}
+            onChange={(e) => setNewAddress((s) => ({ ...s, name: e.target.value }))}
+          />
+          <input
+            className="border p-2"
+            placeholder={t("Phone")}
+            value={newAddress.phone}
+            onChange={(e) => setNewAddress((s) => ({ ...s, phone: e.target.value }))}
+          />
+          <input
+            className="border p-2 col-span-2"
+            placeholder={t("Street")}
+            value={newAddress.street}
+            onChange={(e) => setNewAddress((s) => ({ ...s, street: e.target.value }))}
+          />
+          <input
+            className="border p-2"
+            placeholder={t("City")}
+            value={newAddress.city}
+            onChange={(e) => setNewAddress((s) => ({ ...s, city: e.target.value }))}
+          />
+          <input
+            className="border p-2"
+            placeholder={t("Pincode")}
+            value={newAddress.pincode}
+            onChange={(e) => setNewAddress((s) => ({ ...s, pincode: e.target.value }))}
+          />
+        </div>
+        <div className="flex gap-3 mt-3">
+          <button
+            className="text-sm text-gray-700"
+            onClick={() => setNewAddress({ name: "", phone: "", street: "", city: "", pincode: "" })}
+          >
+            {t("Clear")}
+          </button>
+          <div className="text-sm text-gray-500 self-center">{t("Fill this form and click Save Profile to add")}</div>
+        </div>
+      </div>
 
       {msg && <div className="text-sm text-green-700">{msg}</div>}
 
