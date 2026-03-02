@@ -4,6 +4,57 @@ import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
 import { formatCurrency } from "../lib/format";
+import { BarChart } from "@mui/x-charts/BarChart";
+import { useAnimateBarLabel } from "@mui/x-charts/hooks";
+import Stack from "@mui/material/Stack";
+import Button from "@mui/material/Button";
+import { styled } from "@mui/material/styles";
+
+const Text = styled("text")(({ theme }) => ({
+  ...theme?.typography?.body2,
+  stroke: "none",
+  fill: (theme.vars || theme)?.palette?.text?.primary,
+}));
+
+function AnimatedBarLabel(props) {
+  const {
+    seriesId,
+    dataIndex,
+    color,
+    isFaded,
+    isHighlighted,
+    classes,
+    xOrigin,
+    yOrigin,
+    x,
+    y,
+    width,
+    height,
+    layout,
+    skipAnimation,
+    ...otherProps
+  } = props;
+
+  const animatedProps = useAnimateBarLabel({
+    xOrigin,
+    x,
+    yOrigin,
+    y,
+    width,
+    height,
+    layout,
+    skipAnimation,
+  });
+
+  return (
+    <Text
+      {...otherProps}
+      textAnchor="middle"
+      dominantBaseline="central"
+      {...animatedProps}
+    />
+  );
+}
 
 export default function Admin() {
   const { user, token } = useAuth();
@@ -50,6 +101,7 @@ export default function Admin() {
     maxDiscount: "",
     active: true,
   });
+  const [analyticsChartKey, runAnalyticsAnimation] = React.useReducer((v) => v + 1, 0);
 
   const groupOptions = ["device", "category"];
   const productFormRef = useRef(null);
@@ -255,8 +307,10 @@ export default function Admin() {
 
   const topProducts = Array.isArray(analytics?.topProducts) ? analytics.topProducts : [];
   const ordersByDay = Array.isArray(analytics?.ordersByDay) ? analytics.ordersByDay : [];
-  const maxTopProductQty = Math.max(1, ...topProducts.map((p) => Number(p.qty || 0)));
-  const maxOrdersByDay = Math.max(1, ...ordersByDay.map((d) => Number(d.count || 0)));
+  const topProductLabels = topProducts.map((p) => p.product?.name || p._id || "-");
+  const topProductQtyData = topProducts.map((p) => Number(p.qty || 0));
+  const ordersByDayLabels = ordersByDay.map((d) => d._id || "-");
+  const ordersByDayCountData = ordersByDay.map((d) => Number(d.count || 0));
 
   return (
     <div className="max-w-5xl mx-auto p-6 md:p-10">
@@ -564,51 +618,59 @@ export default function Admin() {
         <div className="card p-4 mt-3">
           <div>{t("Total Orders:")} {analytics.totalOrders}</div>
           <div>{t("Total Sales:")} {formatCurrency(analytics.totalSales, lang)}</div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-            <div>
-              <h3 className="font-semibold mb-2">{t("Top Products")}</h3>
-              {topProducts.length === 0 && <div className="text-sm text-gray-500">No data</div>}
-              <div className="space-y-2">
-                {topProducts.map((p) => {
-                  const qty = Number(p.qty || 0);
-                  const width = `${Math.max(6, (qty / maxTopProductQty) * 100)}%`;
-                  return (
-                    <div key={p._id} className="text-sm">
-                      <div className="flex justify-between gap-2">
-                        <span className="truncate max-w-[70%]">{p.product?.name || p._id}</span>
-                        <span>{qty} sold</span>
-                      </div>
-                      <div className="mt-1 h-2 bg-gray-200 rounded">
-                        <div className="h-2 bg-teal-600 rounded" style={{ width }} />
-                      </div>
-                    </div>
-                  );
-                })}
+          <Stack spacing={2} className="mt-4">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-semibold mb-2">{t("Top Products")}</h3>
+                {topProducts.length === 0 ? (
+                  <div className="text-sm text-gray-500">No data</div>
+                ) : (
+                  <BarChart
+                    key={`products-${analyticsChartKey}`}
+                    xAxis={[{ data: topProductLabels, scaleType: "band" }]}
+                    series={[
+                      {
+                        type: "bar",
+                        label: "Sold",
+                        data: topProductQtyData,
+                      },
+                    ]}
+                    width={460}
+                    height={320}
+                    barLabel="value"
+                    slots={{ barLabel: AnimatedBarLabel }}
+                  />
+                )}
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">{t("Orders by Day")}</h3>
+                {ordersByDay.length === 0 ? (
+                  <div className="text-sm text-gray-500">No data</div>
+                ) : (
+                  <BarChart
+                    key={`days-${analyticsChartKey}`}
+                    xAxis={[{ data: ordersByDayLabels, scaleType: "band" }]}
+                    series={[
+                      {
+                        type: "bar",
+                        label: "Orders",
+                        data: ordersByDayCountData,
+                      },
+                    ]}
+                    width={460}
+                    height={320}
+                    barLabel="value"
+                    slots={{ barLabel: AnimatedBarLabel }}
+                  />
+                )}
               </div>
             </div>
 
-            <div>
-              <h3 className="font-semibold mb-2">{t("Orders by Day")}</h3>
-              {ordersByDay.length === 0 && <div className="text-sm text-gray-500">No data</div>}
-              <div className="space-y-2">
-                {ordersByDay.map((d) => {
-                  const count = Number(d.count || 0);
-                  const width = `${Math.max(6, (count / maxOrdersByDay) * 100)}%`;
-                  return (
-                    <div key={d._id} className="text-sm">
-                      <div className="flex justify-between gap-2">
-                        <span>{d._id}</span>
-                        <span>{count} orders</span>
-                      </div>
-                      <div className="mt-1 h-2 bg-gray-200 rounded">
-                        <div className="h-2 bg-indigo-600 rounded" style={{ width }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+            <Button variant="outlined" onClick={() => runAnalyticsAnimation()}>
+              Run Animation
+            </Button>
+          </Stack>
         </div>
       )}
     </div>
