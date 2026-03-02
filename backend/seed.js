@@ -1,4 +1,5 @@
-require("./db");
+require("dotenv").config();
+const { connectDB, mongoose } = require("./db");
 const Product = require("./models/Product");
 
 const INR_TO_EUR_RATE = Number(process.env.INR_TO_EUR_RATE || 90);
@@ -185,10 +186,17 @@ const products = [
 ];
 
 async function seed() {
-  await Product.deleteMany();
-  await Product.insertMany(products);
-  console.log("✅ Products inserted");
-  process.exit();
+  try {
+    await connectDB();
+    await Product.deleteMany();
+    await Product.insertMany(products);
+    console.log("✅ Products inserted");
+    await mongoose.connection.close();
+    process.exit(0);
+  } catch (err) {
+    console.error("❌ Seed failed:", err.message);
+    process.exit(1);
+  }
 }
 
 seed();

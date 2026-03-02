@@ -1,5 +1,5 @@
 require("dotenv").config();
-require("./db"); 
+const { connectDB, MONGODB_URI, maskMongoUri } = require("./db");
 const express = require("express");
 const cors = require("cors");
 const compression = require("compression");
@@ -124,12 +124,6 @@ async function autoNormalizeProductPrices() {
     );
   }
 }
-
-autoNormalizeProductPrices().catch((err) => {
-  console.error("Auto-normalize prices failed:", err.message);
-});
-
-
 
 app.get("/api/orders/:userId", async (req, res) => {
   const orders = await Order.find({ userId: req.params.userId })
@@ -387,6 +381,39 @@ app.post("/api/cart/add", async (req, res) => {
    SERVER
 ========================= */
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`✅ Backend running on http://localhost:${PORT}`);
+
+process.on("unhandledRejection", (reason) => {
+  console.error("❌ Unhandled promise rejection:", reason);
 });
+
+process.on("uncaughtException", (error) => {
+  console.error("❌ Uncaught exception:", error);
+});
+
+async function startServer() {
+  try {
+    console.log(
+      `[startup] PORT=${PORT} NODE_ENV=${process.env.NODE_ENV || "development"} DB=${maskMongoUri(MONGODB_URI)}`
+    );
+
+    await connectDB();
+
+    const server = app.listen(PORT, () => {
+      console.log(`✅ Backend running on http://localhost:${PORT}`);
+    });
+
+    server.on("error", (err) => {
+      console.error("❌ Server error:", err.message);
+      process.exit(1);
+    });
+
+    autoNormalizeProductPrices().catch((err) => {
+      console.error("Auto-normalize prices failed:", err.message);
+    });
+  } catch (err) {
+    console.error("❌ Startup failed:", err.message);
+    process.exit(1);
+  }
+}
+
+startServer();
