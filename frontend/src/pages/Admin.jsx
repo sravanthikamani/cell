@@ -357,7 +357,7 @@ export default function Admin() {
 
   return (
     <div className="admin-page-bg">
-      <div className="max-w-5xl mx-auto p-6 md:p-10">
+      <div className="w-full mx-auto px-4 md:px-8 lg:px-10 py-6 md:py-10">
       <h1 className="text-2xl font-bold mb-4">{t("Admin - Add Product")}</h1>
 
       <div ref={productFormRef} className="mb-3 card p-4">
