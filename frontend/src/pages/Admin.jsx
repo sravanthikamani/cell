@@ -182,6 +182,13 @@ export default function Admin() {
   }, [editingId]);
 
   useEffect(() => {
+    document.body.classList.add("admin-bg-active");
+    return () => {
+      document.body.classList.remove("admin-bg-active");
+    };
+  }, []);
+
+  useEffect(() => {
     setUserSlideStart(0);
     if (!users.length) {
       setSelectedUserId("");
