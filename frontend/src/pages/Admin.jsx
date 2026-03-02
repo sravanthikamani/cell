@@ -11,6 +11,7 @@ export default function Admin() {
 
   // state hooks must always be called unconditionally at the top of the component
   const [editingId, setEditingId] = useState(null);
+  const [typeWarning, setTypeWarning] = useState("");
   const [form, setForm] = useState({
     name: "",
     price: "",
@@ -275,14 +276,35 @@ export default function Admin() {
         <input ref={productNameInputRef} className="border p-2" placeholder={t("Name")} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         <input className="border p-2" placeholder={t("Price")} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
         <input className="border p-2" placeholder={t("Brand")} value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} />
-        <select className="border p-2 bg-white" value={form.group} onChange={(e) => setForm({ ...form, group: e.target.value, type: "" })}>
+        <select className="border p-2 bg-white" value={form.group} onChange={(e) => {
+          setForm({ ...form, group: e.target.value, type: "" });
+          setTypeWarning("");
+        }}>
           <option value="">Select group</option>
           {groupOptions.map((g) => <option key={g} value={g}>{g}</option>)}
         </select>
-        <select className="border p-2 bg-white" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} disabled={!form.group}>
+        <select
+          className="border p-2 bg-white"
+          value={form.type}
+          onMouseDown={() => {
+            if (!form.group) setTypeWarning("first select group");
+          }}
+          onFocus={() => {
+            if (!form.group) setTypeWarning("first select group");
+          }}
+          onChange={(e) => {
+            if (!form.group) {
+              setTypeWarning("first select group");
+              return;
+            }
+            setTypeWarning("");
+            setForm({ ...form, type: e.target.value });
+          }}
+        >
           <option value="">Select type</option>
           {(typeOptions[form.group] || []).map((tp) => <option key={tp} value={tp}>{tp}</option>)}
         </select>
+        {typeWarning && <p className="md:col-span-2 text-sm text-red-600">{typeWarning}</p>}
         <input className="border p-2" placeholder={t("Stock")} value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
         <input className="border p-2 md:col-span-2" placeholder={t("Images (comma URLs)")} value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} />
         <input className="border p-2" placeholder={t("Sizes (comma)")} value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} />
