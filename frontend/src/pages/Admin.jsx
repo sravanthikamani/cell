@@ -38,6 +38,8 @@ export default function Admin() {
   const [userSearch, setUserSearch] = useState("");
   const [userRoleFilter, setUserRoleFilter] = useState("");
   const [userMsg, setUserMsg] = useState("");
+  const [userSlideStart, setUserSlideStart] = useState(0);
+  const userCardsPerView = 2;
 
   const [couponForm, setCouponForm] = useState({
     code: "",
@@ -122,6 +124,10 @@ export default function Admin() {
     productFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     setTimeout(() => productNameInputRef.current?.focus(), 250);
   }, [editingId]);
+
+  useEffect(() => {
+    setUserSlideStart(0);
+  }, [users]);
 
   // early return after declaring all hooks
   if (!user) return <div className="p-10">{t("Loading...")}</div>;
@@ -453,29 +459,62 @@ export default function Admin() {
           <button type="button" className="bg-black text-white px-3" onClick={() => loadUsers(1)}>Search</button>
         </div>
         {userMsg && <div className="text-sm text-red-600 mb-2">{userMsg}</div>}
-        {users.map((u) => (
-          <div key={u._id} className="border rounded p-3 mb-2 flex justify-between gap-3">
-            <div className="text-sm">
-              <div className="font-semibold">{u.email}</div>
-              <div>{u.name || "-"}</div>
-              <div>{u.phone || "-"}</div>
-              <div>Role: {u.role}</div>
-              <div>Status: {u.isBlocked ? "blocked" : "active"}</div>
+
+        {users.length > 0 && (
+          <div className="flex items-center justify-between mb-2">
+            <button
+              type="button"
+              className="border px-3 py-1 text-sm disabled:opacity-50"
+              disabled={userSlideStart <= 0}
+              onClick={() => setUserSlideStart((s) => Math.max(0, s - userCardsPerView))}
+            >
+              ←
+            </button>
+            <div className="text-xs text-gray-600">
+              Showing {Math.min(users.length, userSlideStart + 1)}-
+              {Math.min(users.length, userSlideStart + userCardsPerView)} of {users.length}
             </div>
-            <div className="flex items-center gap-2">
-              <select className="border p-1 text-sm" value={u.role} onChange={(e) => updateUser(u._id, { role: e.target.value })}>
-                <option value="user">user</option>
-                <option value="admin">admin</option>
-              </select>
-              <button className="text-sm underline" onClick={() => updateUser(u._id, { isBlocked: !u.isBlocked })}>
-                {u.isBlocked ? "Unblock" : "Block"}
-              </button>
-              <button className="text-sm text-red-600 underline" onClick={() => deleteUser(u._id)}>
-                Delete
-              </button>
-            </div>
+            <button
+              type="button"
+              className="border px-3 py-1 text-sm disabled:opacity-50"
+              disabled={userSlideStart + userCardsPerView >= users.length}
+              onClick={() =>
+                setUserSlideStart((s) => Math.min(Math.max(0, users.length - userCardsPerView), s + userCardsPerView))
+              }
+            >
+              →
+            </button>
           </div>
-        ))}
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {users.slice(userSlideStart, userSlideStart + userCardsPerView).map((u) => (
+            <div key={u._id} className="border rounded p-3 flex justify-between gap-3">
+              <div className="text-sm">
+                <div className="font-semibold">{u.email}</div>
+                <div>{u.name || "-"}</div>
+                <div>{u.phone || "-"}</div>
+                <div>Role: {u.role}</div>
+                <div>Status: {u.isBlocked ? "blocked" : "active"}</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <select className="border p-1 text-sm" value={u.role} onChange={(e) => updateUser(u._id, { role: e.target.value })}>
+                  <option value="user">user</option>
+                  <option value="admin">admin</option>
+                </select>
+                <button className="text-sm underline" onClick={() => updateUser(u._id, { isBlocked: !u.isBlocked })}>
+                  {u.isBlocked ? "Unblock" : "Block"}
+                </button>
+                <button className="text-sm text-red-600 underline" onClick={() => deleteUser(u._id)}>
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {users.length === 0 && <div className="text-sm text-gray-600">No users found.</div>}
+
         <div className="flex gap-2 mt-3">
           <button className="border px-3 py-1 text-sm disabled:opacity-50" disabled={userPage <= 1} onClick={() => loadUsers(userPage - 1)}>Prev</button>
           <div className="text-sm px-2 py-1">Page {userPage} / {userTotalPages}</div>
