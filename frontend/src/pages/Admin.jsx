@@ -360,43 +360,42 @@ export default function Admin() {
       <div className="w-full mx-auto px-4 md:px-8 lg:px-10 py-6 md:py-10">
       <h1 className="text-2xl font-bold mb-4">{t("Admin - Add Product")}</h1>
 
-      <div className="max-w-5xl mx-auto">
-        <div ref={productFormRef} className="mb-3 card p-4">
-          <input
-            type="file"
-            accept="image/*"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              const fd = new FormData();
-              fd.append("image", file);
-              const res = await fetch(`${API_BASE}/api/admin/upload`, {
-                method: "POST",
-                headers: { Authorization: `Bearer ${token}` },
-                body: fd,
-              });
-              const data = await res.json();
-              if (res.ok && data.url) {
-                setForm((f) => ({
-                  ...f,
-                  images: f.images ? `${f.images},${data.url}` : data.url,
-                }));
-              } else {
-                alert(data.error || "Upload failed");
-              }
-            }}
-          />
-        </div>
-
-        <div
-          className="card p-4 grid grid-cols-1 md:grid-cols-2 gap-3"
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              submitProductForm();
+      <div ref={productFormRef} className="mb-3 card p-4">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const fd = new FormData();
+            fd.append("image", file);
+            const res = await fetch(`${API_BASE}/api/admin/upload`, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}` },
+              body: fd,
+            });
+            const data = await res.json();
+            if (res.ok && data.url) {
+              setForm((f) => ({
+                ...f,
+                images: f.images ? `${f.images},${data.url}` : data.url,
+              }));
+            } else {
+              alert(data.error || "Upload failed");
             }
           }}
-        >
+        />
+      </div>
+
+      <div
+        className="card p-4 grid grid-cols-1 md:grid-cols-2 gap-3"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            submitProductForm();
+          }
+        }}
+      >
         <input ref={productNameInputRef} className="border p-2" placeholder={t("Name")} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         <input className="border p-2" placeholder={t("Price")} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
         <input className="border p-2" placeholder={t("Brand")} value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} />
@@ -433,12 +432,11 @@ export default function Admin() {
         <input className="border p-2 md:col-span-2" placeholder={t("Images (comma URLs)")} value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} />
         <input className="border p-2" placeholder={t("Sizes (comma)")} value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} />
         <input className="border p-2" placeholder={t("Colors (comma)")} value={form.colors} onChange={(e) => setForm({ ...form, colors: e.target.value })} />
-        </div>
-
-        <button type="button" onClick={submitProductForm} className="w-full bg-black text-white py-2 mt-3">
-          {editingId ? t("Update Product") : t("Add Product")}
-        </button>
       </div>
+
+      <button type="button" onClick={submitProductForm} className="w-full md:w-64 md:mx-auto block bg-black text-white py-2 mt-3">
+        {editingId ? t("Update Product") : t("Add Product")}
+      </button>
 
       <h2 className="text-xl font-bold mt-10">{t("All Products")}</h2>
       <div className="flex gap-2 mb-3 mt-2">
@@ -571,7 +569,7 @@ export default function Admin() {
       <div className="card p-4 mt-3">
         <div className="flex gap-2 mb-3">
           <input
-            className="border p-2 flex-1"
+            className="border p-2 w-full md:w-[420px] lg:w-[520px]"
             placeholder="Search by email/name/phone"
             value={userSearch}
             onChange={(e) => setUserSearch(e.target.value)}
