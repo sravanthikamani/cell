@@ -18,6 +18,9 @@ export default function ProductPage() {
   const [reviews, setReviews] = useState([]);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [realImages, setRealImages] = useState([]);
+  const [isUploadingReviewImage, setIsUploadingReviewImage] = useState(false);
+  const [editingReviewId, setEditingReviewId] = useState("");
   const [reviewMsg, setReviewMsg] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
@@ -109,16 +112,23 @@ export default function ProductPage() {
     }
     setReviewMsg("");
     try {
-      const res = await fetch(`${API_BASE}/api/reviews`, {
-        method: "POST",
+      const isEditing = Boolean(editingReviewId);
+      const url = isEditing
+        ? `${API_BASE}/api/reviews/${editingReviewId}`
+        : `${API_BASE}/api/reviews`;
+      const method = isEditing ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          productId: product._id,
+          ...(isEditing ? {} : { productId: product._id }),
           rating: Number(rating),
           comment,
+          realImages,
         }),
       });
       const data = await res.json();
@@ -131,10 +141,73 @@ export default function ProductPage() {
       setReviews(updated);
       setComment("");
       setRating(5);
-      setReviewMsg(t("Review submitted."));
+      setRealImages([]);
+      setEditingReviewId("");
+      setReviewMsg(isEditing ? "Review updated." : t("Review submitted."));
     } catch (err) {
       setReviewMsg(err.error || t("Failed to submit review."));
     }
+  };
+
+  const uploadReviewImage = async (file) => {
+    if (!file || !user) return;
+    setReviewMsg("");
+    setIsUploadingReviewImage(true);
+    try {
+      const fd = new FormData();
+      fd.append("image", file);
+      const res = await fetch(`${API_BASE}/api/reviews/upload`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "Failed to upload image");
+      }
+      setRealImages((prev) => [...prev, data.url].slice(0, 5));
+    } catch (err) {
+      setReviewMsg(err.message || "Failed to upload image");
+    } finally {
+      setIsUploadingReviewImage(false);
+    }
+  };
+
+  const onEditReview = (review) => {
+    setEditingReviewId(review._id);
+    setRating(Number(review.rating || 5));
+    setComment(review.comment || "");
+    setRealImages(Array.isArray(review.realImages) ? review.realImages : []);
+    setReviewMsg("");
+  };
+
+  const onDeleteReview = async (reviewId) => {
+    if (!window.confirm("Delete this review?")) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/reviews/${reviewId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to delete review");
+
+      setReviews((prev) => prev.filter((r) => r._id !== reviewId));
+      if (editingReviewId === reviewId) {
+        setEditingReviewId("");
+        setRating(5);
+        setComment("");
+        setRealImages([]);
+      }
+      setReviewMsg("Review deleted.");
+    } catch (err) {
+      setReviewMsg(err.message || "Failed to delete review");
+    }
+  };
+
+  const resolveImageUrl = (url) => {
+    if (!url) return "";
+    if (/^https?:\/\//i.test(url)) return url;
+    return `${API_BASE}${url}`;
   };
 
   const toggleWishlist = async () => {
@@ -269,17 +342,73 @@ export default function ProductPage() {
             placeholder={t("Write your review...")}
             rows={3}
           />
+          <div className="mt-3">
+            <div className="text-sm font-medium mb-1">real images</div>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                await uploadReviewImage(file);
+              }}
+              disabled={isUploadingReviewImage || realImages.length >= 5}
+            />
+            <div className="text-xs text-gray-500 mt-1">Up to 5 images</div>
+            {isUploadingReviewImage && (
+              <div className="text-xs text-gray-600 mt-1">Uploading image...</div>
+            )}
+            {realImages.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {realImages.map((img, idx) => (
+                  <div key={`${img}-${idx}`} className="relative">
+                    <img
+                      src={resolveImageUrl(img)}
+                      alt={`real-${idx + 1}`}
+                      className="w-20 h-20 object-cover rounded border"
+                    />
+                    <button
+                      type="button"
+                      className="absolute -top-2 -right-2 bg-black text-white rounded-full w-5 h-5 text-xs"
+                      onClick={() =>
+                        setRealImages((prev) => prev.filter((_, i) => i !== idx))
+                      }
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           {reviewMsg && (
             <div className="mt-2 text-sm text-red-600">
               {reviewMsg}
             </div>
           )}
-          <button
-            onClick={submitReview}
-            className="mt-3 bg-teal-600 text-white px-4 py-2"
-          >
-            {t("Submit Review")}
-          </button>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={submitReview}
+              className="bg-teal-600 text-white px-4 py-2"
+            >
+              {editingReviewId ? "Update Review" : t("Submit Review")}
+            </button>
+            {editingReviewId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingReviewId("");
+                  setRating(5);
+                  setComment("");
+                  setRealImages([]);
+                  setReviewMsg("");
+                }}
+                className="border px-4 py-2"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
         </div>
 
         {reviews.length === 0 && (
@@ -296,6 +425,31 @@ export default function ProductPage() {
             </div>
             {r.comment && (
               <div className="text-sm mt-2">{r.comment}</div>
+            )}
+            {Array.isArray(r.realImages) && r.realImages.length > 0 && (
+              <div className="mt-2">
+                <div className="text-xs text-gray-500 mb-1">real images</div>
+                <div className="flex flex-wrap gap-2">
+                  {r.realImages.map((img, idx) => (
+                    <img
+                      key={`${r._id}-${idx}`}
+                      src={resolveImageUrl(img)}
+                      alt={`review-${idx + 1}`}
+                      className="w-20 h-20 object-cover rounded border"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            {String(r.userId?._id || "") === String(user?.id || "") && (
+              <div className="mt-3 flex gap-3 text-sm">
+                <button type="button" onClick={() => onEditReview(r)} className="text-blue-600 underline">
+                  {t("Edit")}
+                </button>
+                <button type="button" onClick={() => onDeleteReview(r._id)} className="text-red-600 underline">
+                  {t("Delete")}
+                </button>
+              </div>
             )}
           </div>
         ))}
