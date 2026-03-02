@@ -9,6 +9,9 @@ import { useAnimateBarLabel } from "@mui/x-charts/hooks";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import { styled } from "@mui/material/styles";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 const Text = styled("text")(({ theme }) => ({
   ...theme?.typography?.body2,
@@ -79,8 +82,6 @@ export default function Admin() {
   const [productPage, setProductPage] = useState(1);
   const [productTotalPages, setProductTotalPages] = useState(1);
   const [productSearch, setProductSearch] = useState("");
-  const [productSlideStart, setProductSlideStart] = useState(0);
-  const productCardsPerView = 3;
 
   const [coupons, setCoupons] = useState([]);
   const [analytics, setAnalytics] = useState(null);
@@ -181,10 +182,6 @@ export default function Admin() {
   }, [editingId]);
 
   useEffect(() => {
-    setProductSlideStart(0);
-  }, [products]);
-
-  useEffect(() => {
     setUserSlideStart(0);
     if (!users.length) {
       setSelectedUserId("");
@@ -278,6 +275,39 @@ export default function Admin() {
   };
 
   const selectedUser = users.find((u) => u._id === selectedUserId) || null;
+
+  const resolveProductImage = (url) => {
+    if (!url) return "https://via.placeholder.com/300x300?text=No+Image";
+    if (/^https?:\/\//i.test(url)) return url;
+    return `${API_BASE}${url}`;
+  };
+
+  const productSliderSettings = {
+    dots: false,
+    infinite: products.length > 3,
+    speed: 500,
+    slidesToShow: Math.min(3, Math.max(1, products.length || 1)),
+    centerMode: products.length > 1,
+    centerPadding: "60px",
+    autoplay: products.length > 3,
+    autoplaySpeed: 2500,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: Math.min(2, Math.max(1, products.length || 1)),
+          centerPadding: "40px",
+        },
+      },
+      {
+        breakpoint: 640,
+        settings: {
+          slidesToShow: 1,
+          centerPadding: "20px",
+        },
+      },
+    ],
+  };
 
   const createCoupon = async () => {
     const res = await fetch(`${API_BASE}/api/admin/coupons`, {
@@ -420,76 +450,60 @@ export default function Admin() {
       </div>
 
       {products.length > 0 && (
-        <div className="flex items-center justify-between mb-2 mt-3">
-          <button
-            type="button"
-            className="border px-3 py-1 text-sm disabled:opacity-50"
-            disabled={productSlideStart <= 0}
-            onClick={() => setProductSlideStart((s) => Math.max(0, s - 1))}
-          >
-            ←
-          </button>
-          <div className="text-xs text-gray-600">
-            Showing {Math.min(products.length, productSlideStart + 1)}-
-            {Math.min(products.length, productSlideStart + productCardsPerView)} of {products.length}
+        <div className="w-full py-4 bg-gray-100 rounded-lg product-center-slider">
+          <div className="w-11/12 mx-auto">
+            <Slider {...productSliderSettings}>
+              {products.map((p) => (
+                <div key={p._id} className="px-3">
+                  <div className="product-slide-card bg-white rounded-2xl shadow-md p-4 text-center transition-transform duration-300">
+                    <img
+                      src={resolveProductImage(p.images?.[0])}
+                      alt={p.name}
+                      className="mx-auto h-44 w-full object-contain rounded"
+                    />
+                    <h3 className="mt-3 text-lg font-semibold truncate">{p.name}</h3>
+                    <p className="text-sm text-gray-600 truncate">{p.brand}</p>
+                    <p className="text-blue-700 font-bold mt-1">{formatCurrency(p.price, lang)}</p>
+                    <p className="text-xs text-gray-500 mt-1">Stock: {p.stock ?? 0}</p>
+                    <div className="mt-3 flex justify-center gap-4">
+                      <button
+                        onClick={() => {
+                          setEditingId(p._id);
+                          setForm({
+                            name: p.name,
+                            price: p.price,
+                            brand: p.brand,
+                            group: p.group,
+                            type: p.type,
+                            images: (p.images || []).join(","),
+                            stock: p.stock ?? 0,
+                            sizes: (p.sizes || []).join(","),
+                            colors: (p.colors || []).join(","),
+                          });
+                        }}
+                        className="text-blue-600"
+                      >
+                        {t("Edit")}
+                      </button>
+                      <button
+                        onClick={() =>
+                          fetch(`${API_BASE}/api/admin/products/${p._id}`, {
+                            method: "DELETE",
+                            headers: { Authorization: `Bearer ${token}` },
+                          }).then(() => loadProducts(productPage, productSearch))
+                        }
+                        className="text-red-600"
+                      >
+                        {t("Delete")}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </Slider>
           </div>
-          <button
-            type="button"
-            className="border px-3 py-1 text-sm disabled:opacity-50"
-            disabled={productSlideStart + productCardsPerView >= products.length}
-            onClick={() =>
-              setProductSlideStart((s) => Math.min(Math.max(0, products.length - productCardsPerView), s + 1))
-            }
-          >
-            →
-          </button>
         </div>
       )}
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {products.slice(productSlideStart, productSlideStart + productCardsPerView).map((p) => (
-          <div key={p._id} className="card p-3 flex flex-col justify-between">
-            <div>
-              <div className="font-semibold">{p.name}</div>
-              <div className="text-sm text-gray-600">{p.brand}</div>
-              <div className="text-sm text-gray-600">Stock: {p.stock ?? 0}</div>
-              <div className="text-sm text-gray-700 mt-1">{formatCurrency(p.price, lang)}</div>
-            </div>
-            <div className="flex gap-4 mt-4">
-              <button
-                onClick={() => {
-                  setEditingId(p._id);
-                  setForm({
-                    name: p.name,
-                    price: p.price,
-                    brand: p.brand,
-                    group: p.group,
-                    type: p.type,
-                    images: (p.images || []).join(","),
-                    stock: p.stock ?? 0,
-                    sizes: (p.sizes || []).join(","),
-                    colors: (p.colors || []).join(","),
-                  });
-                }}
-                className="text-blue-600"
-              >
-                {t("Edit")}
-              </button>
-              <button
-                onClick={() =>
-                  fetch(`${API_BASE}/api/admin/products/${p._id}`, {
-                    method: "DELETE",
-                    headers: { Authorization: `Bearer ${token}` },
-                  }).then(() => loadProducts(productPage, productSearch))
-                }
-                className="text-red-600"
-              >
-                {t("Delete")}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
 
       {products.length === 0 && <div className="text-sm text-gray-600 mt-2">No products found.</div>}
 
