@@ -123,3 +123,21 @@ body.admin-bg-active {
     background-attachment: fixed;
   }
 }
+
+.admin-orders-page-bg {
+  min-height: 100vh;
+}
+
+body.orders-bg-active {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url('/images/order.jpg') !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: scroll;
+}
+
+@media (min-width: 1024px) {
+  body.orders-bg-active {
+    background-attachment: fixed;
+  }
+}
