@@ -156,6 +156,8 @@ export default function Checkout() {
   const { t, lang } = useI18n();
   const [clientSecret, setClientSecret] = useState(null);
   const [loadError, setLoadError] = useState("");
+  const [paymentInitError, setPaymentInitError] = useState("");
+  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("stripe");
   const [shippingOption, setShippingOption] = useState("standard");
   const [couponCode, setCouponCode] = useState("");
@@ -208,32 +210,37 @@ export default function Checkout() {
     method = paymentMethod,
     shipping = shippingOption
   ) => {
-    setLoadError("");
-    const res = await fetch(`${API_BASE}/api/payments/create-intent`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        userId: user?.id,
-        couponCode: code,
-        paymentMethod: method,
-        shippingOption: shipping,
-      }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || "Failed to create payment intent");
+    setPaymentInitError("");
+    setIsPaymentLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/payments/create-intent`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId: user?.id,
+          couponCode: code,
+          paymentMethod: method,
+          shippingOption: shipping,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to create payment intent");
+      }
+      setClientSecret(data.clientSecret || null);
+      setTotals({
+        subtotal: data.subtotal || 0,
+        discount: data.discount || 0,
+        tax: data.tax || 0,
+        shipping: data.shipping || 0,
+        total: data.total || 0,
+      });
+    } finally {
+      setIsPaymentLoading(false);
     }
-    setClientSecret(data.clientSecret || null);
-    setTotals({
-      subtotal: data.subtotal || 0,
-      discount: data.discount || 0,
-      tax: data.tax || 0,
-      shipping: data.shipping || 0,
-      total: data.total || 0,
-    });
   };
 
   const handleOrderSuccess = async (order) => {
@@ -284,7 +291,7 @@ export default function Checkout() {
   useEffect(() => {
     if (!user || !token) return;
     createIntent(couponCode, paymentMethod, shippingOption).catch((e) => {
-      setLoadError(e.message || "Failed to initialize payment");
+      setPaymentInitError(e.message || "Failed to initialize payment");
     });
   }, [user, token, paymentMethod, shippingOption]);
 
@@ -424,20 +431,6 @@ export default function Checkout() {
         />
         <h1 className="text-2xl font-bold mb-3">{t("Payment")}</h1>
         <div className="text-sm text-red-600">{loadError}</div>
-      </div>
-    );
-  }
-
-  if (paymentMethod !== "paypal" && !clientSecret) {
-    return (
-      <div className="p-10">
-        <Seo
-          title="Checkout"
-          description="Complete your purchase securely."
-          canonicalPath="/checkout"
-          noindex
-        />
-        {t("Loading payment...")}
       </div>
     );
   }
@@ -647,26 +640,39 @@ export default function Checkout() {
         </div>
       </div>
 
-      {paymentMethod === "paypal" ? (
-        <div className="card p-4">
-          <div className="text-sm text-gray-700 mb-3">Pay securely with PayPal.</div>
-          {paypalError && <div className="mb-3 text-sm text-red-600">{paypalError}</div>}
-          {!paypalSdkReady && !paypalError && (
-            <div className="text-sm text-gray-600">Loading PayPal...</div>
-          )}
-          <div ref={paypalButtonsRef} />
-        </div>
-      ) : (
-        <StripeWrapper clientSecret={clientSecret} key={clientSecret}>
-          <CheckoutForm
-            couponCode={couponCode}
-            paymentMethod={paymentMethod}
-            shippingOption={shippingOption}
-            selectedAddress={selectedAddress}
-            onOrderSuccess={handleOrderSuccess}
-          />
-        </StripeWrapper>
-      )}
+      <div className="card p-4">
+        {paymentMethod === "paypal" ? (
+          <>
+            <div className="text-sm text-gray-700 mb-3">Pay securely with PayPal.</div>
+            {paypalError && <div className="mb-3 text-sm text-red-600">{paypalError}</div>}
+            {!paypalSdkReady && !paypalError && (
+              <div className="text-sm text-gray-600">Loading PayPal...</div>
+            )}
+            <div ref={paypalButtonsRef} />
+          </>
+        ) : (
+          <>
+            {paymentInitError && (
+              <div className="mb-3 text-sm text-red-600">{paymentInitError}</div>
+            )}
+            {!clientSecret ? (
+              <div className="text-sm text-gray-600">
+                {isPaymentLoading ? t("Loading payment...") : t("Payment unavailable. Please try again.")}
+              </div>
+            ) : (
+              <StripeWrapper clientSecret={clientSecret} key={clientSecret}>
+                <CheckoutForm
+                  couponCode={couponCode}
+                  paymentMethod={paymentMethod}
+                  shippingOption={shippingOption}
+                  selectedAddress={selectedAddress}
+                  onOrderSuccess={handleOrderSuccess}
+                />
+              </StripeWrapper>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
