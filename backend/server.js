@@ -8,6 +8,7 @@ const path = require("path");
 const fs = require("fs");
 const Product = require("./models/Product");
 const Cart = require("./models/Cart"); 
+const Review = require("./models/Review");
 const checkoutRoutes = require("./routes/checkout");
 const Order = require("./models/Order");
 const orderRoutes = require("./routes/orders");
@@ -397,6 +398,13 @@ async function startServer() {
     );
 
     await connectDB();
+
+    try {
+      await Review.syncIndexes();
+      console.log("[startup] Review indexes synced");
+    } catch (indexErr) {
+      console.warn("[startup] Review index sync failed:", indexErr.message);
+    }
 
     const server = app.listen(PORT, () => {
       console.log(`✅ Backend running on http://localhost:${PORT}`);

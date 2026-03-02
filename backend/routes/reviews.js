@@ -63,21 +63,18 @@ router.post(
       return res.status(400).json({ error: "Missing fields" });
     }
 
-    const review = await Review.findOneAndUpdate(
-      { productId, userId },
-      {
-        rating: Number(rating),
-        comment,
-        realImages: Array.isArray(realImages) ? realImages.slice(0, 5) : [],
-      },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
-    ).populate("userId", "email");
+    const review = await Review.create({
+      productId,
+      userId,
+      rating: Number(rating),
+      comment,
+      realImages: Array.isArray(realImages) ? realImages.slice(0, 5) : [],
+    });
+
+    await review.populate("userId", "email");
 
     res.json(review);
   } catch (err) {
-    if (err.code === 11000) {
-      return res.status(409).json({ error: "Duplicate review" });
-    }
     res.status(500).json({ error: err.message });
   }
 });
