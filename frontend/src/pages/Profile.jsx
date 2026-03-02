@@ -9,6 +9,7 @@ export default function Profile() {
   const [profile, setProfile] = useState(null);
   const [msg, setMsg] = useState("");
   const { t } = useI18n();
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [newAddress, setNewAddress] = useState({
     name: "",
     phone: "",
@@ -35,6 +36,28 @@ export default function Profile() {
   }, [token]);
 
   if (!profile) return <div className="p-10">{t("Loading...")}</div>;
+
+  const resolveProfileImage = (url) => {
+    if (!url) return "";
+    if (/^https?:\/\//i.test(url)) return url;
+    return `${API_BASE}${url}`;
+  };
+
+  const profileInitial = String(profile?.name || profile?.email || "U")
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+
+  const syncAuthUserLocal = (patch) => {
+    try {
+      const raw = localStorage.getItem("user");
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      localStorage.setItem("user", JSON.stringify({ ...parsed, ...patch }));
+    } catch {
+      // ignore local storage sync errors
+    }
+  };
 
   const updateField = (key, value) =>
     setProfile((p) => ({ ...p, [key]: value }));
@@ -64,6 +87,7 @@ export default function Profile() {
       return;
     }
     setProfile(data);
+    syncAuthUserLocal({ name: data.name, phone: data.phone, profileImage: data.profileImage });
     setMsg(t("Profile saved"));
 
     // clear new address form if we added one
@@ -73,6 +97,57 @@ export default function Profile() {
   return (
     <div className="max-w-3xl mx-auto p-10 card">
       <h1 className="text-2xl font-bold mb-6">{t("My Profile")}</h1>
+
+      <div className="mb-6 flex items-center gap-4">
+        {profile.profileImage ? (
+          <img
+            src={resolveProfileImage(profile.profileImage)}
+            alt="profile"
+            className="w-20 h-20 rounded-full object-cover border"
+          />
+        ) : (
+          <div className="w-20 h-20 rounded-full bg-slate-200 text-slate-700 border flex items-center justify-center text-2xl font-semibold">
+            {profileInitial}
+          </div>
+        )}
+
+        <div>
+          <label className="text-sm font-medium block mb-1">Profile image</label>
+          <input
+            type="file"
+            accept="image/*"
+            disabled={isUploadingImage}
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (!file) return;
+              setMsg("");
+              setIsUploadingImage(true);
+              try {
+                const fd = new FormData();
+                fd.append("image", file);
+                const res = await fetch(`${API_BASE}/api/users/me/upload-image`, {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${token}` },
+                  body: fd,
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                  throw new Error(data.error || "Failed to upload image");
+                }
+                setProfile(data);
+                syncAuthUserLocal({ profileImage: data.profileImage, name: data.name, phone: data.phone });
+                setMsg("Profile image updated");
+              } catch (err) {
+                setMsg(err.message || "Failed to upload image");
+              } finally {
+                setIsUploadingImage(false);
+              }
+            }}
+          />
+          {isUploadingImage && <div className="text-xs text-gray-500 mt-1">Uploading...</div>}
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 gap-4">
         <input

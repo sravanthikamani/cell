@@ -39,7 +39,8 @@ export default function Admin() {
   const [userRoleFilter, setUserRoleFilter] = useState("");
   const [userMsg, setUserMsg] = useState("");
   const [userSlideStart, setUserSlideStart] = useState(0);
-  const userCardsPerView = 2;
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const userCardsPerView = 6;
 
   const [couponForm, setCouponForm] = useState({
     code: "",
@@ -127,6 +128,11 @@ export default function Admin() {
 
   useEffect(() => {
     setUserSlideStart(0);
+    if (!users.length) {
+      setSelectedUserId("");
+      return;
+    }
+    setSelectedUserId((prev) => (users.some((u) => u._id === prev) ? prev : users[0]._id));
   }, [users]);
 
   // early return after declaring all hooks
@@ -206,6 +212,14 @@ export default function Admin() {
   };
 
   const submitProductForm = () => (editingId ? updateProduct() : addProduct());
+
+  const resolveProfileImage = (url) => {
+    if (!url) return "";
+    if (/^https?:\/\//i.test(url)) return url;
+    return `${API_BASE}${url}`;
+  };
+
+  const selectedUser = users.find((u) => u._id === selectedUserId) || null;
 
   const createCoupon = async () => {
     const res = await fetch(`${API_BASE}/api/admin/coupons`, {
@@ -466,7 +480,7 @@ export default function Admin() {
               type="button"
               className="border px-3 py-1 text-sm disabled:opacity-50"
               disabled={userSlideStart <= 0}
-              onClick={() => setUserSlideStart((s) => Math.max(0, s - userCardsPerView))}
+              onClick={() => setUserSlideStart((s) => Math.max(0, s - 1))}
             >
               ←
             </button>
@@ -479,7 +493,7 @@ export default function Admin() {
               className="border px-3 py-1 text-sm disabled:opacity-50"
               disabled={userSlideStart + userCardsPerView >= users.length}
               onClick={() =>
-                setUserSlideStart((s) => Math.min(Math.max(0, users.length - userCardsPerView), s + userCardsPerView))
+                setUserSlideStart((s) => Math.min(Math.max(0, users.length - userCardsPerView), s + 1))
               }
             >
               →
@@ -487,31 +501,53 @@ export default function Admin() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
           {users.slice(userSlideStart, userSlideStart + userCardsPerView).map((u) => (
-            <div key={u._id} className="border rounded p-3 flex justify-between gap-3">
-              <div className="text-sm">
-                <div className="font-semibold">{u.email}</div>
-                <div>{u.name || "-"}</div>
-                <div>{u.phone || "-"}</div>
-                <div>Role: {u.role}</div>
-                <div>Status: {u.isBlocked ? "blocked" : "active"}</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <select className="border p-1 text-sm" value={u.role} onChange={(e) => updateUser(u._id, { role: e.target.value })}>
-                  <option value="user">user</option>
-                  <option value="admin">admin</option>
-                </select>
-                <button className="text-sm underline" onClick={() => updateUser(u._id, { isBlocked: !u.isBlocked })}>
-                  {u.isBlocked ? "Unblock" : "Block"}
-                </button>
-                <button className="text-sm text-red-600 underline" onClick={() => deleteUser(u._id)}>
-                  Delete
-                </button>
-              </div>
-            </div>
+            <button
+              key={u._id}
+              type="button"
+              className={`w-full flex items-center justify-center rounded-full border-2 aspect-square overflow-hidden ${selectedUserId === u._id ? "border-teal-600" : "border-gray-200"}`}
+              onClick={() => setSelectedUserId(u._id)}
+              title={u.name || u.email}
+            >
+              {u.profileImage ? (
+                <img
+                  src={resolveProfileImage(u.profileImage)}
+                  alt={u.name || u.email}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-lg font-semibold text-slate-700">
+                  {String(u.name || u.email || "U").trim().charAt(0).toUpperCase()}
+                </span>
+              )}
+            </button>
           ))}
         </div>
+
+        {selectedUser && (
+          <div className="border rounded p-3 mt-3 flex justify-between gap-3">
+            <div className="text-sm">
+              <div className="font-semibold">{selectedUser.email}</div>
+              <div>{selectedUser.name || "-"}</div>
+              <div>{selectedUser.phone || "-"}</div>
+              <div>Role: {selectedUser.role}</div>
+              <div>Status: {selectedUser.isBlocked ? "blocked" : "active"}</div>
+            </div>
+            <div className="flex items-center gap-2">
+              <select className="border p-1 text-sm" value={selectedUser.role} onChange={(e) => updateUser(selectedUser._id, { role: e.target.value })}>
+                <option value="user">user</option>
+                <option value="admin">admin</option>
+              </select>
+              <button className="text-sm underline" onClick={() => updateUser(selectedUser._id, { isBlocked: !selectedUser.isBlocked })}>
+                {selectedUser.isBlocked ? "Unblock" : "Block"}
+              </button>
+              <button className="text-sm text-red-600 underline" onClick={() => deleteUser(selectedUser._id)}>
+                Delete
+              </button>
+            </div>
+          </div>
+        )}
 
         {users.length === 0 && <div className="text-sm text-gray-600">No users found.</div>}
 
