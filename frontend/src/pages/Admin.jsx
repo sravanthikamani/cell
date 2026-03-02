@@ -79,6 +79,8 @@ export default function Admin() {
   const [productPage, setProductPage] = useState(1);
   const [productTotalPages, setProductTotalPages] = useState(1);
   const [productSearch, setProductSearch] = useState("");
+  const [productSlideStart, setProductSlideStart] = useState(0);
+  const productCardsPerView = 3;
 
   const [coupons, setCoupons] = useState([]);
   const [analytics, setAnalytics] = useState(null);
@@ -177,6 +179,10 @@ export default function Admin() {
     productFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     setTimeout(() => productNameInputRef.current?.focus(), 250);
   }, [editingId]);
+
+  useEffect(() => {
+    setProductSlideStart(0);
+  }, [products]);
 
   useEffect(() => {
     setUserSlideStart(0);
@@ -413,46 +419,79 @@ export default function Admin() {
         </button>
       </div>
 
-      {products.map((p) => (
-        <div key={p._id} className="card p-3 mt-2 flex justify-between items-center">
-          <div>
-            <div className="font-semibold">{p.name}</div>
-            <div className="text-sm text-gray-600">Stock: {p.stock ?? 0}</div>
+      {products.length > 0 && (
+        <div className="flex items-center justify-between mb-2 mt-3">
+          <button
+            type="button"
+            className="border px-3 py-1 text-sm disabled:opacity-50"
+            disabled={productSlideStart <= 0}
+            onClick={() => setProductSlideStart((s) => Math.max(0, s - 1))}
+          >
+            ←
+          </button>
+          <div className="text-xs text-gray-600">
+            Showing {Math.min(products.length, productSlideStart + 1)}-
+            {Math.min(products.length, productSlideStart + productCardsPerView)} of {products.length}
           </div>
-          <div className="flex gap-4">
-            <button
-              onClick={() => {
-                setEditingId(p._id);
-                setForm({
-                  name: p.name,
-                  price: p.price,
-                  brand: p.brand,
-                  group: p.group,
-                  type: p.type,
-                  images: (p.images || []).join(","),
-                  stock: p.stock ?? 0,
-                  sizes: (p.sizes || []).join(","),
-                  colors: (p.colors || []).join(","),
-                });
-              }}
-              className="text-blue-600"
-            >
-              {t("Edit")}
-            </button>
-            <button
-              onClick={() =>
-                fetch(`${API_BASE}/api/admin/products/${p._id}`, {
-                  method: "DELETE",
-                  headers: { Authorization: `Bearer ${token}` },
-                }).then(() => loadProducts(productPage, productSearch))
-              }
-              className="text-red-600"
-            >
-              {t("Delete")}
-            </button>
-          </div>
+          <button
+            type="button"
+            className="border px-3 py-1 text-sm disabled:opacity-50"
+            disabled={productSlideStart + productCardsPerView >= products.length}
+            onClick={() =>
+              setProductSlideStart((s) => Math.min(Math.max(0, products.length - productCardsPerView), s + 1))
+            }
+          >
+            →
+          </button>
         </div>
-      ))}
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {products.slice(productSlideStart, productSlideStart + productCardsPerView).map((p) => (
+          <div key={p._id} className="card p-3 flex flex-col justify-between">
+            <div>
+              <div className="font-semibold">{p.name}</div>
+              <div className="text-sm text-gray-600">{p.brand}</div>
+              <div className="text-sm text-gray-600">Stock: {p.stock ?? 0}</div>
+              <div className="text-sm text-gray-700 mt-1">{formatCurrency(p.price, lang)}</div>
+            </div>
+            <div className="flex gap-4 mt-4">
+              <button
+                onClick={() => {
+                  setEditingId(p._id);
+                  setForm({
+                    name: p.name,
+                    price: p.price,
+                    brand: p.brand,
+                    group: p.group,
+                    type: p.type,
+                    images: (p.images || []).join(","),
+                    stock: p.stock ?? 0,
+                    sizes: (p.sizes || []).join(","),
+                    colors: (p.colors || []).join(","),
+                  });
+                }}
+                className="text-blue-600"
+              >
+                {t("Edit")}
+              </button>
+              <button
+                onClick={() =>
+                  fetch(`${API_BASE}/api/admin/products/${p._id}`, {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${token}` },
+                  }).then(() => loadProducts(productPage, productSearch))
+                }
+                className="text-red-600"
+              >
+                {t("Delete")}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {products.length === 0 && <div className="text-sm text-gray-600 mt-2">No products found.</div>}
 
       <div className="flex gap-2 mt-3">
         <button className="border px-3 py-1 text-sm disabled:opacity-50" disabled={productPage <= 1} onClick={() => loadProducts(productPage - 1)}>Prev</button>
