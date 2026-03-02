@@ -172,7 +172,8 @@ export default function Checkout() {
   const [selectedAddressIndex, setSelectedAddressIndex] = useState(0);
   const [addingAddress, setAddingAddress] = useState(false);
   const [newAddress, setNewAddress] = useState(emptyAddress);
-  const [saveAddressToProfile, setSaveAddressToProfile] = useState(true);
+  const [isSavingAddress, setIsSavingAddress] = useState(false);
+  const [addressMsg, setAddressMsg] = useState("");
   const [paypalError, setPaypalError] = useState("");
   const [paypalSdkReady, setPaypalSdkReady] = useState(false);
   const paypalButtonsRef = useRef(null);
@@ -236,38 +237,41 @@ export default function Checkout() {
   };
 
   const handleOrderSuccess = async (order) => {
-    try {
-      await persistNewAddressIfNeeded();
-    } catch (err) {
-      console.warn("Address save warning:", err.message);
-    }
     refreshCart();
     navigate(`/order-confirmation?orderId=${order?._id || ""}`, {
       state: { order },
     });
   };
 
-  const persistNewAddressIfNeeded = async () => {
-    if (!addingAddress || !saveAddressToProfile) return;
+  const handleSaveAddress = async () => {
+    setAddressMsg("");
     if (!isAddressValid(newAddress)) return;
+
+    setIsSavingAddress(true);
     const next = [...addresses, newAddress];
-    const res = await fetch(`${API_BASE}/api/users/me`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ addresses: next }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (res.ok) {
+    try {
+      const res = await fetch(`${API_BASE}/api/users/me`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ addresses: next }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to save address");
+      }
       setAddresses(next);
       setSelectedAddressIndex(next.length - 1);
       setAddingAddress(false);
       setNewAddress(emptyAddress);
-      return;
+      setAddressMsg("Address saved to profile");
+    } catch (err) {
+      setAddressMsg(err.message || "Failed to save address");
+    } finally {
+      setIsSavingAddress(false);
     }
-    throw new Error(data.error || "Failed to save address");
   };
 
   useEffect(() => {
@@ -475,7 +479,10 @@ export default function Checkout() {
 
         <button
           className="text-sm text-teal-700 underline mb-3"
-          onClick={() => setAddingAddress((v) => !v)}
+          onClick={() => {
+            setAddressMsg("");
+            setAddingAddress((v) => !v);
+          }}
         >
           {addingAddress ? "Use saved address" : "Add new address"}
         </button>
@@ -512,16 +519,17 @@ export default function Checkout() {
               value={newAddress.pincode}
               onChange={(e) => setNewAddress((v) => ({ ...v, pincode: e.target.value }))}
             />
-            <label className="md:col-span-2 flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={saveAddressToProfile}
-                onChange={(e) => setSaveAddressToProfile(e.target.checked)}
-              />
-              Save this address to profile
-            </label>
+            <button
+              type="button"
+              className="md:col-span-2 bg-black text-white py-2 disabled:opacity-60"
+              onClick={handleSaveAddress}
+              disabled={isSavingAddress}
+            >
+              {isSavingAddress ? "Saving..." : "Save address"}
+            </button>
           </div>
         )}
+        {addressMsg && <div className="text-sm mt-2 text-teal-700">{addressMsg}</div>}
       </div>
 
       <div className="card p-4 mb-4">
