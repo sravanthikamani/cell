@@ -63,7 +63,7 @@ export default function Admin() {
   const { user, token } = useAuth();
   const { t, lang } = useI18n();
   const sectionWrapClass = "w-full max-w-6xl mx-auto";
-  const fieldClass = "border px-3 py-1.5 text-sm h-10";
+  const fieldClass = "border px-2 py-1.5 text-xs h-8";
   const primaryBtnClass = "bg-black text-white px-4 py-2 text-sm h-10";
   const actionBtnClass = "border px-3 py-1.5 text-sm h-9 disabled:opacity-50";
 
@@ -292,7 +292,55 @@ export default function Admin() {
     if (/^https?:\/\//i.test(url)) return url;
     return `${API_BASE}${url}`;
   };
-
+<div
+  className={`card p-4 mt-3 ${sectionWrapClass}`}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      createCoupon();
+    }
+  }}
+>
+  <input
+    className={`w-full mb-2 ${fieldClass}`}
+    placeholder={t("CODE")}
+    value={couponForm.code}
+    onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value })}
+  />
+  <select
+    className={`w-full mb-2 ${fieldClass}`}
+    value={couponForm.type}
+    onChange={(e) => setCouponForm({ ...couponForm, type: e.target.value })}
+  >
+    <option value="percent">{t("Percent")}</option>
+    <option value="fixed">{t("Fixed")}</option>
+  </select>
+  <input
+    className={`w-full mb-2 ${fieldClass}`}
+    placeholder={t("Value")}
+    value={couponForm.value}
+    onChange={(e) => setCouponForm({ ...couponForm, value: e.target.value })}
+  />
+  <input
+    className={`w-full mb-2 ${fieldClass}`}
+    placeholder={t("Min Total")}
+    value={couponForm.minTotal}
+    onChange={(e) => setCouponForm({ ...couponForm, minTotal: e.target.value })}
+  />
+  <input
+    className={`w-full mb-2 ${fieldClass}`}
+    placeholder={t("Max Discount")}
+    value={couponForm.maxDiscount}
+    onChange={(e) => setCouponForm({ ...couponForm, maxDiscount: e.target.value })}
+  />
+  <button
+    type="button"
+    className={`w-full sm:w-auto sm:min-w-[170px] ${primaryBtnClass}`}
+    onClick={createCoupon}
+  >
+    {t("Create Coupon")}
+  </button>
+</div>
   const productSliderSettings = {
     dots: false,
     infinite: products.length > 3,
