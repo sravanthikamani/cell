@@ -62,6 +62,10 @@ function AnimatedBarLabel(props) {
 export default function Admin() {
   const { user, token } = useAuth();
   const { t, lang } = useI18n();
+  const sectionWrapClass = "w-full max-w-6xl mx-auto";
+  const fieldClass = "border px-3 py-1.5 text-sm h-10";
+  const primaryBtnClass = "bg-black text-white px-4 py-2 text-sm h-10";
+  const actionBtnClass = "border px-3 py-1.5 text-sm h-9 disabled:opacity-50";
 
   // state hooks must always be called unconditionally at the top of the component
   const [editingId, setEditingId] = useState(null);
@@ -360,7 +364,7 @@ export default function Admin() {
       <div className="w-full mx-auto px-4 md:px-8 lg:px-10 py-6 md:py-10">
       <h1 className="text-2xl font-bold mb-4">{t("Admin - Add Product")}</h1>
 
-      <div ref={productFormRef} className="mb-3 card p-4">
+      <div ref={productFormRef} className={`mb-3 card p-4 ${sectionWrapClass}`}>
         <input
           type="file"
           accept="image/*"
@@ -388,7 +392,7 @@ export default function Admin() {
       </div>
 
       <div
-        className="card p-4 grid grid-cols-1 md:grid-cols-2 gap-3"
+        className={`card p-4 grid grid-cols-1 md:grid-cols-2 gap-3 ${sectionWrapClass}`}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
@@ -396,10 +400,10 @@ export default function Admin() {
           }
         }}
       >
-        <input ref={productNameInputRef} className="border p-2" placeholder={t("Name")} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-        <input className="border p-2" placeholder={t("Price")} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
-        <input className="border p-2" placeholder={t("Brand")} value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} />
-        <select className="border p-2 bg-white" value={form.group} onChange={(e) => {
+        <input ref={productNameInputRef} className={fieldClass} placeholder={t("Name")} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+        <input className={fieldClass} placeholder={t("Price")} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+        <input className={fieldClass} placeholder={t("Brand")} value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} />
+        <select className={`${fieldClass} bg-white`} value={form.group} onChange={(e) => {
           setForm({ ...form, group: e.target.value, type: "" });
           setTypeWarning("");
         }}>
@@ -407,7 +411,7 @@ export default function Admin() {
           {groupOptions.map((g) => <option key={g} value={g}>{g}</option>)}
         </select>
         <select
-          className="border p-2 bg-white"
+          className={`${fieldClass} bg-white`}
           value={form.type}
           onMouseDown={() => {
             if (!form.group) setTypeWarning("first select group");
@@ -428,20 +432,20 @@ export default function Admin() {
           {(typeOptions[form.group] || []).map((tp) => <option key={tp} value={tp}>{tp}</option>)}
         </select>
         {typeWarning && <p className="md:col-span-2 text-sm text-red-600">{typeWarning}</p>}
-        <input className="border p-2" placeholder={t("Stock")} value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
-        <input className="border p-2 md:col-span-2" placeholder={t("Images (comma URLs)")} value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} />
-        <input className="border p-2" placeholder={t("Sizes (comma)")} value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} />
-        <input className="border p-2" placeholder={t("Colors (comma)")} value={form.colors} onChange={(e) => setForm({ ...form, colors: e.target.value })} />
+        <input className={fieldClass} placeholder={t("Stock")} value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
+        <input className={`${fieldClass} md:col-span-2`} placeholder={t("Images (comma URLs)")} value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} />
+        <input className={fieldClass} placeholder={t("Sizes (comma)")} value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} />
+        <input className={fieldClass} placeholder={t("Colors (comma)")} value={form.colors} onChange={(e) => setForm({ ...form, colors: e.target.value })} />
       </div>
 
-      <button type="button" onClick={submitProductForm} className="w-full md:w-64 md:mx-auto block bg-black text-white py-2 mt-3">
+      <button type="button" onClick={submitProductForm} className={`w-full sm:w-auto sm:min-w-[160px] sm:mx-auto block mt-3 ${primaryBtnClass}`}>
         {editingId ? t("Update Product") : t("Add Product")}
       </button>
 
       <h2 className="text-xl font-bold mt-10">{t("All Products")}</h2>
-      <div className="flex gap-2 mb-3 mt-2">
+      <div className={`flex flex-col sm:flex-row gap-2 mb-3 mt-2 ${sectionWrapClass}`}>
         <input
-          className="border p-2 flex-1"
+          className={`${fieldClass} w-full sm:flex-1`}
           placeholder="Search products"
           value={productSearch}
           onChange={(e) => setProductSearch(e.target.value)}
@@ -452,7 +456,7 @@ export default function Admin() {
             }
           }}
         />
-        <button type="button" className="bg-black text-white px-3" onClick={() => loadProducts(1)}>
+        <button type="button" className={`${primaryBtnClass} w-full sm:w-auto`} onClick={() => loadProducts(1)}>
           Search
         </button>
       </div>
@@ -473,7 +477,7 @@ export default function Admin() {
                     <p className="text-sm text-gray-600 truncate">{p.brand}</p>
                     <p className="text-blue-700 font-bold mt-1">{formatCurrency(p.price, lang)}</p>
                     <p className="text-xs text-gray-500 mt-1">Stock: {p.stock ?? 0}</p>
-                    <div className="mt-3 flex justify-center gap-4">
+                    <div className="mt-3 flex justify-center gap-2">
                       <button
                         onClick={() => {
                           setEditingId(p._id);
@@ -489,7 +493,7 @@ export default function Admin() {
                             colors: (p.colors || []).join(","),
                           });
                         }}
-                        className="text-blue-600"
+                        className={actionBtnClass}
                       >
                         {t("Edit")}
                       </button>
@@ -500,7 +504,7 @@ export default function Admin() {
                             headers: { Authorization: `Bearer ${token}` },
                           }).then(() => loadProducts(productPage, productSearch))
                         }
-                        className="text-red-600"
+                        className={`${actionBtnClass} text-red-600`}
                       >
                         {t("Delete")}
                       </button>
@@ -516,14 +520,14 @@ export default function Admin() {
       {products.length === 0 && <div className="text-sm text-gray-600 mt-2">No products found.</div>}
 
       <div className="flex gap-2 mt-3">
-        <button className="border px-3 py-1 text-sm disabled:opacity-50" disabled={productPage <= 1} onClick={() => loadProducts(productPage - 1)}>Prev</button>
+        <button className={actionBtnClass} disabled={productPage <= 1} onClick={() => loadProducts(productPage - 1)}>Prev</button>
         <div className="text-sm px-2 py-1">Page {productPage} / {productTotalPages}</div>
-        <button className="border px-3 py-1 text-sm disabled:opacity-50" disabled={productPage >= productTotalPages} onClick={() => loadProducts(productPage + 1)}>Next</button>
+        <button className={actionBtnClass} disabled={productPage >= productTotalPages} onClick={() => loadProducts(productPage + 1)}>Next</button>
       </div>
 
       <h2 className="text-xl font-bold mt-10">{t("Coupons")}</h2>
       <div
-        className="card p-4 mt-3"
+        className={`card p-4 mt-3 ${sectionWrapClass}`}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
@@ -531,15 +535,15 @@ export default function Admin() {
           }
         }}
       >
-        <input className="w-full border p-2 mb-2" placeholder={t("CODE")} value={couponForm.code} onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value })} />
-        <select className="w-full border p-2 mb-2" value={couponForm.type} onChange={(e) => setCouponForm({ ...couponForm, type: e.target.value })}>
+        <input className={`w-full mb-2 ${fieldClass}`} placeholder={t("CODE")} value={couponForm.code} onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value })} />
+        <select className={`w-full mb-2 ${fieldClass}`} value={couponForm.type} onChange={(e) => setCouponForm({ ...couponForm, type: e.target.value })}>
           <option value="percent">{t("Percent")}</option>
           <option value="fixed">{t("Fixed")}</option>
         </select>
-        <input className="w-full border p-2 mb-2" placeholder={t("Value")} value={couponForm.value} onChange={(e) => setCouponForm({ ...couponForm, value: e.target.value })} />
-        <input className="w-full border p-2 mb-2" placeholder={t("Min Total")} value={couponForm.minTotal} onChange={(e) => setCouponForm({ ...couponForm, minTotal: e.target.value })} />
-        <input className="w-full border p-2 mb-2" placeholder={t("Max Discount")} value={couponForm.maxDiscount} onChange={(e) => setCouponForm({ ...couponForm, maxDiscount: e.target.value })} />
-        <button type="button" className="w-full bg-black text-white py-2" onClick={createCoupon}>
+        <input className={`w-full mb-2 ${fieldClass}`} placeholder={t("Value")} value={couponForm.value} onChange={(e) => setCouponForm({ ...couponForm, value: e.target.value })} />
+        <input className={`w-full mb-2 ${fieldClass}`} placeholder={t("Min Total")} value={couponForm.minTotal} onChange={(e) => setCouponForm({ ...couponForm, minTotal: e.target.value })} />
+        <input className={`w-full mb-2 ${fieldClass}`} placeholder={t("Max Discount")} value={couponForm.maxDiscount} onChange={(e) => setCouponForm({ ...couponForm, maxDiscount: e.target.value })} />
+        <button type="button" className={`w-full sm:w-auto sm:min-w-[170px] ${primaryBtnClass}`} onClick={createCoupon}>
           {t("Create Coupon")}
         </button>
       </div>
@@ -551,7 +555,7 @@ export default function Admin() {
             <div className="text-sm text-gray-600">{c.type} {c.value} {c.active ? "active" : "inactive"}</div>
           </div>
           <button
-            className="text-red-600"
+            className={`${actionBtnClass} text-red-600`}
             onClick={async () => {
               await fetch(`${API_BASE}/api/admin/coupons/${c._id}`, {
                 method: "DELETE",
@@ -566,10 +570,10 @@ export default function Admin() {
       ))}
 
       <h2 className="text-xl font-bold mt-10">{t("User Management")}</h2>
-      <div className="card p-4 mt-3">
+      <div className={`card p-4 mt-3 ${sectionWrapClass}`}>
         <div className="flex gap-2 mb-3">
           <input
-            className="border p-2 w-full md:w-[420px] lg:w-[520px]"
+            className={`${fieldClass} w-full md:w-[380px] lg:w-[460px]`}
             placeholder="Search by email/name/phone"
             value={userSearch}
             onChange={(e) => setUserSearch(e.target.value)}
@@ -580,12 +584,12 @@ export default function Admin() {
               }
             }}
           />
-          <select className="border p-2" value={userRoleFilter} onChange={(e) => setUserRoleFilter(e.target.value)}>
+          <select className={fieldClass} value={userRoleFilter} onChange={(e) => setUserRoleFilter(e.target.value)}>
             <option value="">All roles</option>
             <option value="admin">admin</option>
             <option value="user">user</option>
           </select>
-          <button type="button" className="bg-black text-white px-3" onClick={() => loadUsers(1)}>Search</button>
+          <button type="button" className={primaryBtnClass} onClick={() => loadUsers(1)}>Search</button>
         </div>
         {userMsg && <div className="text-sm text-red-600 mb-2">{userMsg}</div>}
 
@@ -593,7 +597,7 @@ export default function Admin() {
           <div className="flex items-center justify-between mb-2">
             <button
               type="button"
-              className="border px-3 py-1 text-sm disabled:opacity-50"
+              className={actionBtnClass}
               disabled={userSlideStart <= 0}
               onClick={() => setUserSlideStart((s) => Math.max(0, s - 1))}
             >
@@ -605,7 +609,7 @@ export default function Admin() {
             </div>
             <button
               type="button"
-              className="border px-3 py-1 text-sm disabled:opacity-50"
+              className={actionBtnClass}
               disabled={userSlideStart + userCardsPerView >= users.length}
               onClick={() =>
                 setUserSlideStart((s) => Math.min(Math.max(0, users.length - userCardsPerView), s + 1))
@@ -650,14 +654,14 @@ export default function Admin() {
               <div>Status: {selectedUser.isBlocked ? "blocked" : "active"}</div>
             </div>
             <div className="flex items-center gap-2">
-              <select className="border p-1 text-sm" value={selectedUser.role} onChange={(e) => updateUser(selectedUser._id, { role: e.target.value })}>
+              <select className={fieldClass} value={selectedUser.role} onChange={(e) => updateUser(selectedUser._id, { role: e.target.value })}>
                 <option value="user">user</option>
                 <option value="admin">admin</option>
               </select>
-              <button className="text-sm underline" onClick={() => updateUser(selectedUser._id, { isBlocked: !selectedUser.isBlocked })}>
+              <button className={actionBtnClass} onClick={() => updateUser(selectedUser._id, { isBlocked: !selectedUser.isBlocked })}>
                 {selectedUser.isBlocked ? "Unblock" : "Block"}
               </button>
-              <button className="text-sm text-red-600 underline" onClick={() => deleteUser(selectedUser._id)}>
+              <button className={`${actionBtnClass} text-red-600`} onClick={() => deleteUser(selectedUser._id)}>
                 Delete
               </button>
             </div>
@@ -667,16 +671,16 @@ export default function Admin() {
         {users.length === 0 && <div className="text-sm text-gray-600">No users found.</div>}
 
         <div className="flex gap-2 mt-3">
-          <button className="border px-3 py-1 text-sm disabled:opacity-50" disabled={userPage <= 1} onClick={() => loadUsers(userPage - 1)}>Prev</button>
+          <button className={actionBtnClass} disabled={userPage <= 1} onClick={() => loadUsers(userPage - 1)}>Prev</button>
           <div className="text-sm px-2 py-1">Page {userPage} / {userTotalPages}</div>
-          <button className="border px-3 py-1 text-sm disabled:opacity-50" disabled={userPage >= userTotalPages} onClick={() => loadUsers(userPage + 1)}>Next</button>
+          <button className={actionBtnClass} disabled={userPage >= userTotalPages} onClick={() => loadUsers(userPage + 1)}>Next</button>
         </div>
       </div>
 
       <h2 className="text-xl font-bold mt-10">{t("Analytics")}</h2>
       {!analytics && <div className="text-sm">{t("Loading analytics...")}</div>}
       {analytics && (
-        <div className="card p-4 mt-3">
+        <div className={`card p-4 mt-3 ${sectionWrapClass}`}>
           <div>{t("Total Orders:")} {analytics.totalOrders}</div>
           <div>{t("Total Sales:")} {formatCurrency(analytics.totalSales, lang)}</div>
           <Stack spacing={2} className="mt-4">
