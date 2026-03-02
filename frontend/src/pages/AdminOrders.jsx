@@ -35,8 +35,16 @@ export default function AdminOrders() {
     loadOrders(1).catch(console.error);
   }, [token]);
 
+  useEffect(() => {
+    document.body.classList.add("orders-bg-active");
+    return () => {
+      document.body.classList.remove("orders-bg-active");
+    };
+  }, []);
+
   return (
-    <div className="max-w-5xl mx-auto p-6 md:p-10">
+    <div className="admin-orders-page-bg">
+      <div className="max-w-5xl mx-auto p-6 md:p-10">
       <h1 className="text-2xl font-bold mb-6">{t("Admin - Orders")}</h1>
       <div className="mb-4 flex gap-2">
         <select
@@ -158,6 +166,7 @@ export default function AdminOrders() {
         >
           Next
         </button>
+      </div>
       </div>
     </div>
   );
