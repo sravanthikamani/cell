@@ -66,6 +66,8 @@ export default function Admin() {
   const fieldClass = "border px-2 py-1.5 text-xs h-8";
   const primaryBtnClass = "bg-black text-white px-4 py-2 text-sm h-10";
   const actionBtnClass = "border px-3 py-1.5 text-sm h-9 disabled:opacity-50";
+  const compactCouponFieldWidthClass = "w-full md:w-[420px] lg:w-[520px]";
+  const compactProductSearchWidthClass = "w-full sm:w-[420px] md:w-[520px] lg:w-[620px] sm:flex-none";
 
   // state hooks must always be called unconditionally at the top of the component
   const [editingId, setEditingId] = useState(null);
@@ -292,55 +294,7 @@ export default function Admin() {
     if (/^https?:\/\//i.test(url)) return url;
     return `${API_BASE}${url}`;
   };
-<div
-  className={`card p-4 mt-3 ${sectionWrapClass}`}
-  onKeyDown={(e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      createCoupon();
-    }
-  }}
->
-  <input
-    className={`w-full mb-2 ${fieldClass}`}
-    placeholder={t("CODE")}
-    value={couponForm.code}
-    onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value })}
-  />
-  <select
-    className={`w-full mb-2 ${fieldClass}`}
-    value={couponForm.type}
-    onChange={(e) => setCouponForm({ ...couponForm, type: e.target.value })}
-  >
-    <option value="percent">{t("Percent")}</option>
-    <option value="fixed">{t("Fixed")}</option>
-  </select>
-  <input
-    className={`w-full mb-2 ${fieldClass}`}
-    placeholder={t("Value")}
-    value={couponForm.value}
-    onChange={(e) => setCouponForm({ ...couponForm, value: e.target.value })}
-  />
-  <input
-    className={`w-full mb-2 ${fieldClass}`}
-    placeholder={t("Min Total")}
-    value={couponForm.minTotal}
-    onChange={(e) => setCouponForm({ ...couponForm, minTotal: e.target.value })}
-  />
-  <input
-    className={`w-full mb-2 ${fieldClass}`}
-    placeholder={t("Max Discount")}
-    value={couponForm.maxDiscount}
-    onChange={(e) => setCouponForm({ ...couponForm, maxDiscount: e.target.value })}
-  />
-  <button
-    type="button"
-    className={`w-full sm:w-auto sm:min-w-[170px] ${primaryBtnClass}`}
-    onClick={createCoupon}
-  >
-    {t("Create Coupon")}
-  </button>
-</div>
+
   const productSliderSettings = {
     dots: false,
     infinite: products.length > 3,
@@ -493,7 +447,7 @@ export default function Admin() {
       <h2 className="text-xl font-bold mt-10">{t("All Products")}</h2>
       <div className={`flex flex-col sm:flex-row gap-2 mb-3 mt-2 ${sectionWrapClass}`}>
         <input
-          className={`${fieldClass} w-full sm:flex-1`}
+          className={`${fieldClass} ${compactProductSearchWidthClass}`}
           placeholder="Search products"
           value={productSearch}
           onChange={(e) => setProductSearch(e.target.value)}
@@ -583,15 +537,15 @@ export default function Admin() {
           }
         }}
       >
-        <input className={`w-full mb-2 ${fieldClass}`} placeholder={t("CODE")} value={couponForm.code} onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value })} />
-        <select className={`w-full mb-2 ${fieldClass}`} value={couponForm.type} onChange={(e) => setCouponForm({ ...couponForm, type: e.target.value })}>
+        <input className={`mb-2 ${fieldClass} ${compactCouponFieldWidthClass}`} placeholder={t("CODE")} value={couponForm.code} onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value })} />
+        <select className={`mb-2 ${fieldClass} ${compactCouponFieldWidthClass}`} value={couponForm.type} onChange={(e) => setCouponForm({ ...couponForm, type: e.target.value })}>
           <option value="percent">{t("Percent")}</option>
           <option value="fixed">{t("Fixed")}</option>
         </select>
-        <input className={`w-full mb-2 ${fieldClass}`} placeholder={t("Value")} value={couponForm.value} onChange={(e) => setCouponForm({ ...couponForm, value: e.target.value })} />
-        <input className={`w-full mb-2 ${fieldClass}`} placeholder={t("Min Total")} value={couponForm.minTotal} onChange={(e) => setCouponForm({ ...couponForm, minTotal: e.target.value })} />
-        <input className={`w-full mb-2 ${fieldClass}`} placeholder={t("Max Discount")} value={couponForm.maxDiscount} onChange={(e) => setCouponForm({ ...couponForm, maxDiscount: e.target.value })} />
-        <button type="button" className={`w-full sm:w-auto sm:min-w-[170px] ${primaryBtnClass}`} onClick={createCoupon}>
+        <input className={`mb-2 ${fieldClass} ${compactCouponFieldWidthClass}`} placeholder={t("Value")} value={couponForm.value} onChange={(e) => setCouponForm({ ...couponForm, value: e.target.value })} />
+        <input className={`mb-2 ${fieldClass} ${compactCouponFieldWidthClass}`} placeholder={t("Min Total")} value={couponForm.minTotal} onChange={(e) => setCouponForm({ ...couponForm, minTotal: e.target.value })} />
+        <input className={`mb-2 ${fieldClass} ${compactCouponFieldWidthClass}`} placeholder={t("Max Discount")} value={couponForm.maxDiscount} onChange={(e) => setCouponForm({ ...couponForm, maxDiscount: e.target.value })} />
+        <button type="button" className={`w-auto min-w-[160px] ${primaryBtnClass}`} onClick={createCoupon}>
           {t("Create Coupon")}
         </button>
       </div>
