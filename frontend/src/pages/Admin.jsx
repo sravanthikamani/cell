@@ -349,7 +349,8 @@ export default function Admin() {
   const ordersByDayCountData = ordersByDay.map((d) => Number(d.count || 0));
 
   return (
-    <div className="max-w-5xl mx-auto p-6 md:p-10">
+    <div className="admin-page-bg">
+      <div className="max-w-5xl mx-auto p-6 md:p-10">
       <h1 className="text-2xl font-bold mb-4">{t("Admin - Add Product")}</h1>
 
       <div ref={productFormRef} className="mb-3 card p-4">
@@ -726,6 +727,7 @@ export default function Admin() {
           </Stack>
         </div>
       )}
+      </div>
     </div>
   );
 }
