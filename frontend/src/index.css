@@ -97,3 +97,17 @@ h3,
   transform: scale(1.08);
   transition: 0.3s ease-in-out;
 }
+
+.admin-page-bg {
+  min-height: 100vh;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)), url('/images/adminbg1.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+@media (min-width: 1024px) {
+  .admin-page-bg {
+    background-image: linear-gradient(rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.86)), url('/images/adminbg2.jpg');
+  }
+}
