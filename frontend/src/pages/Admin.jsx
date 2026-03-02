@@ -233,6 +233,11 @@ export default function Admin() {
     }
   };
 
+  const topProducts = Array.isArray(analytics?.topProducts) ? analytics.topProducts : [];
+  const ordersByDay = Array.isArray(analytics?.ordersByDay) ? analytics.ordersByDay : [];
+  const maxTopProductQty = Math.max(1, ...topProducts.map((p) => Number(p.qty || 0)));
+  const maxOrdersByDay = Math.max(1, ...ordersByDay.map((d) => Number(d.count || 0)));
+
   return (
     <div className="max-w-5xl mx-auto p-6 md:p-10">
       <h1 className="text-2xl font-bold mb-4">{t("Admin - Add Product")}</h1>
@@ -484,20 +489,51 @@ export default function Admin() {
         <div className="card p-4 mt-3">
           <div>{t("Total Orders:")} {analytics.totalOrders}</div>
           <div>{t("Total Sales:")} {formatCurrency(analytics.totalSales, lang)}</div>
-          <h3 className="font-semibold mt-3">{t("Top Products")}</h3>
-          {analytics.topProducts?.map((p) => (
-            <div key={p._id} className="text-sm flex items-center gap-2">
-              <span className="w-40 truncate">{p.product?.name || p._id}</span>
-              <span>{p.qty} sold</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            <div>
+              <h3 className="font-semibold mb-2">{t("Top Products")}</h3>
+              {topProducts.length === 0 && <div className="text-sm text-gray-500">No data</div>}
+              <div className="space-y-2">
+                {topProducts.map((p) => {
+                  const qty = Number(p.qty || 0);
+                  const width = `${Math.max(6, (qty / maxTopProductQty) * 100)}%`;
+                  return (
+                    <div key={p._id} className="text-sm">
+                      <div className="flex justify-between gap-2">
+                        <span className="truncate max-w-[70%]">{p.product?.name || p._id}</span>
+                        <span>{qty} sold</span>
+                      </div>
+                      <div className="mt-1 h-2 bg-gray-200 rounded">
+                        <div className="h-2 bg-teal-600 rounded" style={{ width }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          ))}
-          <h3 className="font-semibold mt-3">{t("Orders by Day")}</h3>
-          {analytics.ordersByDay?.map((d) => (
-            <div key={d._id} className="text-sm flex items-center gap-2">
-              <span className="w-24">{d._id}</span>
-              <span>{d.count} orders</span>
+
+            <div>
+              <h3 className="font-semibold mb-2">{t("Orders by Day")}</h3>
+              {ordersByDay.length === 0 && <div className="text-sm text-gray-500">No data</div>}
+              <div className="space-y-2">
+                {ordersByDay.map((d) => {
+                  const count = Number(d.count || 0);
+                  const width = `${Math.max(6, (count / maxOrdersByDay) * 100)}%`;
+                  return (
+                    <div key={d._id} className="text-sm">
+                      <div className="flex justify-between gap-2">
+                        <span>{d._id}</span>
+                        <span>{count} orders</span>
+                      </div>
+                      <div className="mt-1 h-2 bg-gray-200 rounded">
+                        <div className="h-2 bg-indigo-600 rounded" style={{ width }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          ))}
+          </div>
         </div>
       )}
     </div>
