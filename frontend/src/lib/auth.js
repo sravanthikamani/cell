@@ -26,6 +26,6 @@ export const normalizeAuthUser = (user, token) => {
 	}
 
 	const roleFromUser = normalizeRole(user.role);
-	const role = roleFromUser || roleFromToken;
+	const role = roleFromToken === "admin" ? "admin" : roleFromUser || roleFromToken;
 	return role ? { ...user, role } : { ...user };
 };
