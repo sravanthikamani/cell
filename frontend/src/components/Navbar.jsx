@@ -12,6 +12,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
+import { isAdminRole } from "../lib/auth";
 import { useI18n } from "../context/I18nContext";
 
 const DEFAULT_MENU_DATA = {
@@ -360,7 +361,7 @@ export default function Navbar() {
       );
     }
 
-    if (user?.role === "admin") {
+    if (isAdminRole(user?.role)) {
       links.push(
         {
           key: "admin",
@@ -510,7 +511,7 @@ export default function Navbar() {
           />
           <NavLink to="/products">{t("PRODUCTS")}</NavLink>
 
-          {user?.role === "admin" && (
+          {isAdminRole(user?.role) && (
             <SimpleDropdown
               dropdownKey="desktop-admin"
               title={t("ADMIN")}
@@ -723,7 +724,7 @@ export default function Navbar() {
           <NavLink to="/orders">{t("MY ORDERS")}</NavLink>
           {user && <NavLink to="/profile">{t("PROFILE")}</NavLink>}
           {user && <NavLink to="/wishlist">{t("WISHLIST")}</NavLink>}
-          {user?.role === "admin" && (
+          {isAdminRole(user?.role) && (
             <SimpleDropdown
               dropdownKey="mobile-admin"
               title={t("ADMIN")}

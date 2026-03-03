@@ -5,6 +5,13 @@ const User = require("../models/User");
 
 const router = express.Router();
 const JWT_SECRET = "CELL_SECRET_KEY";
+const normalizeRole = (role = "") => {
+  const value = String(role || "").trim().toLowerCase();
+  if (["admin", "administrator", "superadmin", "super_admin"].includes(value)) {
+    return "admin";
+  }
+  return value;
+};
 
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
@@ -22,8 +29,9 @@ router.post("/login", async (req, res) => {
   }
 
   // 3️⃣ Create token
+  const normalizedRole = normalizeRole(user.role);
   const token = jwt.sign(
-    { id: user._id, role: user.role },
+    { id: user._id, role: normalizedRole },
     JWT_SECRET,
     { expiresIn: "7d" }
   );
@@ -34,7 +42,7 @@ router.post("/login", async (req, res) => {
     user: {
       id: user._id,
       email: user.email,
-      role: user.role,
+      role: normalizedRole,
     },
   });
 });
