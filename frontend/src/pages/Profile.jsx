@@ -39,35 +39,40 @@ export default function Profile() {
   const updateField = (key, value) =>
     setProfile((p) => ({ ...p, [key]: value }));
 
-  const save = async () => {
+  // helper that sends updated profile data to the server and updates state
+  const persistProfile = async (updated) => {
     setMsg("");
-    // include a filled new address (if any) at the top of the addresses list
-    const addressesToSave = [...(profile.addresses || [])];
-    const hasNew = Object.values(newAddress).some((v) => String(v || "").trim() !== "");
-    if (hasNew) addressesToSave.unshift({ ...newAddress });
-
     const res = await fetch(`${API_BASE}/api/users/me`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        name: profile.name,
-        phone: profile.phone,
-        addresses: addressesToSave,
-      }),
+      body: JSON.stringify(updated),
     });
     const data = await res.json();
     if (!res.ok) {
       setMsg(data.error || t("Failed to save profile"));
-      return;
+      return false;
     }
     setProfile(data);
     setMsg(t("Profile saved"));
+    return true;
+  };
 
-    // clear new address form if we added one
-    if (hasNew) setNewAddress({ name: "", phone: "", street: "", city: "", pincode: "" });
+  const save = async () => {
+    // original save used when user clicks the global button
+    const addressesToSave = [...(profile.addresses || [])];
+    const hasNew = Object.values(newAddress).some((v) => String(v || "").trim() !== "");
+    if (hasNew) addressesToSave.unshift({ ...newAddress });
+    const success = await persistProfile({
+      name: profile.name,
+      phone: profile.phone,
+      addresses: addressesToSave,
+    });
+    if (success && hasNew) {
+      setNewAddress({ name: "", phone: "", street: "", city: "", pincode: "" });
+    }
   };
 
   return (
@@ -129,12 +134,17 @@ export default function Profile() {
               <div className="flex gap-3 mt-2">
                 <button
                   className="text-sm text-teal-700"
-                  onClick={() => {
+                  onClick={async () => {
                     const next = [...(profile.addresses || [])];
                     next[i] = { ...editedAddress };
                     updateField("addresses", next);
                     setEditingIndex(-1);
                     setEditedAddress({ name: "", phone: "", street: "", city: "", pincode: "" });
+                    await persistProfile({
+                      name: profile.name,
+                      phone: profile.phone,
+                      addresses: next,
+                    });
                   }}
                 >
                   {t("Save")}
@@ -171,10 +181,15 @@ export default function Profile() {
                   className="text-red-600 hover:text-red-800"
                   aria-label={t("Remove")}
                   title={t("Remove")}
-                  onClick={() => {
+                  onClick={async () => {
                     const next = [...(profile.addresses || [])];
                     next.splice(i, 1);
                     updateField("addresses", next);
+                    await persistProfile({
+                      name: profile.name,
+                      phone: profile.phone,
+                      addresses: next,
+                    });
                   }}
                 >
                   <Trash2 size={16} />
