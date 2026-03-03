@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { normalizeAuthUser } from "../lib/auth";
+import { API_BASE } from "../lib/api";
 
 const AuthContext = createContext();
 const IDLE_TIMEOUT_MS = 20 * 60 * 1000;
@@ -64,6 +65,32 @@ export function AuthProvider({ children }) {
       events.forEach((evt) => window.removeEventListener(evt, resetTimer));
     };
   }, [user, token]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    let cancelled = false;
+
+    fetch(`${API_BASE}/api/users/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(async (res) => {
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data;
+      })
+      .then((data) => {
+        if (!data || cancelled) return;
+        const nextUser = normalizeAuthUser(data, token);
+        setUser(nextUser);
+        localStorage.setItem("user", JSON.stringify(nextUser));
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout }}>
