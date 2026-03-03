@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
+import { isAdminRole } from "../lib/auth";
 import { useI18n } from "../context/I18nContext";
 
 export default function AdminOrders() {
@@ -13,7 +14,7 @@ export default function AdminOrders() {
   const [statusFilter, setStatusFilter] = useState("");
 
   if (!user) return <div className="p-10">{t("Loading...")}</div>;
-  if (user.role !== "admin") return <Navigate to="/" replace />;
+  if (!isAdminRole(user.role)) return <Navigate to="/" replace />;
 
   const loadOrders = async (nextPage = page, status = statusFilter) => {
     const params = new URLSearchParams({

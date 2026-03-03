@@ -9,6 +9,13 @@ const { sendMail } = require("../utils/mailer");
 
 const router = express.Router();
 const JWT_SECRET = "CELL_SECRET_KEY";
+const normalizeRole = (role = "") => {
+  const value = String(role || "").trim().toLowerCase();
+  if (["admin", "administrator", "superadmin", "super_admin"].includes(value)) {
+    return "admin";
+  }
+  return value;
+};
 const normalizeEmail = (email = "") => String(email).trim().toLowerCase();
 const isEmailVerificationRequired = () =>
   String(process.env.REQUIRE_EMAIL_VERIFICATION || "true").toLowerCase() !== "false";
@@ -24,8 +31,9 @@ const issueLoginResponse = (res, user) => {
   if (user.isBlocked) {
     return res.status(403).json({ error: "Account is blocked. Contact support." });
   }
+  const normalizedRole = normalizeRole(user.role);
   const token = jwt.sign(
-    { id: user._id, role: user.role },
+    { id: user._id, role: normalizedRole },
     JWT_SECRET,
     { expiresIn: "7d" }
   );
@@ -35,7 +43,7 @@ const issueLoginResponse = (res, user) => {
     user: {
       id: user._id,
       email: user.email,
-      role: user.role,
+      role: normalizedRole,
       name: user.name || "",
     },
   });
