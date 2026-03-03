@@ -4,6 +4,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "admin:fix": "node scripts/fixAdminFlags.js",
     "migrate:prices:eur": "node scripts/convertProductPricesToEur.js",
     "perf:load": "node scripts/loadTest.js"
   },
