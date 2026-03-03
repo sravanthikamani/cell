@@ -5,6 +5,7 @@ import { useCart } from "../context/CartContext";
 import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
 import { formatCurrency } from "../lib/format";
+import { ShoppingCart, Trash2 } from "lucide-react";
 
 export default function Wishlist() {
   const { token, user } = useAuth();
@@ -22,7 +23,7 @@ export default function Wishlist() {
   }, [user, token]);
 
   const remove = async (productId) => {
-    await fetch(`${API_BASE}/api/wishlist/remove`, {
+    const res = await fetch(`${API_BASE}/api/wishlist/remove`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -30,7 +31,9 @@ export default function Wishlist() {
       },
       body: JSON.stringify({ productId }),
     });
+    if (!res.ok) return;
     setItems((list) => list.filter((p) => p._id !== productId));
+    window.dispatchEvent(new Event("wishlist:changed"));
   };
 
   const addToCart = async (productId) => {
@@ -67,16 +70,20 @@ export default function Wishlist() {
             <p className="mt-1">{formatCurrency(p.price, lang)}</p>
             <div className="mt-3 flex gap-3">
               <button
-                className="bg-black text-white px-4 py-1"
+                className="inline-flex items-center justify-center rounded-full p-2 btn-primary"
                 onClick={() => addToCart(p._id)}
+                aria-label={t("Add to Cart")}
+                title={t("Add to Cart")}
               >
-                {t("Add to Cart")}
+                <ShoppingCart size={18} />
               </button>
               <button
-                className="text-red-600"
+                className="inline-flex items-center justify-center rounded-full p-2 btn-secondary text-red-600"
                 onClick={() => remove(p._id)}
+                aria-label={t("Remove")}
+                title={t("Remove")}
               >
-                {t("Remove")}
+                <Trash2 size={18} />
               </button>
             </div>
           </div>
