@@ -75,25 +75,10 @@ export default function Home() {
         <div className="absolute right-10 top-8 w-24 h-24 bg-orange-400/80 rounded-full blur-xl" />
       </div>
 
-      {/* Categories */}
-      <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: "Smartphones", path: "/device/smartphones" },
-          { label: "Tablets", path: "/device/tablets" },
-          { label: "Audio", path: "/category/audio" },
-          { label: "Accessories", path: "/device/accessories" },
-        ].map((c) => (
-          <Link
-            key={c.label}
-            to={c.path}
-            className="card p-5"
-          >
-            <div className="text-xs uppercase text-gray-500">
-              {t("Category")}
-            </div>
-            <div className="mt-2 font-semibold">{t(c.label)}</div>
-          </Link>
-        ))}
+      {/* Exclusive offers */}
+      <div className="mt-10">
+        <h2 className="text-2xl font-bold">{t("Exclusive Offers")}</h2>
+        <p className="mt-2">{t("Upcoming offers start from March 1st to March 31st")}</p>
       </div>
 
       {/* Featured */}
