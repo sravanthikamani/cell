@@ -1,0 +1,31 @@
+export const normalizeRole = (role) => {
+	const value = String(role || "").trim().toLowerCase();
+	if (["admin", "administrator", "superadmin", "super_admin"].includes(value)) {
+		return "admin";
+	}
+	return value;
+};
+
+export const isAdminRole = (role) => normalizeRole(role) === "admin";
+
+export const decodeJwtRole = (token) => {
+	try {
+		const parts = String(token || "").split(".");
+		if (parts.length < 2) return "";
+		const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+		return normalizeRole(payload?.role);
+	} catch {
+		return "";
+	}
+};
+
+export const normalizeAuthUser = (user, token) => {
+	const roleFromToken = decodeJwtRole(token);
+	if (!user || typeof user !== "object") {
+		return roleFromToken ? { role: roleFromToken } : null;
+	}
+
+	const roleFromUser = normalizeRole(user.role);
+	const role = roleFromUser || roleFromToken;
+	return role ? { ...user, role } : { ...user };
+};

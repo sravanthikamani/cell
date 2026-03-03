@@ -1,24 +1,33 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { normalizeAuthUser } from "../lib/auth";
 
 const AuthContext = createContext();
 const IDLE_TIMEOUT_MS = 20 * 60 * 1000;
 
 export function AuthProvider({ children }) {
   const navigate = useNavigate();
-  const [user, setUser] = useState(
-    JSON.parse(localStorage.getItem("user"))
-  );
-  const [token, setToken] = useState(
-    localStorage.getItem("token")
-  );
+  const storedToken = localStorage.getItem("token");
+  const storedUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("user"));
+    } catch {
+      return null;
+    }
+  })();
+
+  const [token, setToken] = useState(storedToken);
+  const [user, setUser] = useState(normalizeAuthUser(storedUser, storedToken));
   const idleTimerRef = useRef(null);
 
   const login = (data) => {
-    setUser(data.user);
-    setToken(data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
-    localStorage.setItem("token", data.token);
+    const nextToken = data?.token || "";
+    const nextUser = normalizeAuthUser(data?.user, nextToken);
+
+    setUser(nextUser);
+    setToken(nextToken);
+    localStorage.setItem("user", JSON.stringify(nextUser));
+    localStorage.setItem("token", nextToken);
     sessionStorage.removeItem("session_timeout");
   };
 

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
+import { isAdminRole } from "../lib/auth";
 import { useI18n } from "../context/I18nContext";
 import { formatCurrency } from "../lib/format";
 import { BarChart } from "@mui/x-charts/BarChart";
@@ -205,7 +206,7 @@ export default function Admin() {
 
   // early return after declaring all hooks
   if (!user) return <div className="p-10">{t("Loading...")}</div>;
-  if (user.role !== "admin") return <Navigate to="/" replace />;
+  if (!isAdminRole(user.role)) return <Navigate to="/" replace />;
 
   const addProduct = async () => {
     const res = await fetch(`${API_BASE}/api/admin/products`, {
