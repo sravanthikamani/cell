@@ -12,7 +12,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
-import { isAdminRole } from "../lib/auth";
+import { decodeJwtRole, isAdminRole } from "../lib/auth";
 import { useI18n } from "../context/I18nContext";
 
 const DEFAULT_MENU_DATA = {
@@ -188,9 +188,10 @@ const SimpleDropdown = ({
 
 export default function Navbar() {
   const { cartCount } = useCart();
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const { lang, setLang, t } = useI18n();
   const [wishlistCount, setWishlistCount] = useState(0);
+  const isAdmin = isAdminRole(user?.role) || isAdminRole(decodeJwtRole(token));
 
   // Icon color
   const iconColor = "#374151";
@@ -361,7 +362,7 @@ export default function Navbar() {
       );
     }
 
-    if (isAdminRole(user?.role)) {
+    if (isAdmin) {
       links.push(
         {
           key: "admin",
@@ -405,7 +406,7 @@ export default function Navbar() {
     ];
 
     return [...links, ...menuLinks];
-  }, [menuData, t, user]);
+  }, [isAdmin, menuData, t, user]);
 
   const filteredQuickLinks = useMemo(() => {
     const term = globalSearch.trim().toLowerCase();
@@ -511,7 +512,7 @@ export default function Navbar() {
           />
           <NavLink to="/products">{t("PRODUCTS")}</NavLink>
 
-          {isAdminRole(user?.role) && (
+          {isAdmin && (
             <SimpleDropdown
               dropdownKey="desktop-admin"
               title={t("ADMIN")}
@@ -724,7 +725,7 @@ export default function Navbar() {
           <NavLink to="/orders">{t("MY ORDERS")}</NavLink>
           {user && <NavLink to="/profile">{t("PROFILE")}</NavLink>}
           {user && <NavLink to="/wishlist">{t("WISHLIST")}</NavLink>}
-          {isAdminRole(user?.role) && (
+          {isAdmin && (
             <SimpleDropdown
               dropdownKey="mobile-admin"
               title={t("ADMIN")}
