@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import ImageGallery from "../components/ImageGallery";
@@ -27,6 +27,7 @@ export default function ProductPage() {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const productDetailsBg =
     "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772629203/drew-beamer-kUHfMW8awpE-unsplash_aqbeir.jpg";
+  const reviewFileInputRef = useRef(null);
 
   // 🔹 Load single product
   useEffect(() => {
@@ -151,7 +152,7 @@ export default function ProductPage() {
       setRating(5);
       setRealImages([]);
       setEditingReviewId("");
-      setReviewMsg(isEditing ? "Review updated." : t("Review submitted."));
+      setReviewMsg("");
     } catch (err) {
       setReviewMsg(err.error || t("Failed to submit review."));
     }
@@ -206,7 +207,7 @@ export default function ProductPage() {
         setComment("");
         setRealImages([]);
       }
-      setReviewMsg("Review deleted.");
+      setReviewMsg("");
     } catch (err) {
       setReviewMsg(err.message || "Failed to delete review");
     }
@@ -365,10 +366,11 @@ export default function ProductPage() {
             rows={3}
           />
           <div className="mt-3">
-            <div className="text-sm font-medium mb-1">real images</div>
             <input
+              ref={reviewFileInputRef}
               type="file"
               accept="image/*"
+              className="hidden"
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 e.target.value = "";
@@ -376,6 +378,14 @@ export default function ProductPage() {
               }}
               disabled={isUploadingReviewImage || realImages.length >= 5}
             />
+            <button
+              type="button"
+              className="border px-3 py-1"
+              onClick={() => reviewFileInputRef.current?.click()}
+              disabled={isUploadingReviewImage || realImages.length >= 5}
+            >
+              Choose file
+            </button>
             <div className="text-xs text-gray-500 mt-1">Up to 5 images</div>
             {isUploadingReviewImage && (
               <div className="text-xs text-gray-600 mt-1">Uploading image...</div>
@@ -450,7 +460,6 @@ export default function ProductPage() {
             )}
             {Array.isArray(r.realImages) && r.realImages.length > 0 && (
               <div className="mt-2">
-                <div className="text-xs text-gray-500 mb-1">real images</div>
                 <div className="flex flex-wrap gap-2">
                   {r.realImages.map((img, idx) => (
                     <img
