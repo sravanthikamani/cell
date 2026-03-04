@@ -5,12 +5,24 @@ const User = require("../models/User");
 
 const router = express.Router();
 const JWT_SECRET = "CELL_SECRET_KEY";
+const normalizeEmail = (email = "") => String(email).trim().toLowerCase();
 const normalizeRole = (role = "") => {
   const value = String(role || "").trim().toLowerCase();
   if (["admin", "administrator", "superadmin", "super_admin"].includes(value)) {
     return "admin";
   }
   return value;
+};
+const ADMIN_EMAILS = new Set(
+  String(process.env.ADMIN_EMAILS || "admin@test.com")
+    .split(",")
+    .map((v) => normalizeEmail(v))
+    .filter(Boolean)
+);
+const resolveRole = (user) => {
+  const email = normalizeEmail(user?.email);
+  if (email && ADMIN_EMAILS.has(email)) return "admin";
+  return normalizeRole(user?.role);
 };
 
 router.post("/login", async (req, res) => {
@@ -29,7 +41,7 @@ router.post("/login", async (req, res) => {
   }
 
   // 3️⃣ Create token
-  const normalizedRole = normalizeRole(user.role);
+  const normalizedRole = resolveRole(user);
   const token = jwt.sign(
     { id: user._id, role: normalizedRole },
     JWT_SECRET,

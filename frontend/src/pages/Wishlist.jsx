@@ -37,14 +37,19 @@ export default function Wishlist() {
   };
 
   const addToCart = async (productId) => {
-    await fetch(`${API_BASE}/api/cart/add`, {
+    const res = await fetch(`${API_BASE}/api/cart/add`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ userId: user.id, productId }),
+      body: JSON.stringify({ userId: user.id || user._id, productId }),
     });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(data?.error || t("Failed to add to cart"));
+      return;
+    }
     await refreshCart();
   };
 
