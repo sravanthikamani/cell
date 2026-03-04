@@ -28,6 +28,8 @@ export default function Products() {
   });
   const [catalogTree, setCatalogTree] = useState({});
   const hasSearchQuery = Boolean(q.trim());
+  const productsBg =
+    "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772628644/nordwood-themes-R53t-Tg6J4c-unsplash_um5hxv.jpg";
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -154,7 +156,11 @@ export default function Products() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 md:p-10">
+    <div
+      className="min-h-screen bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: `url(${productsBg})` }}
+    >
+      <div className="max-w-6xl mx-auto p-6 md:p-10">
       <Seo
         title={hasSearchQuery ? `Search: ${q.trim()}` : "Products"}
         description={
@@ -289,6 +295,7 @@ export default function Products() {
             </button>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

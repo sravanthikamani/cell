@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
@@ -25,6 +25,9 @@ export default function Profile() {
     city: "",
     pincode: "",
   });
+  const fileInputRef = useRef(null);
+  const profileBg =
+    "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772627049/jason-leung-Xaanw0s0pMk-unsplash_cazp5h.jpg";
 
   useEffect(() => {
     fetch(`${API_BASE}/api/users/me`, {
@@ -100,7 +103,11 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-10 card">
+    <div
+      className="min-h-screen bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: `url(${profileBg})` }}
+    >
+      <div className="max-w-3xl mx-auto p-10">
       <h1 className="text-2xl font-bold mb-6">{t("My Profile")}</h1>
 
       <div className="mb-6 flex items-center gap-4">
@@ -117,11 +124,20 @@ export default function Profile() {
         )}
 
         <div>
-          <label className="text-sm font-medium block mb-1">Profile image</label>
+          <button
+            type="button"
+            className="border border-black bg-white px-3 py-1 text-sm"
+            disabled={isUploadingImage}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {t("Upload Image")}
+          </button>
           <input
+            ref={fileInputRef}
             type="file"
             accept="image/*"
             disabled={isUploadingImage}
+            className="hidden"
             onChange={async (e) => {
               const file = e.target.files?.[0];
               e.target.value = "";
@@ -171,7 +187,7 @@ export default function Profile() {
 
       <h2 className="text-xl font-bold mt-8 mb-3">{t("Addresses")}</h2>
       {(profile.addresses || []).map((addr, i) => (
-        <div key={i} className="border p-3 mb-3">
+        <div key={i} className="border bg-white p-3 mb-3">
           {editingIndex === i ? (
             <div>
               <div className="grid grid-cols-2 gap-3">
@@ -329,6 +345,7 @@ export default function Profile() {
       >
         {t("Save Profile")}
       </button>
+      </div>
     </div>
   );
 }

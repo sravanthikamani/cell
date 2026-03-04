@@ -36,10 +36,11 @@ export default function App() {
     <>
       <UrlNormalizer />
       <Navbar />
-      <Breadcrumbs />
+      <div className="pt-36 md:pt-40">
+        <Breadcrumbs />
 
-      <Suspense fallback={<div className="p-10">Loading...</div>}>
-        <Routes>
+        <Suspense fallback={<div className="p-10">Loading...</div>}>
+          <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<Products />} />
 
@@ -127,9 +128,10 @@ export default function App() {
             path="*"
             element={<NotFound />}
           />
-        </Routes>
-      </Suspense>
-      <Footer />
+          </Routes>
+        </Suspense>
+        <Footer />
+      </div>
     </>
   );
 }
