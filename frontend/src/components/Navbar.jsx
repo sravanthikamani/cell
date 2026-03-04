@@ -450,7 +450,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="w-full">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full">
       <div className="flex items-center justify-between bg-gradient-to-r from-blue-600 to-slate-900 px-6 py-2 text-white text-xs md:text-sm font-semibold">
         <button className="px-2" onClick={() => setTopIndex((i) => (i - 1 + 4) % 4)}>
           <ChevronLeft />
