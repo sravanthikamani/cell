@@ -119,17 +119,22 @@ export default function BrandPage() {
               <button
                 onClick={async () => {
                   if (!user) return alert(t("Login first"));
-                  await fetch(`${API_BASE}/api/cart/add`, {
+                  const res = await fetch(`${API_BASE}/api/cart/add`, {
                     method: "POST",
                     headers: {
                       "Content-Type": "application/json",
                       Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({
-                      userId: user.id,
+                      userId: user.id || user._id,
                       productId: product._id,
                     }),
                   });
+                  const data = await res.json().catch(() => ({}));
+                  if (!res.ok) {
+                    alert(data?.error || t("Failed to add to cart"));
+                    return;
+                  }
                   await refreshCart();
                 }}
                 className="bg-teal-600 text-white px-4 py-1"
