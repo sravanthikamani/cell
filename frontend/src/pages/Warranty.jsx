@@ -14,11 +14,23 @@ export default function Warranty() {
       <h1 className="text-4xl font-bold mb-4 text-teal-600">
         {t("Warranty Policy")}
       </h1>
-      <ul className="list-disc pl-6 space-y-2 text-gray-600">
-        <li>{t("1 year manufacturer warranty")}</li>
-        <li>{t("Covers hardware defects")}</li>
-        <li>{t("Does not cover physical damage")}</li>
-      </ul>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <img
+          src="https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772630903/ChatGPT_Image_Mar_4_2026_06_54_20_PM_hjxf9p.png"
+          alt="Warranty detail 1"
+          className="w-full h-56 object-cover rounded-lg"
+        />
+        <img
+          src="https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772631184/ChatGPT_Image_Mar_4_2026_06_55_37_PM_na81nk.png"
+          alt="Warranty detail 2"
+          className="w-full h-56 object-cover rounded-lg"
+        />
+        <img
+          src="https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772631205/ChatGPT_Image_Mar_4_2026_06_58_02_PM_tvkncm.png"
+          alt="Warranty detail 3"
+          className="w-full h-56 object-cover rounded-lg"
+        />
+      </div>
     </div>
   );
 }

@@ -189,6 +189,7 @@ export default function AdminOrders() {
   };
 
   useEffect(() => {
+    if (!user || !isAdminRole(user.role) || !token) return;
     loadOrders(page || 1, {}, false).catch((err) => {
       setError(err.message || "Failed to fetch orders");
       setLoading(false);

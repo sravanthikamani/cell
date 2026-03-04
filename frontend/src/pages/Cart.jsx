@@ -5,6 +5,7 @@ import { useCart } from "../context/CartContext";
 import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
 import { formatCurrency } from "../lib/format";
+import { Trash2 } from "lucide-react";
 
 export default function Cart() {
   const [cart, setCart] = useState(null);
@@ -98,12 +99,24 @@ export default function Cart() {
 
           {cart.items.length === 0 && <p>{t("Cart is empty")}</p>}
 
+          {cart.items.length > 0 && (
+            <div className="mb-4 flex justify-end">
+              <button
+                type="button"
+                onClick={() => navigate("/products")}
+                className="btn-primary"
+              >
+                {t("Shop More")}
+              </button>
+            </div>
+          )}
+
           {cart.items.map(({ productId, qty, variant }, idx) => {
             if (!productId) {
               return (
                 <div
                   key={`missing-${idx}`}
-                  className="card p-4 mb-3 flex items-center justify-between"
+                  className="p-4 mb-3 flex items-center justify-between border border-black rounded"
                 >
                   <div className="text-sm text-gray-600">
                     {t("Product not found")}
@@ -114,7 +127,7 @@ export default function Cart() {
             return (
               <div
                 key={`${productId._id}-${variant?.color || ""}-${variant?.size || ""}`}
-                className="card p-4 mb-3 flex items-center justify-between"
+                className="p-4 mb-3 flex items-center justify-between border border-black rounded"
               >
                 <div>
                   <h2 className="font-semibold">{productId.name}</h2>
@@ -148,9 +161,11 @@ export default function Cart() {
 
                   <button
                     onClick={() => removeItem(productId._id, variant)}
-                    className="text-red-600 text-sm"
+                    className="text-black p-1"
+                    aria-label={t("Remove")}
+                    title={t("Remove")}
                   >
-                    {t("Remove")}
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </div>
