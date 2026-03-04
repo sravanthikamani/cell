@@ -205,7 +205,7 @@ export default function ProductPage() {
         setComment("");
         setRealImages([]);
       }
-      setReviewMsg("Review deleted.");
+      setReviewMsg("");
     } catch (err) {
       setReviewMsg(err.message || "Failed to delete review");
     }
