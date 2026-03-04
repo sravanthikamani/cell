@@ -35,7 +35,7 @@ body {
 }
 
 .dark .btn-primary {
-  @apply bg-teal-500 hover:bg-teal-400;
+  @apply bg-blue-500 hover:bg-blue-400;
 }
 
 .dark .btn-secondary {
@@ -54,7 +54,7 @@ h3,
 }
 
 .btn-primary {
-  @apply bg-teal-600 text-white px-5 py-2 rounded-full font-semibold hover:bg-teal-700 transition;
+  @apply bg-blue-600 text-white px-5 py-2 rounded-full font-semibold hover:bg-blue-700 transition;
 }
 
 .btn-secondary {

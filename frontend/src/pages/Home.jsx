@@ -35,7 +35,7 @@ export default function Home() {
 
       <div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/images/home-hero.jpeg')" }}
+        style={{ backgroundImage: "url('https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772513537/ChatGPT_Image_Mar_3_2026_10_19_03_AM_r5yufa.png')" }}
       />
       <div className="absolute inset-0 bg-white/85 backdrop-blur-[1px]" />
       <div className="relative px-6 md:px-10 py-8">
@@ -44,17 +44,17 @@ export default function Home() {
         className="relative overflow-hidden rounded-3xl bg-cover bg-center text-white p-8 md:p-14"
         style={{
           backgroundImage:
-            "linear-gradient(135deg, rgba(13,148,136,0.88), rgba(15,23,42,0.9)), url('/images/home-hero.jpeg')",
+            "linear-gradient(135deg, rgba(30,58,138,0.88), rgba(15,23,42,0.95)), url('https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772513537/ChatGPT_Image_Mar_3_2026_10_19_03_AM_r5yufa.png')",
         }}
       >
         <div className="max-w-2xl">
-          <p className="uppercase tracking-widest text-xs text-teal-100 mb-2">
+          <p className="uppercase tracking-widest text-xs text-blue-100 mb-2">
             {t("New Season Tech")}
           </p>
           <h1 className="text-3xl md:text-5xl font-bold leading-tight">
             {t("Power your day with devices that feel futuristic")}
           </h1>
-          <p className="mt-4 text-teal-100 text-sm md:text-base">
+          <p className="mt-4 text-blue-100 text-sm md:text-base">
             {t(
               "Flagship phones, premium audio, and smart accessories curated for everyday performance."
             )}
@@ -75,32 +75,17 @@ export default function Home() {
         <div className="absolute right-10 top-8 w-24 h-24 bg-orange-400/80 rounded-full blur-xl" />
       </div>
 
-      {/* Categories */}
-      <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: "Smartphones", path: "/device/smartphones" },
-          { label: "Tablets", path: "/device/tablets" },
-          { label: "Audio", path: "/category/audio" },
-          { label: "Accessories", path: "/device/accessories" },
-        ].map((c) => (
-          <Link
-            key={c.label}
-            to={c.path}
-            className="card p-5"
-          >
-            <div className="text-xs uppercase text-gray-500">
-              {t("Category")}
-            </div>
-            <div className="mt-2 font-semibold">{t(c.label)}</div>
-          </Link>
-        ))}
+      {/* Exclusive offers */}
+      <div className="mt-10">
+        <h2 className="text-2xl font-bold">{t("Exclusive Offers")}</h2>
+        <p className="mt-2">{t("Upcoming offers start from March 1st to March 31st")}</p>
       </div>
 
       {/* Featured */}
       <div className="mt-12">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">{t("Featured Products")}</h2>
-          <Link to="/products" className="text-sm text-teal-700">
+          <Link to="/products" className="text-sm text-blue-700">
             {t("View all")}
           </Link>
         </div>
