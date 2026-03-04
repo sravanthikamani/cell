@@ -12,6 +12,8 @@ export default function Wishlist() {
   const { refreshCart } = useCart();
   const [items, setItems] = useState([]);
   const { t, lang } = useI18n();
+  const wishlistBg =
+    "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772628675/casey-horner-RmoWqDCqN2E-unsplash_g93cv9.jpg";
 
   useEffect(() => {
     if (!user || !token) return;
@@ -54,7 +56,11 @@ export default function Wishlist() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-10">
+    <div
+      className="min-h-screen bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: `url(${wishlistBg})` }}
+    >
+      <div className="max-w-5xl mx-auto p-10">
       <h1 className="text-3xl font-bold mb-6">{t("Wishlist")}</h1>
       {items.length === 0 && <p>{t("No items in wishlist")}</p>}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -93,6 +99,7 @@ export default function Wishlist() {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );
