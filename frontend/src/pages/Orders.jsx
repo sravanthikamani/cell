@@ -10,6 +10,8 @@ export default function Orders() {
   const [actionMsg, setActionMsg] = useState("");
   const [processingId, setProcessingId] = useState("");
   const { t, lang } = useI18n();
+  const myOrdersBg =
+    "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772629439/milad-fakurian-tGTa40GKSRI-unsplash_k9xpk5.jpg";
 
   // ✅ STOP until user exists
   if (!user) {
@@ -58,7 +60,11 @@ export default function Orders() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6 md:p-10">
+    <div
+      className="min-h-screen bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: `url(${myOrdersBg})` }}
+    >
+      <div className="max-w-5xl mx-auto p-6 md:p-10">
       <h1 className="text-3xl font-bold mb-6">{t("My Orders")}</h1>
       {actionMsg && <div className="text-sm mb-3">{actionMsg}</div>}
 
@@ -162,6 +168,7 @@ export default function Orders() {
           </div>
         </div>
       ))}
+      </div>
     </div>
   );
 }
