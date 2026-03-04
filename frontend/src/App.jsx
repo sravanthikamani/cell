@@ -1,7 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import Navbar from "./components/Navbar";
-import Breadcrumbs from "./components/Breadcrumbs";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
 import UrlNormalizer from "./components/UrlNormalizer";
@@ -36,9 +35,7 @@ export default function App() {
     <>
       <UrlNormalizer />
       <Navbar />
-      <div className="pt-36 md:pt-40">
-        <Breadcrumbs />
-
+      <div className="pt-36 md:pt-40 app-content">
         <Suspense fallback={<div className="p-10">Loading...</div>}>
           <Routes>
           <Route path="/" element={<Home />} />
