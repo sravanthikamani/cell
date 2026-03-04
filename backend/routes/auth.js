@@ -17,6 +17,17 @@ const normalizeRole = (role = "") => {
   return value;
 };
 const normalizeEmail = (email = "") => String(email).trim().toLowerCase();
+const ADMIN_EMAILS = new Set(
+  String(process.env.ADMIN_EMAILS || "admin@test.com")
+    .split(",")
+    .map((v) => normalizeEmail(v))
+    .filter(Boolean)
+);
+const resolveRole = (user) => {
+  const email = normalizeEmail(user?.email);
+  if (email && ADMIN_EMAILS.has(email)) return "admin";
+  return normalizeRole(user?.role);
+};
 const isEmailVerificationRequired = () =>
   String(process.env.REQUIRE_EMAIL_VERIFICATION || "true").toLowerCase() !== "false";
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -31,7 +42,7 @@ const issueLoginResponse = (res, user) => {
   if (user.isBlocked) {
     return res.status(403).json({ error: "Account is blocked. Contact support." });
   }
-  const normalizedRole = normalizeRole(user.role);
+  const normalizedRole = resolveRole(user);
   const token = jwt.sign(
     { id: user._id, role: normalizedRole },
     JWT_SECRET,

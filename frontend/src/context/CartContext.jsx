@@ -9,13 +9,14 @@ export function CartProvider({ children }) {
   const [cartCount, setCartCount] = useState(0);
 
   const fetchCartCount = async () => {
-    if (!user || !token) {
+    const userId = user?.id || user?._id;
+    if (!userId || !token) {
       setCartCount(0);
       return;
     }
 
     const res = await fetch(
-      `${API_BASE}/api/cart/${user.id}`,
+      `${API_BASE}/api/cart/${userId}`,
       {
         headers: { Authorization: token },
       }

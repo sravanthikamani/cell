@@ -14,7 +14,7 @@ export default function Cart() {
   const { t, lang } = useI18n();
 
   // keep an id even if user is null to allow hooks to run unconditionally
-  const USER_ID = user?.id;
+  const USER_ID = user?.id || user?._id;
   const cartBg =
     "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772514348/ChatGPT_Image_Mar_3_2026_10_34_18_AM_m4bol0.png";
 
