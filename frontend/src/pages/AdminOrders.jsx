@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
@@ -13,10 +13,7 @@ export default function AdminOrders() {
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState("");
 
-  if (!user) return <div className="p-10">{t("Loading...")}</div>;
-  if (!isAdminRole(user.role)) return <Navigate to="/" replace />;
-
-  const loadOrders = async (nextPage = page, status = statusFilter) => {
+  const loadOrders = useCallback(async (nextPage = page, status = statusFilter) => {
     const params = new URLSearchParams({
       page: String(nextPage),
       limit: "20",
@@ -30,11 +27,12 @@ export default function AdminOrders() {
     setOrders(Array.isArray(data.items) ? data.items : []);
     setPage(data.page || 1);
     setTotalPages(data.totalPages || 1);
-  };
+  }, [page, statusFilter, token]);
 
   useEffect(() => {
+    if (!user || !isAdminRole(user.role) || !token) return;
     loadOrders(1).catch(console.error);
-  }, [token]);
+  }, [loadOrders, token, user]);
 
   useEffect(() => {
     document.body.classList.add("orders-bg-active");
@@ -42,6 +40,9 @@ export default function AdminOrders() {
       document.body.classList.remove("orders-bg-active");
     };
   }, []);
+
+  if (!user) return <div className="p-10">{t("Loading...")}</div>;
+  if (!isAdminRole(user.role)) return <Navigate to="/" replace />;
 
   return (
     <div className="admin-orders-page-bg">
