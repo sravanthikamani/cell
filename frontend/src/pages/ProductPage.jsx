@@ -25,6 +25,8 @@ export default function ProductPage() {
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const productDetailsBg =
+    "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772629203/drew-beamer-kUHfMW8awpE-unsplash_aqbeir.jpg";
 
   // 🔹 Load single product
   useEffect(() => {
@@ -245,7 +247,11 @@ export default function ProductPage() {
         ).toFixed(1);
 
   return (
-    <div className="max-w-5xl mx-auto p-6 md:p-10">
+    <div
+      className="min-h-screen bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: `url(${productDetailsBg})` }}
+    >
+      <div className="max-w-5xl mx-auto p-6 md:p-10">
       <Seo
         title={product.name || "Product Details"}
         description={`${product.brand || "Electronics"} product details, stock, reviews, and pricing.`}
@@ -469,6 +475,7 @@ export default function ProductPage() {
             )}
           </div>
         ))}
+      </div>
       </div>
     </div>
   );
