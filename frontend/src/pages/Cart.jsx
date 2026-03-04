@@ -19,7 +19,7 @@ const { refreshCart } = useCart();
   }
 
   // ✅ SAFE NOW
-  const USER_ID = user.id;
+  const USER_ID = user.id || user._id;
 
   const fetchCart = () => {
     fetch(`${API_BASE}/api/cart/${USER_ID}`, {

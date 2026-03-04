@@ -130,17 +130,23 @@ export default function Products() {
       return;
     }
 
-    await fetch(`${API_BASE}/api/cart/add`, {
+    const res = await fetch(`${API_BASE}/api/cart/add`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        userId: user.id,
+        userId: user.id || user._id,
         productId,
       }),
     });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(data?.error || t("Failed to add to cart"));
+      return;
+    }
 
     await refreshCart(); // ✅ cart icon updates
     alert(t("Added to cart"));
