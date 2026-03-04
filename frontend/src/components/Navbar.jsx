@@ -86,7 +86,7 @@ const Dropdown = ({
         onClick={() =>
           setOpenDropdown(openDropdown === dropdownKey ? null : dropdownKey)
         }
-        className="flex items-center gap-1 hover:text-teal-600"
+          className="flex items-center gap-1 hover:text-blue-600"
         aria-expanded={openDropdown === dropdownKey}
         aria-haspopup="menu"
       >
@@ -154,7 +154,7 @@ const SimpleDropdown = ({
       onClick={() =>
         setOpenDropdown(openDropdown === dropdownKey ? null : dropdownKey)
       }
-      className="flex items-center gap-1 hover:text-teal-600"
+        className="flex items-center gap-1 hover:text-blue-600"
       aria-expanded={openDropdown === dropdownKey}
       aria-haspopup="menu"
     >
@@ -451,7 +451,7 @@ export default function Navbar() {
 
   return (
     <header className="w-full">
-      <div className="flex items-center justify-between bg-gradient-to-r from-teal-600 to-slate-900 px-6 py-2 text-white text-xs md:text-sm font-semibold">
+      <div className="flex items-center justify-between bg-gradient-to-r from-blue-600 to-slate-900 px-6 py-2 text-white text-xs md:text-sm font-semibold">
         <button className="px-2" onClick={() => setTopIndex((i) => (i - 1 + 4) % 4)}>
           <ChevronLeft />
         </button>
@@ -470,13 +470,15 @@ export default function Navbar() {
 
       <div className="flex items-center justify-between bg-white/90 backdrop-blur px-6 py-4 shadow-md sticky top-0 z-40">
         <Link to="/">
-          <h1 className="text-3xl font-bold text-blue-600 heading tracking-tight">
-            {t("CELL")}
-          </h1>
+          <img 
+            src="https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772512421/ChatGPT_Image_Mar_3_2026_10_03_22_AM_xofi3i.png"
+            alt="CELL Logo"
+            className="h-20 object-contain"
+          />
         </Link>
 
         <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-gray-700">
-          <NavLink to="/" className={({ isActive }) => (isActive ? "text-teal-600" : "")}>
+          <NavLink to="/" className={({ isActive }) => (isActive ? "text-blue-600" : "")}>
             {t("HOME")}
           </NavLink>
 
