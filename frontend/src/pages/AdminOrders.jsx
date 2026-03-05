@@ -334,6 +334,35 @@ export default function AdminOrders() {
       <div className="max-w-5xl mx-auto p-6 md:p-10">
         <h1 className="text-2xl font-bold mb-6">{t("Admin - Orders")}</h1>
 
+      {orders.map((order) => (
+        <div key={order._id} className="card p-4 mb-4 admin-order-card">
+          <p className="font-semibold">{t("Order ID:")} {order._id}</p>
+          <p>User: {order.userId}</p>
+          <p className="admin-order-date">
+            {t("Date:")}{" "}
+            {order.createdAt ? new Date(order.createdAt).toLocaleString() : "-"}
+          </p>
+          <button
+            className="mt-2 text-sm text-teal-700 underline"
+            onClick={async () => {
+              try {
+                const res = await fetch(`${API_BASE}/api/orders/${order._id}/invoice`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!res.ok) throw new Error("Failed to download invoice");
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `invoice-${order._id}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+              } catch (err) {
+                console.error(err);
+              }
+            }}
         <div className="card p-4 mb-5 grid grid-cols-1 md:grid-cols-6 gap-2">
           <input
             className="border p-2 md:col-span-2"
