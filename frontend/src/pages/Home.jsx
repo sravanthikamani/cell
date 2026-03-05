@@ -78,25 +78,25 @@ export default function Home() {
       </div>
 
       {/* Exclusive offers */}
-      <div className="mt-10 rounded-3xl bg-white/70 backdrop-blur-sm p-6 md:p-8 exclusive-offers-section">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-          <div>
-            <h2 className="text-2xl font-bold">{t("Exclusive Offers")}</h2>
-            <p className="mt-2">
-              {t("Upcoming offers start from")}{" "}
-              <span className="offer-date">March 1st</span>{" "}
-              {t("to")}{" "}
-              <span className="offer-date">March 31st</span>
-            </p>
-          </div>
-          <div className="md:justify-self-end">
-            <img
-              src="https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772683317/ChatGPT_Image_Mar_5_2026_09_30_19_AM_mlrgjg.png"
-              alt={t("Exclusive offers banner")}
-              className="w-full md:w-[460px] rounded-2xl object-cover shadow-lg"
-              loading="lazy"
-            />
-          </div>
+      <div className="mt-10 rounded-3xl p-6 md:p-8 text-white exclusive-offers-section relative overflow-hidden min-h-[310px] md:min-h-[350px] flex items-center">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(90deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.24)), url('/images/sale%20images/grandsalelimit.jpg')",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            backgroundSize: "cover",
+          }}
+        />
+        <div className="relative z-10 max-w-2xl ml-auto text-right rounded-2xl bg-black/18 backdrop-blur-[1px] p-4 md:p-5">
+          <h2 className="text-2xl font-bold drop-shadow">{t("Exclusive Offers")}</h2>
+          <p className="mt-2 text-white/95">
+            {t("Upcoming offers start from")} {" "}
+            <span className="offer-date">March 1st</span>{" "}
+            {t("to")} {" "}
+            <span className="offer-date">March 31st</span>
+          </p>
         </div>
       </div>
 
