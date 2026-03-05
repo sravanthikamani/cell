@@ -68,9 +68,13 @@ export default function AdminOrders() {
       </div>
 
       {orders.map((order) => (
-        <div key={order._id} className="card p-4 mb-4">
+        <div key={order._id} className="card p-4 mb-4 admin-order-card">
           <p className="font-semibold">{t("Order ID:")} {order._id}</p>
           <p>User: {order.userId}</p>
+          <p className="admin-order-date">
+            {t("Date:")}{" "}
+            {order.createdAt ? new Date(order.createdAt).toLocaleString() : "-"}
+          </p>
           <button
             className="mt-2 text-sm text-teal-700 underline"
             onClick={async () => {
