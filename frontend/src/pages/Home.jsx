@@ -104,7 +104,7 @@ export default function Home() {
       <div className="mt-12">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">{t("Featured Products")}</h2>
-          <Link to="/products" className="text-sm text-blue-700">
+          <Link to="/products" className="btn-primary text-sm !px-4 !py-2">
             {t("View all")}
           </Link>
         </div>
