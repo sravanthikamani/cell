@@ -23,6 +23,20 @@ body {
   color: var(--text);
 }
 
+body.home-bg-active {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.52)), url('/images/homebg.jpg') !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: scroll;
+}
+
+@media (min-width: 1024px) {
+  body.home-bg-active {
+    background-attachment: fixed;
+  }
+}
+
 .dark body {
   background: radial-gradient(1200px 600px at 80% -10%, rgba(15,118,110,0.35) 0%, rgba(0,0,0,0) 60%),
     radial-gradient(900px 500px at -10% 10%, rgba(255,122,26,0.2) 0%, rgba(0,0,0,0) 55%),
@@ -59,6 +73,10 @@ h3,
 
 .btn-secondary {
   @apply border border-slate-900/10 bg-white px-5 py-2 rounded-full text-slate-900 hover:bg-slate-50 transition;
+}
+
+.app-content h1 {
+  display: none !important;
 }
 
 .animate-fade-up {
@@ -165,7 +183,7 @@ body.admin-bg-active {
 }
 
 body.orders-bg-active {
-  background-image: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url('/images/order.jpg') !important;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url('/images/adminbg3.jpg') !important;
   background-size: cover !important;
   background-position: center center !important;
   background-repeat: no-repeat !important;
