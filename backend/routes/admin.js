@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
 const Coupon = require("../models/Coupon");
@@ -190,20 +191,114 @@ router.get("/orders/all", auth, async (req, res) => {
 
   const { page, limit, skip } = parsePagination(req);
   const status = String(req.query.status || "").trim();
+  const q = String(req.query.q || "").trim();
+  const sort = String(req.query.sort || "newest").trim();
+  const dateFrom = String(req.query.dateFrom || "").trim();
+  const dateTo = String(req.query.dateTo || "").trim();
   const filter = {};
   if (status) filter.status = status;
+
+  if (q) {
+    const safe = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(safe, "i");
+    const orderOr = [
+      { userId: regex },
+      { trackingNumber: regex },
+      { carrier: regex },
+      { couponCode: regex },
+      { paymentId: regex },
+    ];
+
+    const userMatches = await User.find({
+      $or: [
+        { name: regex },
+        { email: regex },
+        { phone: regex },
+      ],
+    })
+      .select("_id")
+      .limit(200)
+      .lean();
+
+    const matchedUserIds = userMatches
+      .map((u) => String(u._id || "").trim())
+      .filter(Boolean);
+
+    if (matchedUserIds.length) {
+      orderOr.push({ userId: { $in: matchedUserIds } });
+    }
+
+    filter.$or = orderOr;
+  }
+
+  const createdAt = {};
+  if (dateFrom) {
+    const from = new Date(dateFrom);
+    if (!Number.isNaN(from.getTime())) {
+      createdAt.$gte = from;
+    }
+  }
+  if (dateTo) {
+    const to = new Date(dateTo);
+    if (!Number.isNaN(to.getTime())) {
+      to.setHours(23, 59, 59, 999);
+      createdAt.$lte = to;
+    }
+  }
+  if (Object.keys(createdAt).length) {
+    filter.createdAt = createdAt;
+  }
+
+  const sortMap = {
+    newest: { createdAt: -1 },
+    oldest: { createdAt: 1 },
+    total_desc: { grandTotal: -1, createdAt: -1 },
+    total_asc: { grandTotal: 1, createdAt: -1 },
+  };
+  const sortStage = sortMap[sort] || sortMap.newest;
 
   const [orders, total] = await Promise.all([
     Order.find(filter)
       .populate("items.productId")
-      .sort({ createdAt: -1 })
+      .sort(sortStage)
       .skip(skip)
-      .limit(limit),
+      .limit(limit)
+      .lean(),
     Order.countDocuments(filter),
   ]);
 
+  const userIds = [...new Set((orders || [])
+    .map((o) => String(o.userId || "").trim())
+    .filter((id) => mongoose.Types.ObjectId.isValid(id)))];
+
+  let usersById = new Map();
+  if (userIds.length) {
+    const users = await User.find({ _id: { $in: userIds } })
+      .select("name email phone")
+      .lean();
+    usersById = new Map(
+      users.map((u) => [
+        String(u._id),
+        {
+          id: String(u._id),
+          name: u.name || "",
+          email: u.email || "",
+          phone: u.phone || "",
+        },
+      ])
+    );
+  }
+
+  const enriched = (orders || []).map((order) => ({
+    ...order,
+    customer: usersById.get(String(order.userId || "")) || null,
+    itemCount: Array.isArray(order.items)
+      ? order.items.reduce((sum, i) => sum + Number(i?.qty || 0), 0)
+      : 0,
+  }));
+
   res.json({
-    items: orders,
+    items: enriched,
     total,
     page,
     limit,

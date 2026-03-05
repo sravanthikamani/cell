@@ -6,10 +6,13 @@ import { formatCurrency } from "../lib/format";
 import Seo from "../components/Seo";
 
 export default function Home() {
+  const homeBg = "/images/homebg.jpg";
   const [featured, setFeatured] = useState([]);
   const { t, lang } = useI18n();
 
   useEffect(() => {
+    document.body.classList.add("home-bg-active");
+
     fetch(`${API_BASE}/api/catalog`)
       .then((res) => res.json())
       .then((data) => {
@@ -22,10 +25,14 @@ export default function Home() {
         setFeatured(list.slice(0, 6));
       })
       .catch(() => setFeatured([]));
+
+    return () => {
+      document.body.classList.remove("home-bg-active");
+    };
   }, []);
 
   return (
-    <div className="relative">
+    <div>
       <Seo
         title="HI-TECH Electronics Store"
         description="Shop smartphones, audio devices, accessories, and more with secure checkout and fast delivery."
@@ -33,18 +40,13 @@ export default function Home() {
         keywords="electronics, smartphones, accessories, audio, tablets"
       />
 
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772513537/ChatGPT_Image_Mar_3_2026_10_19_03_AM_r5yufa.png')" }}
-      />
-      <div className="absolute inset-0 bg-white/85 backdrop-blur-[1px]" />
-      <div className="relative px-6 md:px-10 py-8">
+      <div className="px-6 md:px-10 py-8">
       {/* Hero */}
       <div
         className="relative overflow-hidden rounded-3xl bg-cover bg-center text-white p-8 md:p-14"
         style={{
           backgroundImage:
-            "linear-gradient(135deg, rgba(30,58,138,0.88), rgba(15,23,42,0.95)), url('https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772513537/ChatGPT_Image_Mar_3_2026_10_19_03_AM_r5yufa.png')",
+            `linear-gradient(135deg, rgba(30,58,138,0.88), rgba(15,23,42,0.95)), url('${homeBg}')`,
         }}
       >
         <div className="max-w-2xl">
