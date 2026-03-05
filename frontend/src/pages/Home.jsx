@@ -7,6 +7,31 @@ import Seo from "../components/Seo";
 
 export default function Home() {
   const homeBg = "/images/homebg.jpg";
+  const confettiColors = ["#fde047", "#fb7185", "#60a5fa", "#34d399", "#f97316", "#a78bfa", "#22d3ee", "#facc15"];
+  const confettiPieces = Array.from({ length: 24 }, (_, i) => {
+    const direction = i % 2 === 0 ? 1 : -1;
+    return {
+      left: `${4 + ((i * 4) % 92)}%`,
+      tx: `${direction * (90 + (i % 6) * 45)}px`,
+      ty: `-${170 + (i % 5) * 30}px`,
+      delay: `${(i * 0.13).toFixed(2)}s`,
+      dur: `${(2.35 + (i % 7) * 0.18).toFixed(2)}s`,
+      color: confettiColors[i % confettiColors.length],
+    };
+  });
+  const heartDrops = Array.from({ length: 14 }, (_, i) => ({
+    left: `${5 + ((i * 7) % 90)}%`,
+    delay: `${(i * 0.35).toFixed(2)}s`,
+    dur: `${(4.2 + (i % 5) * 0.45).toFixed(2)}s`,
+    size: `${14 + (i % 4) * 4}px`,
+  }));
+  const balloons = Array.from({ length: 10 }, (_, i) => ({
+    left: `${6 + ((i * 9) % 86)}%`,
+    delay: `${(i * 0.55).toFixed(2)}s`,
+    dur: `${(6.8 + (i % 4) * 0.7).toFixed(2)}s`,
+    size: `${20 + (i % 3) * 6}px`,
+    color: ["#f43f5e", "#38bdf8", "#f59e0b", "#34d399", "#a78bfa"][i % 5],
+  }));
   const [featured, setFeatured] = useState([]);
   const { t, lang } = useI18n();
 
@@ -79,16 +104,85 @@ export default function Home() {
 
       {/* Exclusive offers */}
       <div className="mt-10 rounded-3xl p-6 md:p-8 text-white exclusive-offers-section relative overflow-hidden min-h-[310px] md:min-h-[350px] flex items-center">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "linear-gradient(90deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.24)), url('/images/sale%20images/grandsalelimit.jpg')",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-            backgroundSize: "cover",
-          }}
+        <img
+          src="/images/sale images/grandsalelimit.jpg"
+          alt="Exclusive offers"
+          className="absolute inset-0 h-full w-full object-cover object-center"
         />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/20 to-black/35" />
+        <div className="firework firework-left" aria-hidden="true">
+          <span className="blast-core" />
+          <span className="blast-cone" />
+          <span className="spark spark-1" />
+          <span className="spark spark-2" />
+          <span className="spark spark-3" />
+          <span className="spark spark-4" />
+          <span className="spark spark-5" />
+          <span className="spark spark-6" />
+          <span className="spark spark-7" />
+          <span className="spark spark-8" />
+        </div>
+        <div className="firework firework-right" aria-hidden="true">
+          <span className="blast-core" />
+          <span className="blast-cone" />
+          <span className="spark spark-1" />
+          <span className="spark spark-2" />
+          <span className="spark spark-3" />
+          <span className="spark spark-4" />
+          <span className="spark spark-5" />
+          <span className="spark spark-6" />
+          <span className="spark spark-7" />
+          <span className="spark spark-8" />
+        </div>
+        <div className="confetti-layer" aria-hidden="true">
+          {confettiPieces.map((piece, idx) => (
+            <span
+              key={`${piece.left}-${idx}`}
+              className="confetti-piece"
+              style={{
+                left: piece.left,
+                "--tx": piece.tx,
+                "--ty": piece.ty,
+                "--delay": piece.delay,
+                "--dur": piece.dur,
+                "--paper-color": piece.color,
+              }}
+            />
+          ))}
+        </div>
+        <div className="hearts-layer" aria-hidden="true">
+          {heartDrops.map((heart, idx) => (
+            <span
+              key={`${heart.left}-${idx}`}
+              className="heart-drop"
+              style={{
+                left: heart.left,
+                "--heart-delay": heart.delay,
+                "--heart-dur": heart.dur,
+                "--heart-size": heart.size,
+              }}
+            >
+              ❤
+            </span>
+          ))}
+        </div>
+        <div className="balloons-layer" aria-hidden="true">
+          {balloons.map((balloon, idx) => (
+            <span
+              key={`${balloon.left}-${idx}`}
+              className="balloon-rise"
+              style={{
+                left: balloon.left,
+                "--balloon-delay": balloon.delay,
+                "--balloon-dur": balloon.dur,
+                "--balloon-size": balloon.size,
+                "--balloon-color": balloon.color,
+              }}
+            >
+              <span className="balloon-string" />
+            </span>
+          ))}
+        </div>
         <div className="relative z-10 max-w-2xl ml-auto text-right rounded-2xl bg-black/18 backdrop-blur-[1px] p-4 md:p-5">
           <h2 className="text-2xl font-bold drop-shadow">{t("Exclusive Offers")}</h2>
           <p className="mt-2 text-white/95">
