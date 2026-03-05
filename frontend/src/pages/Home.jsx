@@ -78,9 +78,26 @@ export default function Home() {
       </div>
 
       {/* Exclusive offers */}
-      <div className="mt-10">
-        <h2 className="text-2xl font-bold">{t("Exclusive Offers")}</h2>
-        <p className="mt-2">{t("Upcoming offers start from March 1st to March 31st")}</p>
+      <div className="mt-10 rounded-3xl bg-white/70 backdrop-blur-sm p-6 md:p-8 exclusive-offers-section">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+          <div>
+            <h2 className="text-2xl font-bold">{t("Exclusive Offers")}</h2>
+            <p className="mt-2">
+              {t("Upcoming offers start from")}{" "}
+              <span className="offer-date">March 1st</span>{" "}
+              {t("to")}{" "}
+              <span className="offer-date">March 31st</span>
+            </p>
+          </div>
+          <div className="md:justify-self-end">
+            <img
+              src="https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772683317/ChatGPT_Image_Mar_5_2026_09_30_19_AM_mlrgjg.png"
+              alt={t("Exclusive offers banner")}
+              className="w-full md:w-[460px] rounded-2xl object-cover shadow-lg"
+              loading="lazy"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Featured */}
