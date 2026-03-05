@@ -6,7 +6,8 @@ import { formatCurrency } from "../lib/format";
 import Seo from "../components/Seo";
 
 export default function Home() {
-  const homeBg = "/images/homebg.jpg";
+  const homeBg =
+    "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772698018/chris-appano--sTwytNnqWw-unsplash_itlmtf.jpg";
   const confettiColors = ["#fde047", "#fb7185", "#60a5fa", "#34d399", "#f97316", "#a78bfa", "#22d3ee", "#facc15"];
   const confettiPieces = Array.from({ length: 24 }, (_, i) => {
     const direction = i % 2 === 0 ? 1 : -1;
@@ -31,6 +32,13 @@ export default function Home() {
     dur: `${(6.8 + (i % 4) * 0.7).toFixed(2)}s`,
     size: `${20 + (i % 3) * 6}px`,
     color: ["#f43f5e", "#38bdf8", "#f59e0b", "#34d399", "#a78bfa"][i % 5],
+  }));
+  const sparkles = Array.from({ length: 22 }, (_, i) => ({
+    left: `${4 + ((i * 11) % 92)}%`,
+    top: `${8 + ((i * 13) % 74)}%`,
+    delay: `${(i * 0.22).toFixed(2)}s`,
+    dur: `${(1.4 + (i % 6) * 0.28).toFixed(2)}s`,
+    size: `${4 + (i % 4)}px`,
   }));
   const [featured, setFeatured] = useState([]);
   const { t, lang } = useI18n();
@@ -183,13 +191,27 @@ export default function Home() {
             </span>
           ))}
         </div>
+        <div className="sparkles-layer" aria-hidden="true">
+          {sparkles.map((sparkle, idx) => (
+            <span
+              key={`${sparkle.left}-${sparkle.top}-${idx}`}
+              className="sparkle-star"
+              style={{
+                left: sparkle.left,
+                top: sparkle.top,
+                "--sparkle-delay": sparkle.delay,
+                "--sparkle-dur": sparkle.dur,
+                "--sparkle-size": sparkle.size,
+              }}
+            />
+          ))}
+        </div>
         <div className="relative z-10 max-w-2xl ml-auto text-right rounded-2xl bg-black/18 backdrop-blur-[1px] p-4 md:p-5">
-          <h2 className="text-2xl font-bold drop-shadow">{t("Exclusive Offers")}</h2>
-          <p className="mt-2 text-white/95">
-            {t("Upcoming offers start from")} {" "}
-            <span className="offer-date">March 1st</span>{" "}
-            {t("to")} {" "}
-            <span className="offer-date">March 31st</span>
+          <p className="offer-copy mt-1 text-white/95">
+            <span className="block">Upcoming offers start from</span>
+            <span className="block mt-2">
+              <span className="offer-date">March 1st</span> to <span className="offer-date">March 31st</span>
+            </span>
           </p>
         </div>
       </div>
