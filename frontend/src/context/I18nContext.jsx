@@ -43,6 +43,8 @@ const translations = {
     "Quality Promise": "Quality Promise",
     "Curated gadgets with verified quality checks.":
       "Curated gadgets with verified quality checks.",
+    "Upcoming offers start from": "Upcoming offers start from",
+    "to": "to",
     "Get early access deals": "Get early access deals",
     "Sign up to receive launches, price drops, and exclusive offers.":
       "Sign up to receive launches, price drops, and exclusive offers.",
@@ -239,6 +241,8 @@ const translations = {
     "Quality Promise": "Qualità garantita",
     "Curated gadgets with verified quality checks.":
       "Gadget selezionati con controlli qualità verificati.",
+    "Upcoming offers start from": "Le prossime offerte iniziano dal",
+    "to": "al",
     "Get early access deals": "Offerte in anteprima",
     "Sign up to receive launches, price drops, and exclusive offers.":
       "Iscriviti per ricevere lanci, ribassi di prezzo e offerte esclusive.",
