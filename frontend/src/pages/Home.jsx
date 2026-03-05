@@ -73,20 +73,20 @@ export default function Home() {
         keywords="electronics, smartphones, accessories, audio, tablets"
       />
 
-      <div className="px-6 md:px-10 py-8">
+      <div className="px-4 sm:px-6 lg:px-10 py-6 sm:py-8">
       {/* Hero */}
       <div
-        className="relative overflow-hidden rounded-3xl bg-cover bg-center text-white p-8 md:p-14"
+        className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-cover bg-center text-white p-5 sm:p-8 md:p-14"
         style={{
           backgroundImage:
             `linear-gradient(135deg, rgba(30,58,138,0.88), rgba(15,23,42,0.95)), url('${homeBg}')`,
         }}
       >
-        <div className="max-w-2xl">
+        <div className="max-w-2xl text-center sm:text-left">
           <p className="uppercase tracking-widest text-xs text-blue-100 mb-2">
             {t("New Season Tech")}
           </p>
-          <h1 className="text-3xl md:text-5xl font-bold leading-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold leading-tight">
             {t("Power your day with devices that feel futuristic")}
           </h1>
           <p className="mt-4 text-blue-100 text-sm md:text-base">
@@ -94,24 +94,24 @@ export default function Home() {
               "Flagship phones, premium audio, and smart accessories curated for everyday performance."
             )}
           </p>
-          <div className="mt-6 flex gap-3">
-            <Link to="/products" className="btn-primary">
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:items-center">
+            <Link to="/products" className="btn-primary w-full sm:w-auto text-center">
               {t("Shop All")}
             </Link>
             <Link
               to="/device/smartphones"
-              className="btn-secondary"
+              className="btn-secondary w-full sm:w-auto text-center"
             >
               {t("Explore Phones")}
             </Link>
           </div>
         </div>
-        <div className="absolute -right-20 -bottom-24 w-72 h-72 bg-white/10 rounded-full blur-2xl" />
-        <div className="absolute right-10 top-8 w-24 h-24 bg-orange-400/80 rounded-full blur-xl" />
+        <div className="absolute hidden sm:block -right-20 -bottom-24 w-72 h-72 bg-white/10 rounded-full blur-2xl" />
+        <div className="absolute hidden sm:block right-10 top-8 w-24 h-24 bg-orange-400/80 rounded-full blur-xl" />
       </div>
 
       {/* Exclusive offers */}
-      <div className="mt-10 rounded-3xl p-6 md:p-8 text-white exclusive-offers-section relative overflow-hidden min-h-[310px] md:min-h-[350px] flex items-center">
+      <div className="mt-8 sm:mt-10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-white exclusive-offers-section relative overflow-hidden min-h-[260px] sm:min-h-[310px] md:min-h-[350px] flex items-center">
         <img
           src="/images/sale images/grandsalelimit.jpg"
           alt="Exclusive offers"
@@ -206,7 +206,7 @@ export default function Home() {
             />
           ))}
         </div>
-        <div className="relative z-10 max-w-2xl ml-auto text-right rounded-2xl bg-black/18 backdrop-blur-[1px] p-4 md:p-5">
+        <div className="relative z-10 w-full sm:max-w-2xl sm:ml-auto text-center sm:text-right rounded-xl sm:rounded-2xl bg-black/28 sm:bg-black/18 backdrop-blur-[1px] p-3 sm:p-4 md:p-5">
           <p className="offer-copy mt-1 text-white/95">
             <span className="block">Upcoming offers start from</span>
             <span className="block mt-2">
@@ -218,13 +218,13 @@ export default function Home() {
 
       {/* Featured */}
       <div className="mt-12">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">{t("Featured Products")}</h2>
-          <Link to="/products" className="btn-primary text-sm !px-4 !py-2">
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+          <h2 className="text-xl sm:text-2xl font-bold">{t("Featured Products")}</h2>
+          <Link to="/products" className="btn-primary text-sm !px-4 !py-2 w-full sm:w-auto text-center">
             {t("View all")}
           </Link>
         </div>
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {featured.map((p) => (
             <Link
               key={p._id}
@@ -238,7 +238,7 @@ export default function Home() {
                     : p.images?.[0]
                 }
                 alt={p.name}
-                className="h-44 w-full object-cover rounded-xl"
+                className="h-40 sm:h-44 w-full object-cover rounded-xl"
               />
               <div className="mt-3">
                 <div className="font-semibold">{p.name}</div>
@@ -275,22 +275,22 @@ export default function Home() {
       </div>
 
       {/* Newsletter */}
-      <div className="mt-12 rounded-3xl bg-slate-900 text-white p-8 md:p-12">
-        <div className="md:flex items-center justify-between gap-6">
+      <div className="mt-12 rounded-2xl sm:rounded-3xl bg-slate-900 text-white p-6 sm:p-8 md:p-12">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <h3 className="text-2xl font-bold">{t("Get early access deals")}</h3>
+            <h3 className="text-xl sm:text-2xl font-bold">{t("Get early access deals")}</h3>
             <p className="text-sm text-slate-300 mt-2">
               {t(
                 "Sign up to receive launches, price drops, and exclusive offers."
               )}
             </p>
           </div>
-          <div className="mt-4 md:mt-0 flex gap-2 w-full md:w-auto">
+          <div className="mt-1 md:mt-0 flex flex-col sm:flex-row gap-2 w-full md:w-auto">
             <input
               placeholder={t("Your email")}
-              className="flex-1 md:w-64 rounded-full px-4 py-2 text-slate-900"
+              className="w-full sm:flex-1 md:w-64 rounded-full px-4 py-2 text-slate-900"
             />
-            <button className="btn-primary">
+            <button className="btn-primary w-full sm:w-auto">
               {t("Notify me")}
             </button>
           </div>
