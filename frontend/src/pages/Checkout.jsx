@@ -189,6 +189,13 @@ export default function Checkout() {
     return addresses[selectedAddressIndex] || emptyAddress;
   }, [addingAddress, newAddress, addresses, selectedAddressIndex]);
 
+  useEffect(() => {
+    document.body.classList.add("checkout-bg-active");
+    return () => {
+      document.body.classList.remove("checkout-bg-active");
+    };
+  }, []);
+
   const fetchProfileAddresses = async () => {
     const res = await fetch(`${API_BASE}/api/users/me`, {
       headers: { Authorization: `Bearer ${token}` },
