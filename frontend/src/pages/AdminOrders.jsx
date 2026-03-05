@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
@@ -47,9 +47,6 @@ export default function AdminOrders() {
   const [isBulkSaving, setIsBulkSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  if (!user) return <div className="p-10">{t("Loading...")}</div>;
-  if (!isAdminRole(user.role)) return <Navigate to="/" replace />;
-
   const hydrateDrafts = (items) => {
     const next = {};
     (items || []).forEach((order) => {
@@ -62,7 +59,7 @@ export default function AdminOrders() {
     setDraftByOrderId(next);
   };
 
-  const buildParams = (nextPage, limit = "20", override = {}) => {
+  const buildParams = useCallback((nextPage, limit = "20", override = {}) => {
     const nextStatus = override.statusFilter ?? statusFilter;
     const nextQ = override.q ?? q;
     const nextSort = override.sortBy ?? sortBy;
@@ -81,9 +78,9 @@ export default function AdminOrders() {
     if (nextDateTo) params.set("dateTo", nextDateTo);
 
     return params;
-  };
+  }, [dateFrom, dateTo, q, sortBy, statusFilter]);
 
-  const fetchOrdersPage = async (nextPage = 1, override = {}, limit = "20") => {
+  const fetchOrdersPage = useCallback(async (nextPage = 1, override = {}, limit = "20") => {
     const params = buildParams(nextPage, limit, override);
 
     const res = await fetch(`${API_BASE}/api/admin/orders/all?${params.toString()}`, {
@@ -92,9 +89,9 @@ export default function AdminOrders() {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || "Failed to fetch orders");
     return { data, params };
-  };
+  }, [buildParams, token]);
 
-  const loadOrders = async (nextPage = 1, override = {}, syncUrl = true) => {
+  const loadOrders = useCallback(async (nextPage = 1, override = {}, syncUrl = true) => {
     setLoading(true);
     setError("");
     setActionMsg("");
@@ -112,7 +109,7 @@ export default function AdminOrders() {
     setTotal(data.total || 0);
     setTotalPages(data.totalPages || 1);
     setLoading(false);
-  };
+  }, [fetchOrdersPage, setSearchParams]);
 
   const updateOrderRequest = async (orderId, payload) => {
     const res = await fetch(`${API_BASE}/api/admin/orders/${orderId}`, {
@@ -194,7 +191,7 @@ export default function AdminOrders() {
       setError(err.message || "Failed to fetch orders");
       setLoading(false);
     });
-  }, [token]);
+  }, [loadOrders, page, token, user]);
 
   useEffect(() => {
     document.body.classList.add("orders-bg-active");
@@ -329,40 +326,14 @@ export default function AdminOrders() {
     }
   };
 
+  if (!user) return <div className="p-10">{t("Loading...")}</div>;
+  if (!isAdminRole(user.role)) return <Navigate to="/" replace />;
+
   return (
     <div className="admin-orders-page-bg">
       <div className="max-w-5xl mx-auto p-6 md:p-10">
         <h1 className="text-2xl font-bold mb-6">{t("Admin - Orders")}</h1>
 
-      {orders.map((order) => (
-        <div key={order._id} className="card p-4 mb-4 admin-order-card">
-          <p className="font-semibold">{t("Order ID:")} {order._id}</p>
-          <p>User: {order.userId}</p>
-          <p className="admin-order-date">
-            {t("Date:")}{" "}
-            {order.createdAt ? new Date(order.createdAt).toLocaleString() : "-"}
-          </p>
-          <button
-            className="mt-2 text-sm text-teal-700 underline"
-            onClick={async () => {
-              try {
-                const res = await fetch(`${API_BASE}/api/orders/${order._id}/invoice`, {
-                  headers: { Authorization: `Bearer ${token}` },
-                });
-                if (!res.ok) throw new Error("Failed to download invoice");
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `invoice-${order._id}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                URL.revokeObjectURL(url);
-              } catch (err) {
-                console.error(err);
-              }
-            }}
         <div className="card p-4 mb-5 grid grid-cols-1 md:grid-cols-6 gap-2">
           <input
             className="border p-2 md:col-span-2"
