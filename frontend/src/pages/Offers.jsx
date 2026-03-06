@@ -18,7 +18,7 @@ export default function Offers() {
 
   return (
     <div
-      className="px-4 sm:px-6 lg:px-10 py-8 sm:py-10 min-h-[100vh] bg-cover bg-center bg-no-repeat flex items-end justify-center"
+      className="px-4 sm:px-6 lg:px-10 py-8 sm:py-10 min-h-[90vh] bg-cover bg-center bg-no-repeat flex items-end justify-center"
       style={{
         backgroundImage: `url('${offersBg}')`,
       }}
