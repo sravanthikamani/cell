@@ -16,7 +16,7 @@
 
 body {
   margin: 0;
-  font-family: "Sora", sans-serif;
+  font-family: "Roboto", sans-serif;
   background: radial-gradient(1200px 600px at 80% -10%, #c7fff2 0%, rgba(199,255,242,0) 60%),
     radial-gradient(900px 500px at -10% 10%, #ffe1c4 0%, rgba(255,225,196,0) 55%),
     linear-gradient(180deg, #f6f7f9 0%, #eef2f7 100%);
@@ -72,7 +72,7 @@ h1,
 h2,
 h3,
 .heading {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Playfair Display", serif;
 }
 
 .card {
