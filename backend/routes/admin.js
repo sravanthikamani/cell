@@ -48,6 +48,61 @@ const parsePagination = (req) => {
   return { page, limit, skip };
 };
 
+const buildAdminOrdersFilter = async ({ status = "", q = "", dateFrom = "", dateTo = "" }) => {
+  const filter = {};
+
+  if (status) filter.status = status;
+
+  if (q) {
+    const safe = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(safe, "i");
+    const orderOr = [
+      { userId: regex },
+      { trackingNumber: regex },
+      { carrier: regex },
+      { couponCode: regex },
+      { paymentId: regex },
+    ];
+
+    const userMatches = await User.find({
+      $or: [{ name: regex }, { email: regex }, { phone: regex }],
+    })
+      .select("_id")
+      .limit(200)
+      .lean();
+
+    const matchedUserIds = userMatches
+      .map((u) => String(u._id || "").trim())
+      .filter(Boolean);
+
+    if (matchedUserIds.length) {
+      orderOr.push({ userId: { $in: matchedUserIds } });
+    }
+
+    filter.$or = orderOr;
+  }
+
+  const createdAt = {};
+  if (dateFrom) {
+    const from = new Date(dateFrom);
+    if (!Number.isNaN(from.getTime())) {
+      createdAt.$gte = from;
+    }
+  }
+  if (dateTo) {
+    const to = new Date(dateTo);
+    if (!Number.isNaN(to.getTime())) {
+      to.setHours(23, 59, 59, 999);
+      createdAt.$lte = to;
+    }
+  }
+  if (Object.keys(createdAt).length) {
+    filter.createdAt = createdAt;
+  }
+
+  return filter;
+};
+
 /* ===============================
    ADD PRODUCT (ADMIN)
 ================================ */
@@ -195,59 +250,7 @@ router.get("/orders/all", auth, async (req, res) => {
   const sort = String(req.query.sort || "newest").trim();
   const dateFrom = String(req.query.dateFrom || "").trim();
   const dateTo = String(req.query.dateTo || "").trim();
-  const filter = {};
-  if (status) filter.status = status;
-
-  if (q) {
-    const safe = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(safe, "i");
-    const orderOr = [
-      { userId: regex },
-      { trackingNumber: regex },
-      { carrier: regex },
-      { couponCode: regex },
-      { paymentId: regex },
-    ];
-
-    const userMatches = await User.find({
-      $or: [
-        { name: regex },
-        { email: regex },
-        { phone: regex },
-      ],
-    })
-      .select("_id")
-      .limit(200)
-      .lean();
-
-    const matchedUserIds = userMatches
-      .map((u) => String(u._id || "").trim())
-      .filter(Boolean);
-
-    if (matchedUserIds.length) {
-      orderOr.push({ userId: { $in: matchedUserIds } });
-    }
-
-    filter.$or = orderOr;
-  }
-
-  const createdAt = {};
-  if (dateFrom) {
-    const from = new Date(dateFrom);
-    if (!Number.isNaN(from.getTime())) {
-      createdAt.$gte = from;
-    }
-  }
-  if (dateTo) {
-    const to = new Date(dateTo);
-    if (!Number.isNaN(to.getTime())) {
-      to.setHours(23, 59, 59, 999);
-      createdAt.$lte = to;
-    }
-  }
-  if (Object.keys(createdAt).length) {
-    filter.createdAt = createdAt;
-  }
+  const filter = await buildAdminOrdersFilter({ status, q, dateFrom, dateTo });
 
   const sortMap = {
     newest: { createdAt: -1 },
@@ -304,6 +307,47 @@ router.get("/orders/all", auth, async (req, res) => {
     limit,
     totalPages: Math.max(1, Math.ceil(total / limit)),
   });
+});
+
+router.delete("/orders/:id", auth, async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  const deleted = await Order.findByIdAndDelete(req.params.id);
+  if (!deleted) {
+    return res.status(404).json({ error: "Order not found" });
+  }
+
+  clearCacheByPrefix("admin-analytics:");
+  return res.json({ success: true, deletedCount: 1, id: req.params.id });
+});
+
+router.delete("/orders", auth, async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  const target = String(req.query.target || "filtered").trim().toLowerCase();
+  const status = String(req.query.status || "").trim();
+  const q = String(req.query.q || "").trim();
+  const dateFrom = String(req.query.dateFrom || "").trim();
+  const dateTo = String(req.query.dateTo || "").trim();
+
+  let filter = {};
+  if (target !== "all") {
+    const hasAnyFilter = Boolean(status || q || dateFrom || dateTo);
+    if (!hasAnyFilter) {
+      return res.status(400).json({
+        error: "Provide at least one filter, or use target=all to delete all orders",
+      });
+    }
+    filter = await buildAdminOrdersFilter({ status, q, dateFrom, dateTo });
+  }
+
+  const result = await Order.deleteMany(filter);
+  clearCacheByPrefix("admin-analytics:");
+  return res.json({ success: true, deletedCount: Number(result?.deletedCount || 0), target });
 });
 
 /* ===============================

@@ -291,7 +291,7 @@ export default function Admin() {
   const selectedUser = users.find((u) => u._id === selectedUserId) || null;
 
   const resolveProductImage = (url) => {
-    if (!url) return "https://via.placeholder.com/300x300?text=No+Image";
+    if (!url) return "/images/home-hero.jpeg";
     if (/^https?:\/\//i.test(url)) return url;
     return `${API_BASE}${url}`;
   };
