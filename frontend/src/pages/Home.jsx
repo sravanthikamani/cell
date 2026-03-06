@@ -111,7 +111,10 @@ export default function Home() {
       </div>
 
       {/* Exclusive offers */}
-      <div className="mt-8 sm:mt-10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-white exclusive-offers-section relative overflow-hidden min-h-[260px] sm:min-h-[310px] md:min-h-[350px] flex items-center">
+      <Link
+        to="/offers"
+        className="mt-8 sm:mt-10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-white exclusive-offers-section relative overflow-hidden min-h-[260px] sm:min-h-[310px] md:min-h-[350px] flex items-center"
+      >
         <img
           src="/images/sale images/grandsalelimit.jpg"
           alt="Exclusive offers"
@@ -214,7 +217,7 @@ export default function Home() {
             </span>
           </p>
         </div>
-      </div>
+      </Link>
 
       {/* Featured */}
       <div className="mt-12">
