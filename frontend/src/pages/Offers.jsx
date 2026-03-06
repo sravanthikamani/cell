@@ -18,7 +18,7 @@ export default function Offers() {
 
   return (
     <div
-      className="px-4 sm:px-6 lg:px-10 py-8 sm:py-10 min-h-[90vh] bg-cover bg-center bg-no-repeat flex items-end justify-center"
+      className="px-4 sm:px-6 lg:px-10 py-6 sm:py-8 lg:py-10 min-h-[82vh] sm:min-h-[86vh] lg:min-h-[90vh] bg-cover bg-center bg-no-repeat flex items-end justify-center"
       style={{
         backgroundImage: `url('${offersBg}')`,
       }}
@@ -28,7 +28,7 @@ export default function Offers() {
         description="Latest offers and promotions from HI-TECH Electronics Store."
         canonicalPath="/offers"
       />
-      <div className="p-8 sm:p-12 text-center max-w-3xl mx-auto bg-transparent">
+      <div className="w-full p-4 sm:p-8 lg:p-10 text-center max-w-4xl mx-auto bg-transparent">
         <div className="gift-wrap mx-auto">
           <div className="flyers-layer" aria-hidden="true">
             {flyers.map((flyer, idx) => (
@@ -61,16 +61,16 @@ export default function Offers() {
       </div>
       <style>{`
         .gift-wrap {
-          width: 220px;
+          width: min(92vw, 340px);
           max-width: 100%;
           position: relative;
-          padding-top: 8px;
+          padding-top: 10px;
         }
         .gift-box {
-          width: 180px;
+          width: clamp(150px, 36vw, 180px);
           margin: 0 auto;
           position: relative;
-          height: 160px;
+          height: clamp(140px, 30vw, 160px);
         }
         .gift-body {
           position: absolute;
@@ -85,10 +85,10 @@ export default function Offers() {
         }
         .gift-lid {
           position: absolute;
-          top: 24px;
-          left: -6px;
-          width: 192px;
-          height: 38px;
+          top: clamp(20px, 4.5vw, 24px);
+          left: -3.5%;
+          width: 107%;
+          height: clamp(32px, 8vw, 38px);
           border-radius: 10px;
           background: linear-gradient(180deg, #fb7185, #f43f5e);
           transform-origin: left bottom;
@@ -100,8 +100,8 @@ export default function Offers() {
           position: absolute;
           left: 0;
           right: 0;
-          top: 52px;
-          height: 120px;
+          top: clamp(44px, 11vw, 54px);
+          height: clamp(90px, 24vw, 120px);
           pointer-events: none;
           overflow: visible;
           z-index: 4;
@@ -148,8 +148,8 @@ export default function Offers() {
         }
         .gift-message {
           display: inline-block;
-          margin-bottom: 18px;
-          margin-left: 112px;
+          margin-bottom: clamp(10px, 2.4vw, 18px);
+          margin-left: clamp(50px, 20vw, 112px);
           line-height: 1.2;
           padding-bottom: 0.14em;
           background: linear-gradient(90deg, #facc15, #fb7185);
@@ -162,6 +162,26 @@ export default function Offers() {
           animation:
             revealText 0.8s ease 1.65s forwards,
             textSwing 2s ease-in-out 2.45s infinite;
+        }
+        @media (max-width: 640px) {
+          .gift-wrap {
+            width: min(88vw, 300px);
+          }
+          .paper-flyer {
+            width: 7px;
+            height: 11px;
+          }
+          .gift-message {
+            margin-left: clamp(36px, 17vw, 64px);
+          }
+        }
+        @media (min-width: 641px) and (max-width: 1024px) {
+          .gift-wrap {
+            width: min(70vw, 330px);
+          }
+          .gift-message {
+            margin-left: clamp(66px, 16vw, 96px);
+          }
         }
         @keyframes giftOpen {
           0% { transform: rotate(0deg) translateY(0); }
