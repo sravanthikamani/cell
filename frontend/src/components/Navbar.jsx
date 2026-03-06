@@ -689,78 +689,174 @@ export default function Navbar() {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden bg-white shadow-lg px-6 py-4 space-y-4">
-          <NavLink to="/">{t("HOME")}</NavLink>
+        <div className="md:hidden bg-white shadow-lg px-6 py-4 space-y-2 border-t">
+          <NavLink to="/" onClick={() => setMobileOpen(false)} className="block py-2 text-base font-medium text-gray-800">
+            {t("HOME")}
+          </NavLink>
 
-          <Dropdown
-            dropdownKey="mobile-device"
-            title={t("DEVICE")}
-            items={menuData.device}
-            basePath="device"
-            openDropdown={openDropdown}
-            setOpenDropdown={setOpenDropdown}
-            faqSearch={faqSearch}
-            setFaqSearch={setFaqSearch}
-            toSlug={toSlug}
-            navigate={navigate}
-            setMobileOpen={setMobileOpen}
-            dropdownRef={dropdownRef}
-            t={t}
-          />
-          <Dropdown
-            dropdownKey="mobile-category"
-            title={t("CATEGORY")}
-            items={menuData.category}
-            basePath="category"
-            openDropdown={openDropdown}
-            setOpenDropdown={setOpenDropdown}
-            faqSearch={faqSearch}
-            setFaqSearch={setFaqSearch}
-            toSlug={toSlug}
-            navigate={navigate}
-            setMobileOpen={setMobileOpen}
-            dropdownRef={dropdownRef}
-            t={t}
-          />
-          <NavLink to="/products">{t("PRODUCTS")}</NavLink>
+          <div className="py-1">
+            <button
+              type="button"
+              className="w-full flex items-center justify-between py-2 text-base font-medium text-gray-800"
+              onClick={() =>
+                setOpenDropdown(openDropdown === "mobile-device" ? null : "mobile-device")
+              }
+            >
+              {t("DEVICE")}
+              <ChevronDown size={18} />
+            </button>
+            {openDropdown === "mobile-device" && (
+              <div className="pl-4 pb-1 space-y-2">
+                {menuData.device.map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    className="block w-full text-left py-1.5 text-sm text-gray-700"
+                    onClick={() => {
+                      navigate(`/device/${toSlug(item.label)}`);
+                      setOpenDropdown(null);
+                      setMobileOpen(false);
+                    }}
+                  >
+                    {t(item.label)}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-          <NavLink to="/orders">{t("MY ORDERS")}</NavLink>
-          {user && <NavLink to="/profile">{t("PROFILE")}</NavLink>}
-          {user && <NavLink to="/wishlist">{t("WISHLIST")}</NavLink>}
+          <div className="py-1">
+            <button
+              type="button"
+              className="w-full flex items-center justify-between py-2 text-base font-medium text-gray-800"
+              onClick={() =>
+                setOpenDropdown(openDropdown === "mobile-category" ? null : "mobile-category")
+              }
+            >
+              {t("CATEGORY")}
+              <ChevronDown size={18} />
+            </button>
+            {openDropdown === "mobile-category" && (
+              <div className="pl-4 pb-1 space-y-2">
+                {menuData.category.map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    className="block w-full text-left py-1.5 text-sm text-gray-700"
+                    onClick={() => {
+                      navigate(`/category/${toSlug(item.label)}`);
+                      setOpenDropdown(null);
+                      setMobileOpen(false);
+                    }}
+                  >
+                    {t(item.label)}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <NavLink to="/products" onClick={() => setMobileOpen(false)} className="block py-2 text-base font-medium text-gray-800">
+            {t("PRODUCTS")}
+          </NavLink>
+          <NavLink to="/orders" onClick={() => setMobileOpen(false)} className="block py-2 text-base font-medium text-gray-800">
+            {t("MY ORDERS")}
+          </NavLink>
+          {user && (
+            <NavLink to="/profile" onClick={() => setMobileOpen(false)} className="block py-2 text-base font-medium text-gray-800">
+              {t("PROFILE")}
+            </NavLink>
+          )}
+          {user && (
+            <NavLink to="/wishlist" onClick={() => setMobileOpen(false)} className="block py-2 text-base font-medium text-gray-800">
+              {t("WISHLIST")}
+            </NavLink>
+          )}
+          <NavLink to="/cart" onClick={() => setMobileOpen(false)} className="block py-2 text-base font-medium text-gray-800">
+            {t("CART")} ({cartCount})
+          </NavLink>
+
           {isAdmin && (
-            <SimpleDropdown
-              dropdownKey="mobile-admin"
-              title={t("ADMIN")}
-              items={[
-                { label: t("ADMIN"), path: "/admin" },
-                { label: t("ADMIN ORDERS"), path: "/admin/orders" },
-              ]}
-              openDropdown={openDropdown}
-              setOpenDropdown={setOpenDropdown}
-              navigate={navigate}
-              setMobileOpen={setMobileOpen}
-              dropdownRef={dropdownRef}
-            />
+            <div className="py-1">
+              <button
+                type="button"
+                className="w-full flex items-center justify-between py-2 text-base font-medium text-gray-800"
+                onClick={() =>
+                  setOpenDropdown(openDropdown === "mobile-admin" ? null : "mobile-admin")
+                }
+              >
+                {t("ADMIN")}
+                <ChevronDown size={18} />
+              </button>
+              {openDropdown === "mobile-admin" && (
+                <div className="pl-4 pb-1 space-y-2">
+                  <button
+                    type="button"
+                    className="block w-full text-left py-1.5 text-sm text-gray-700"
+                    onClick={() => {
+                      navigate("/admin");
+                      setOpenDropdown(null);
+                      setMobileOpen(false);
+                    }}
+                  >
+                    {t("ADMIN")}
+                  </button>
+                  <button
+                    type="button"
+                    className="block w-full text-left py-1.5 text-sm text-gray-700"
+                    onClick={() => {
+                      navigate("/admin/orders");
+                      setOpenDropdown(null);
+                      setMobileOpen(false);
+                    }}
+                  >
+                    {t("ADMIN ORDERS")}
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
-          <NavLink to="/warranty">{t("WARRANTY")}</NavLink>
-          <Dropdown
-            dropdownKey="mobile-faq"
-            title={t("FAQ")}
-            items={menuData.faq}
-            basePath="faq"
-            searchable
-            openDropdown={openDropdown}
-            setOpenDropdown={setOpenDropdown}
-            faqSearch={faqSearch}
-            setFaqSearch={setFaqSearch}
-            toSlug={toSlug}
-            navigate={navigate}
-            setMobileOpen={setMobileOpen}
-            dropdownRef={dropdownRef}
-            t={t}
-          />
-          <NavLink to="/about">{t("ABOUT US")}</NavLink>
+          <div className="pt-2 border-t border-gray-200">
+            <label className="block text-xs font-semibold text-gray-500 mb-1">
+              {t("Language")}
+            </label>
+            <select
+              className="w-full text-sm border rounded px-2 py-2"
+              value={lang}
+              onChange={(e) => setLang(e.target.value)}
+              aria-label="Language"
+            >
+              <option value="en">{t("English")}</option>
+              <option value="it">{t("Italian")}</option>
+            </select>
+          </div>
+
+          <div className="pt-1">
+            {!user ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  navigate("/login");
+                }}
+                className="w-full px-3 py-2 bg-slate-900 text-white rounded-md text-sm font-medium"
+              >
+                {t("Login")}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  logout("manual");
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-800"
+              >
+                {t("Logout")}
+              </button>
+            )}
+          </div>
         </div>
       )}
     </header>
