@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
@@ -46,6 +46,12 @@ export default function AdminOrders() {
   const [bulkStatus, setBulkStatus] = useState("shipped");
   const [isBulkSaving, setIsBulkSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [deletingOrderId, setDeletingOrderId] = useState("");
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [isDateMenuOpen, setIsDateMenuOpen] = useState(false);
+  const fromDateInputRef = useRef(null);
+  const toDateInputRef = useRef(null);
 
   const hydrateDrafts = (items) => {
     const next = {};
@@ -122,6 +128,24 @@ export default function AdminOrders() {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || "Failed to update order");
+    return data;
+  };
+
+  const deleteOrderRequest = async (orderId) => {
+    const res = await fetch(`${API_BASE}/api/admin/orders/${orderId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 404 && data?.error === "Order not found") {
+      return { success: true, notFound: true };
+    }
+    if (res.status === 404) {
+      throw new Error("Delete API not found (404). Please restart backend server and try again.");
+    }
+    if (!res.ok) throw new Error(data.error || "Failed to delete order");
     return data;
   };
 
@@ -209,6 +233,32 @@ export default function AdminOrders() {
     [lang]
   );
 
+  const openDatePicker = (which) => {
+    setIsDateMenuOpen(false);
+    const input = which === "from" ? fromDateInputRef.current : toDateInputRef.current;
+    if (!input) return;
+    if (typeof input.showPicker === "function") {
+      input.showPicker();
+      return;
+    }
+    input.focus();
+    input.click();
+  };
+
+  const dateRangeResultsLabel = useMemo(() => {
+    if (!dateFrom || !dateTo) return "";
+    const formatPretty = (value) => {
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return value;
+      return new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }).format(d);
+    };
+    return `Results of ${formatPretty(dateFrom)} to ${formatPretty(dateTo)}`;
+  }, [dateFrom, dateTo]);
+
   const allVisibleSelected = orders.length > 0 && selectedOrderIds.length === orders.length;
 
   const toggleSelectAllVisible = () => {
@@ -240,6 +290,81 @@ export default function AdminOrders() {
       setError(err.message || "Failed bulk update");
     } finally {
       setIsBulkSaving(false);
+    }
+  };
+
+  const deleteSingleOrder = async (orderId) => {
+    const ok = window.confirm("Delete this order permanently?");
+    if (!ok) return;
+
+    setDeletingOrderId(orderId);
+    setActionMsg("");
+    setError("");
+    try {
+      const data = await deleteOrderRequest(orderId);
+      setActionMsg(data?.notFound ? "Order already deleted" : "Order deleted");
+      const nextPage = orders.length === 1 && page > 1 ? page - 1 : page;
+      await loadOrders(nextPage);
+    } catch (err) {
+      setError(err.message || "Failed to delete order");
+    } finally {
+      setDeletingOrderId("");
+    }
+  };
+
+  const deleteSelectedOrders = async () => {
+    if (selectedOrderIds.length === 0) return;
+    const ok = window.confirm(`Delete ${selectedOrderIds.length} selected order(s)?`);
+    if (!ok) return;
+
+    setIsBulkDeleting(true);
+    setActionMsg("");
+    setError("");
+    try {
+      let deletedCount = 0;
+      let missingCount = 0;
+      for (const orderId of selectedOrderIds) {
+        const data = await deleteOrderRequest(orderId);
+        if (data?.notFound) missingCount += 1;
+        else deletedCount += 1;
+      }
+
+      if (missingCount > 0) {
+        setActionMsg(`Deleted ${deletedCount} order(s). ${missingCount} already removed.`);
+      } else {
+        setActionMsg(`Deleted ${deletedCount} selected order(s)`);
+      }
+      await loadOrders(1);
+    } catch (err) {
+      setError(err.message || "Failed to delete selected orders");
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
+  const deleteAllOrders = async () => {
+    const ok = window.confirm("Delete ALL orders permanently? This cannot be undone.");
+    if (!ok) return;
+
+    setIsDeletingAll(true);
+    setActionMsg("");
+    setError("");
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/orders?target=all`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to delete all orders");
+
+      setActionMsg(`Deleted ${Number(data.deletedCount || 0)} order(s)`);
+      await loadOrders(1);
+    } catch (err) {
+      setError(err.message || "Failed to delete all orders");
+    } finally {
+      setIsDeletingAll(false);
     }
   };
 
@@ -363,27 +488,67 @@ export default function AdminOrders() {
             <option value="total_desc">Total: High to Low</option>
             <option value="total_asc">Total: Low to High</option>
           </select>
-          <input
-            type="date"
-            className="border p-2"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-          />
-          <input
-            type="date"
-            className="border p-2"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-          />
+          <div className="relative md:col-span-2">
+            <button
+              type="button"
+              className="w-full h-10 border border-blue-300 bg-white rounded-md px-3 text-sm text-slate-500 inline-flex items-center justify-between shadow-sm"
+              onClick={() => setIsDateMenuOpen((prev) => !prev)}
+            >
+              <span>Select date</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-4 w-4 text-slate-500"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="m6 8 4 4 4-4" />
+              </svg>
+            </button>
+            {isDateMenuOpen && (
+              <div className="absolute z-20 mt-1 w-full rounded-md border border-blue-200 bg-white shadow">
+                <button
+                  type="button"
+                  className="block w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                  onClick={() => openDatePicker("from")}
+                >
+                  From
+                </button>
+                <button
+                  type="button"
+                  className="block w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                  onClick={() => openDatePicker("to")}
+                >
+                  To
+                </button>
+              </div>
+            )}
+            <input
+              ref={fromDateInputRef}
+              type="date"
+              className="sr-only"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+            />
+            <input
+              ref={toDateInputRef}
+              type="date"
+              className="sr-only"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+            />
+          </div>
           <div className="md:col-span-6 flex gap-2">
             <button
-              className="bg-black text-white px-3 py-2"
+              className="bg-blue-600 text-white px-3 py-2 rounded-full hover:bg-blue-700"
               onClick={() => loadOrders(1).catch((err) => setError(err.message || "Failed to fetch orders"))}
             >
-              Apply Filters
+              Apply
             </button>
             <button
-              className="border px-3 py-2"
+              className="bg-blue-600 text-white px-3 py-2 rounded-full hover:bg-blue-700"
               onClick={() => {
                 setStatusFilter("");
                 setQ("");
@@ -402,23 +567,29 @@ export default function AdminOrders() {
               Clear
             </button>
             <button
-              className="border px-3 py-2"
+              className="bg-blue-600 text-white px-3 py-2 rounded-full hover:bg-blue-700 disabled:opacity-50"
               disabled={isExporting || loading}
               onClick={exportCsv}
             >
               {isExporting ? "Exporting..." : "Export CSV"}
             </button>
           </div>
+          {dateRangeResultsLabel && (
+            <div className="md:col-span-6 text-lg font-bold text-green-700">
+              {dateRangeResultsLabel}
+            </div>
+          )}
         </div>
 
         <div className="card p-3 mb-4 flex flex-wrap items-center gap-2">
           <label className="inline-flex items-center gap-2 text-sm">
             <input
               type="checkbox"
+              className="h-6 w-6 cursor-pointer rounded-sm border border-slate-700 bg-slate-900 accent-sky-300"
               checked={allVisibleSelected}
               onChange={toggleSelectAllVisible}
             />
-            Select all on page
+            <span className="sr-only">Select all on page</span>
           </label>
           <select
             className="border p-2 text-sm"
@@ -432,11 +603,25 @@ export default function AdminOrders() {
             ))}
           </select>
           <button
-            className="bg-black text-white px-3 py-2 text-sm disabled:opacity-50"
+            className="bg-blue-600 text-white px-3 py-2 text-sm rounded-full hover:bg-blue-700 disabled:opacity-50"
             disabled={isBulkSaving || selectedOrderIds.length === 0}
             onClick={applyBulkStatus}
           >
             {isBulkSaving ? "Applying..." : `Apply to ${selectedOrderIds.length} selected`}
+          </button>
+          <button
+            className="bg-blue-600 text-white px-3 py-2 text-sm rounded-full hover:bg-blue-700 disabled:opacity-50"
+            disabled={isBulkDeleting || selectedOrderIds.length === 0}
+            onClick={deleteSelectedOrders}
+          >
+            {isBulkDeleting ? "Deleting..." : "Delete"}
+          </button>
+          <button
+            className="bg-blue-600 text-white px-3 py-2 text-sm rounded-full hover:bg-blue-700 disabled:opacity-50"
+            disabled={isDeletingAll || loading}
+            onClick={deleteAllOrders}
+          >
+            {isDeletingAll ? "Deleting all..." : "Delete All"}
           </button>
         </div>
 
@@ -458,10 +643,11 @@ export default function AdminOrders() {
                   <label className="inline-flex items-center gap-2 text-sm mb-2">
                     <input
                       type="checkbox"
+                      className="h-6 w-6 cursor-pointer rounded-sm border border-slate-700 bg-slate-900 accent-sky-300"
                       checked={selectedOrderIds.includes(order._id)}
                       onChange={() => toggleSelectOrder(order._id)}
                     />
-                    Select
+                    <span className="sr-only">Select order</span>
                   </label>
                   <p className="font-semibold">{t("Order ID:")} {order._id}</p>
                   <p className="text-sm text-gray-600">
@@ -530,7 +716,7 @@ export default function AdminOrders() {
 
               <div className="mt-3 flex flex-wrap gap-2 items-center">
                 <button
-                  className="text-sm text-teal-700 underline"
+                  className="bg-blue-600 text-white px-3 py-2 text-sm rounded-full hover:bg-blue-700"
                   onClick={async () => {
                     try {
                       const res = await fetch(`${API_BASE}/api/orders/${order._id}/invoice`, {
@@ -555,18 +741,33 @@ export default function AdminOrders() {
                 </button>
 
                 <button
-                  className="border px-2 py-1 text-xs"
+                  className="bg-blue-600 text-white px-2 py-1 text-xs rounded-full hover:bg-blue-700 disabled:opacity-50"
                   disabled={savingOrderId === order._id}
                   onClick={() => onStatusChange(order._id, "shipped")}
                 >
                   Mark Shipped
                 </button>
                 <button
-                  className="border px-2 py-1 text-xs"
+                  className="bg-blue-600 text-white px-2 py-1 text-xs rounded-full hover:bg-blue-700 disabled:opacity-50"
                   disabled={savingOrderId === order._id}
                   onClick={() => onStatusChange(order._id, "delivered")}
                 >
                   Mark Delivered
+                </button>
+                <button
+                  className="inline-flex h-8 w-8 items-center justify-center bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  disabled={deletingOrderId === order._id}
+                  onClick={() => deleteSingleOrder(order._id)}
+                  aria-label="Delete order"
+                  title="Delete"
+                >
+                  {deletingOrderId === order._id ? (
+                    "..."
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" className="h-5 w-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14" />
+                    </svg>
+                  )}
                 </button>
               </div>
 
@@ -599,11 +800,11 @@ export default function AdminOrders() {
                   onChange={(e) => setDraftField(order._id, "trackingNumber", e.target.value)}
                 />
                 <button
-                  className="bg-black text-white px-3 py-2 text-sm disabled:opacity-50"
+                  className="bg-blue-600 text-white px-3 py-2 text-sm rounded-full hover:bg-blue-700 disabled:opacity-50 justify-self-start"
                   disabled={savingOrderId === order._id}
                   onClick={() => onSaveShipping(order._id)}
                 >
-                  {savingOrderId === order._id ? "Saving..." : "Save Shipping"}
+                  {savingOrderId === order._id ? "Saving..." : "Save"}
                 </button>
               </div>
             </div>
@@ -612,7 +813,7 @@ export default function AdminOrders() {
 
         <div className="flex flex-wrap items-center gap-2 mt-3">
           <button
-            className="border px-3 py-1 text-sm disabled:opacity-50"
+            className="bg-blue-600 text-white px-3 py-1 text-sm rounded-full hover:bg-blue-700 disabled:opacity-50"
             disabled={page <= 1 || loading}
             onClick={() => loadOrders(page - 1).catch((err) => setError(err.message || "Failed to fetch orders"))}
           >
@@ -621,7 +822,7 @@ export default function AdminOrders() {
           <div className="text-sm px-2 py-1">Page {page} / {totalPages}</div>
           <div className="text-sm text-gray-600">Total orders: {total}</div>
           <button
-            className="border px-3 py-1 text-sm disabled:opacity-50"
+            className="bg-blue-600 text-white px-3 py-1 text-sm rounded-full hover:bg-blue-700 disabled:opacity-50"
             disabled={page >= totalPages || loading}
             onClick={() => loadOrders(page + 1).catch((err) => setError(err.message || "Failed to fetch orders"))}
           >
