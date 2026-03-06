@@ -421,7 +421,7 @@ export default function ProductPage() {
           <div className="mt-3 flex gap-2">
             <button
               onClick={submitReview}
-              className="bg-teal-600 text-white px-4 py-2"
+              className="btn-primary"
             >
               {editingReviewId ? "Update Review" : t("Submit Review")}
             </button>

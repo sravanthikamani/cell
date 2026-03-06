@@ -340,7 +340,7 @@ export default function Profile() {
       {msg && <div className="text-sm text-green-700">{msg}</div>}
 
       <button
-        className="mt-3 bg-teal-600 text-white px-6 py-2"
+        className="mt-3 btn-primary"
         onClick={save}
       >
         {t("Save Profile")}
