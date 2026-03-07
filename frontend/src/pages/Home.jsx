@@ -40,6 +40,8 @@ export default function Home() {
     size: `${4 + (i % 4)}px`,
   }));
   const [featured, setFeatured] = useState([]);
+  const [activeOfferInfo, setActiveOfferInfo] = useState(null);
+  const [offerNowTs, setOfferNowTs] = useState(Date.now());
   const { t, lang } = useI18n();
 
   useEffect(() => {
@@ -62,6 +64,51 @@ export default function Home() {
       document.body.classList.remove("home-bg-active");
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_BASE}/api/offers/active`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data?.active && data?.offer) {
+          setActiveOfferInfo({
+            title: data.offer.title,
+            startsAt: data.offer.startsAt,
+            endsAt: data.offer.endsAt,
+          });
+        } else {
+          setActiveOfferInfo(null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setActiveOfferInfo(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!activeOfferInfo?.endsAt) return undefined;
+    const timer = setInterval(() => setOfferNowTs(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [activeOfferInfo?.endsAt]);
+
+  const offerTimeLeft = (() => {
+    if (!activeOfferInfo?.endsAt) return "";
+    const leftMs = new Date(activeOfferInfo.endsAt).getTime() - offerNowTs;
+    if (leftMs <= 0) return "Offer expired";
+    const sec = Math.floor(leftMs / 1000);
+    const d = Math.floor(sec / (24 * 3600));
+    const h = Math.floor((sec % (24 * 3600)) / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    if (d > 0) return `${d}d ${h}h ${m}m ${s}s left`;
+    if (h > 0) return `${h}h ${m}m ${s}s left`;
+    return `${m}m ${s}s left`;
+  })();
 
   return (
     <div>
@@ -210,10 +257,28 @@ export default function Home() {
         </div>
         <div className="relative z-10 w-full sm:max-w-2xl sm:ml-auto text-center sm:text-right rounded-xl sm:rounded-2xl bg-black/28 sm:bg-black/18 backdrop-blur-[1px] p-3 sm:p-4 md:p-5">
           <p className="offer-copy mt-1 text-white/95">
-            <span className="block">Upcoming offers start from</span>
-            <span className="block mt-2">
-              <span className="offer-date">March 1st</span> to <span className="offer-date">March 31st</span>
-            </span>
+            {activeOfferInfo ? (
+              <>
+                <span className="block">{activeOfferInfo.title || "Special offer is live"}</span>
+                <span className="block mt-2">
+                  <span className="offer-date">
+                    {new Date(activeOfferInfo.startsAt).toLocaleDateString()}
+                  </span>{" "}
+                  to{" "}
+                  <span className="offer-date">
+                    {new Date(activeOfferInfo.endsAt).toLocaleDateString()}
+                  </span>
+                </span>
+                <span className="block mt-2 text-sm font-semibold">{offerTimeLeft}</span>
+              </>
+            ) : (
+              <>
+                <span className="block">Upcoming offers start from</span>
+                <span className="block mt-2">
+                  <span className="offer-date">March 1st</span> to <span className="offer-date">March 31st</span>
+                </span>
+              </>
+            )}
           </p>
         </div>
       </Link>

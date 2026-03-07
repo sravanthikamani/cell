@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
 const Coupon = require("../models/Coupon");
+const Offer = require("../models/Offer");
 const auth = require("../middleware/auth");
 const { body, validationResult } = require("express-validator");
 const User = require("../models/User");
@@ -47,6 +48,20 @@ const parsePagination = (req) => {
   const skip = (page - 1) * limit;
   return { page, limit, skip };
 };
+
+const OFFER_DURATION_UNITS = {
+  hours: 60 * 60 * 1000,
+  days: 24 * 60 * 60 * 1000,
+  months: 30 * 24 * 60 * 60 * 1000,
+  nights: 24 * 60 * 60 * 1000,
+};
+
+const toValidObjectIdStrings = (list = []) =>
+  [...new Set(
+    list
+      .map((v) => String(v || "").trim())
+      .filter((v) => mongoose.Types.ObjectId.isValid(v))
+  )];
 
 const buildAdminOrdersFilter = async ({ status = "", q = "", dateFrom = "", dateTo = "" }) => {
   const filter = {};
@@ -481,6 +496,105 @@ router.delete("/coupons/:id", auth, async (req, res) => {
   }
   await Coupon.findByIdAndDelete(req.params.id);
   res.json({ success: true });
+});
+
+/* ===============================
+   SPECIAL OFFERS (ADMIN)
+================================ */
+router.get("/offers/current", auth, async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  const now = new Date();
+  const offer = await Offer.findOne({ isEnabled: true, endsAt: { $gte: now } })
+    .sort({ startsAt: 1, createdAt: -1 })
+    .populate("productIds")
+    .lean();
+
+  if (!offer) {
+    return res.json({ offer: null, active: false });
+  }
+
+  return res.json({
+    active: offer.startsAt <= now && offer.endsAt >= now,
+    offer: {
+      ...offer,
+      productIds: (offer.productIds || []).map((p) => ({
+        ...p,
+        _id: String(p._id),
+      })),
+    },
+  });
+});
+
+router.post("/offers", auth, async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  const title = String(req.body.title || "Exclusive Special Offer").trim() || "Exclusive Special Offer";
+  const productIds = toValidObjectIdStrings(req.body.productIds || []);
+  const durationValue = Number(req.body.durationValue || 3);
+  const durationUnit = String(req.body.durationUnit || "days").trim().toLowerCase();
+  const discountType = String(req.body.discountType || "percent").trim().toLowerCase();
+  const discountValue = Number(req.body.discountValue || 0);
+
+  if (!productIds.length) {
+    return res.status(400).json({ error: "Select at least one product" });
+  }
+  if (!Number.isFinite(durationValue) || durationValue <= 0) {
+    return res.status(400).json({ error: "Duration must be greater than zero" });
+  }
+  if (!OFFER_DURATION_UNITS[durationUnit]) {
+    return res.status(400).json({ error: "Invalid duration unit" });
+  }
+  if (!["percent", "fixed"].includes(discountType)) {
+    return res.status(400).json({ error: "Invalid discount type" });
+  }
+  if (!Number.isFinite(discountValue) || discountValue <= 0) {
+    return res.status(400).json({ error: "Discount value must be greater than zero" });
+  }
+
+  const existingCount = await Product.countDocuments({ _id: { $in: productIds } });
+  if (existingCount !== productIds.length) {
+    return res.status(400).json({ error: "One or more selected products are invalid" });
+  }
+
+  const startsAt = new Date();
+  const endsAt = new Date(startsAt.getTime() + durationValue * OFFER_DURATION_UNITS[durationUnit]);
+
+  await Offer.updateMany({ isEnabled: true }, { $set: { isEnabled: false } });
+
+  const created = await Offer.create({
+    title,
+    productIds,
+    startsAt,
+    endsAt,
+    discountType,
+    discountValue,
+    isEnabled: true,
+    createdBy: req.user.id,
+  });
+
+  const offer = await Offer.findById(created._id).populate("productIds").lean();
+  return res.json({ success: true, offer });
+});
+
+router.delete("/offers/:id", auth, async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  const deleted = await Offer.findByIdAndUpdate(
+    req.params.id,
+    { $set: { isEnabled: false } },
+    { new: true }
+  );
+  if (!deleted) {
+    return res.status(404).json({ error: "Offer not found" });
+  }
+  return res.json({ success: true });
 });
 
 /* ===============================
