@@ -7,6 +7,10 @@ const Cart = require("../models/Cart");
 const Coupon = require("../models/Coupon");
 const { normalizePrice } = require("../utils/price");
 const {
+  getActiveOfferForProductIds,
+  getOfferAdjustedUnitPrice,
+} = require("../utils/offerPricing");
+const {
   computeOrderTotals,
   normalizeShippingOption,
 } = require("../utils/checkoutPricing");
@@ -43,9 +47,27 @@ async function loadPricingForCheckout({
     throw err;
   }
 
+  const missingProductItems = (cart.items || []).filter((i) => !i?.productId);
+  if (missingProductItems.length > 0) {
+    const err = new Error(
+      "Some items in your cart are no longer available. Please remove them and try again."
+    );
+    err.status = 400;
+    throw err;
+  }
+
+  const activeOffer = await getActiveOfferForProductIds(
+    (cart.items || []).map((i) => i?.productId?._id || i?.productId)
+  );
+
   let subtotal = 0;
   cart.items.forEach((i) => {
-    subtotal += normalizePrice(i.productId.price) * i.qty;
+    const unitPrice = getOfferAdjustedUnitPrice({
+      productId: i.productId._id || i.productId,
+      basePrice: i.productId.price,
+      activeOffer,
+    });
+    subtotal += unitPrice * i.qty;
   });
 
   let discount = 0;
