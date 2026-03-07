@@ -26,8 +26,6 @@ export default function Profile() {
     pincode: "",
   });
   const fileInputRef = useRef(null);
-  const profileBg =
-    "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772861785/annie-spratt-zA7I5BtFbvw-unsplash_1_e7zoni.jpg";
 
   useEffect(() => {
     fetch(`${API_BASE}/api/users/me`, {
@@ -37,6 +35,13 @@ export default function Profile() {
       .then(setProfile)
       .catch(console.error);
   }, [token]);
+
+  useEffect(() => {
+    document.body.classList.add("profile-bg-active");
+    return () => {
+      document.body.classList.remove("profile-bg-active");
+    };
+  }, []);
 
   if (!profile) return <div className="p-10">{t("Loading...")}</div>;
 
@@ -103,10 +108,7 @@ export default function Profile() {
   };
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: `url(${profileBg})` }}
-    >
+    <div className="profile-page-bg">
       <div className="max-w-3xl mx-auto p-10">
       <h1 className="text-2xl font-bold mb-6">{t("My Profile")}</h1>
 
@@ -328,22 +330,22 @@ export default function Profile() {
         </div>
         <div className="flex gap-3 mt-3">
           <button
-            className="text-sm text-gray-700"
+            className="text-sm text-white"
             onClick={() => setNewAddress({ name: "", phone: "", street: "", city: "", pincode: "" })}
           >
             {t("Clear")}
           </button>
-          <div className="text-sm text-gray-500 self-center">{t("Fill this form and click Save Profile to add")}</div>
+          <div className="text-sm text-white self-center">{t("Fill this form and click Save Profile to add")}</div>
         </div>
       </div>
 
       {msg && <div className="text-sm text-green-700">{msg}</div>}
 
       <button
-        className="mt-3 btn-primary"
+        className="mt-3 bg-blue-600 text-white px-6 py-2 rounded-full"
         onClick={save}
       >
-        {t("Save Profile")}
+        {t("Save")}
       </button>
       </div>
     </div>
