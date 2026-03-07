@@ -6,8 +6,7 @@ import { formatCurrency } from "../lib/format";
 import Seo from "../components/Seo";
 
 export default function Home() {
-  const homeBg =
-    "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772698018/chris-appano--sTwytNnqWw-unsplash_itlmtf.jpg";
+  const homeBg = "/images/homebg.jpg";
   const confettiColors = ["#fde047", "#fb7185", "#60a5fa", "#34d399", "#f97316", "#a78bfa", "#22d3ee", "#facc15"];
   const confettiPieces = Array.from({ length: 24 }, (_, i) => {
     const direction = i % 2 === 0 ? 1 : -1;

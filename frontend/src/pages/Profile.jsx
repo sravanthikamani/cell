@@ -187,7 +187,7 @@ export default function Profile() {
         />
       </div>
 
-      <h2 className="text-xl font-bold mt-8 mb-3">{t("Addresses")}</h2>
+      <h2 className="text-xl font-bold mt-8 mb-3 text-black">{t("Addresses")}</h2>
       {(profile.addresses || []).map((addr, i) => (
         <div key={i} className="border bg-white p-3 mb-3">
           {editingIndex === i ? (
@@ -295,7 +295,7 @@ export default function Profile() {
 
       {/* New address form */}
       <div className="border rounded p-4 mb-4">
-        <h3 className="font-semibold mb-2">{t("Add New Address")}</h3>
+        <h3 className="font-semibold mb-2 text-black">{t("Add New Address")}</h3>
         <div className="grid grid-cols-2 gap-3">
           <input
             className="border p-2"
