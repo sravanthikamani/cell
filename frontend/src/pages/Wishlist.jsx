@@ -13,7 +13,7 @@ export default function Wishlist() {
   const [items, setItems] = useState([]);
   const { t, lang } = useI18n();
   const wishlistBg =
-    "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772628675/casey-horner-RmoWqDCqN2E-unsplash_g93cv9.jpg";
+    "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772629203/drew-beamer-kUHfMW8awpE-unsplash_aqbeir.jpg";
 
   useEffect(() => {
     if (!user || !token) return;
