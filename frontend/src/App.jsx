@@ -29,6 +29,7 @@ const Cart = lazy(() => import("./pages/Cart"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Offers = lazy(() => import("./pages/Offers"));
 
 export default function App() {
   return (
@@ -40,6 +41,7 @@ export default function App() {
           <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/offers" element={<Offers />} />
 
           <Route path="/:group/:type" element={<CatalogPage />} />
           <Route path="/:group/:type/:brand" element={<BrandPage />} />
