@@ -149,17 +149,145 @@ h3,
 }
 
 body.admin-bg-active {
-  background-image: linear-gradient(rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.42)), url('/images/adminbg1.jpg') !important;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.42)), url('/images/adminbg1.png') !important;
   background-size: cover !important;
   background-position: center top !important;
   background-repeat: no-repeat !important;
   background-attachment: scroll;
 }
 
+@media (max-width: 640px) {
+  body.admin-bg-active {
+    background-position: center center !important;
+    background-size: cover !important;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.52)), url('/images/adminbg1.png') !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  body.admin-bg-active {
+    background-position: center 15% !important;
+    background-size: cover !important;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.45)), url('/images/adminbg1.png') !important;
+  }
+}
+
 @media (min-width: 1024px) {
   body.admin-bg-active {
-    background-image: linear-gradient(rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.38)), url('/images/adminbg2.jpg') !important;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.38)), url('/images/adminbg1.png') !important;
+    background-position: center top !important;
     background-attachment: fixed;
+  }
+}
+
+.profile-page-bg {
+  min-height: 100vh;
+  background: transparent;
+}
+
+body.profile-bg-active {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.36)), url('/images/profilebg.png') !important;
+  background-size: cover !important;
+  background-position: center top !important;
+  background-repeat: no-repeat !important;
+  background-attachment: scroll;
+}
+
+@media (max-width: 640px) {
+  body.profile-bg-active {
+    background-position: center center !important;
+    background-size: cover !important;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.58)), url('/images/profilebg.png') !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  body.profile-bg-active {
+    background-position: center 20% !important;
+    background-size: cover !important;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.48)), url('/images/profilebg.png') !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  body.profile-bg-active {
+    background-position: center top !important;
+    background-attachment: fixed;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.34)), url('/images/profilebg.png') !important;
+  }
+}
+
+.wishlist-page-bg {
+  min-height: 100vh;
+  background: transparent;
+}
+
+body.wishlist-bg-active {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)), url('/images/wishlistbg.png') !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: scroll;
+}
+
+@media (max-width: 640px) {
+  body.wishlist-bg-active {
+    background-position: center center !important;
+    background-size: cover !important;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.56)), url('/images/wishlistbg.png') !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  body.wishlist-bg-active {
+    background-position: center 30% !important;
+    background-size: cover !important;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.46)), url('/images/wishlistbg.png') !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  body.wishlist-bg-active {
+    background-position: center center !important;
+    background-attachment: fixed;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.38)), url('/images/wishlistbg.png') !important;
+  }
+}
+
+.about-page-bg {
+  min-height: 100vh;
+  background: transparent;
+}
+
+body.about-bg-active {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.44), rgba(255, 255, 255, 0.44)), url('/images/aboutusbg.png') !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: scroll;
+}
+
+@media (max-width: 640px) {
+  body.about-bg-active {
+    background-position: center center !important;
+    background-size: cover !important;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url('/images/aboutusbg.png') !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  body.about-bg-active {
+    background-position: center 25% !important;
+    background-size: cover !important;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.52)), url('/images/aboutusbg.png') !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  body.about-bg-active {
+    background-position: center center !important;
+    background-attachment: fixed;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.42)), url('/images/aboutusbg.png') !important;
   }
 }
 
@@ -637,7 +765,7 @@ body.admin-bg-active {
 }
 
 body.orders-bg-active {
-  background-image: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url('/images/adminbg3.jpg') !important;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url('/images/adminordersbg.png') !important;
   background-size: cover !important;
   background-position: center center !important;
   background-repeat: no-repeat !important;
