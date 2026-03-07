@@ -6,6 +6,10 @@ const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 const PDFDocument = require("pdfkit");
 const { normalizePrice } = require("../utils/price");
+const {
+  getActiveOfferForProductIds,
+  getOfferAdjustedUnitPrice,
+} = require("../utils/offerPricing");
 
 /* PLACE ORDER */
 router.post("/place", auth, async (req, res) => {
@@ -17,15 +21,37 @@ router.post("/place", auth, async (req, res) => {
     return res.status(400).json({ error: "Cart empty" });
   }
 
+  const missingProductItems = (cart.items || []).filter((i) => !i?.productId);
+  if (missingProductItems.length > 0) {
+    return res.status(400).json({
+      error:
+        "Some items in your cart are no longer available. Please remove them and try again.",
+    });
+  }
+
+  const activeOffer = await getActiveOfferForProductIds(
+    (cart.items || []).map((i) => i?.productId?._id || i?.productId)
+  );
+
   const total = cart.items.reduce(
-    (sum, i) => sum + normalizePrice(i.productId.price) * i.qty,
+    (sum, i) =>
+      sum +
+      getOfferAdjustedUnitPrice({
+        productId: i.productId._id || i.productId,
+        basePrice: i.productId.price,
+        activeOffer,
+      }) * i.qty,
     0
   );
 
   const orderItems = cart.items.map((i) => ({
     productId: i.productId._id || i.productId,
     qty: i.qty,
-    price: normalizePrice(i.productId.price),
+    price: getOfferAdjustedUnitPrice({
+      productId: i.productId._id || i.productId,
+      basePrice: i.productId.price,
+      activeOffer,
+    }),
     variant: i.variant || {},
   }));
 

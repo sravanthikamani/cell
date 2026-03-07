@@ -9,6 +9,10 @@ const { sendMail } = require("../utils/mailer");
 const Coupon = require("../models/Coupon");
 const { normalizePrice } = require("../utils/price");
 const {
+  getActiveOfferForProductIds,
+  getOfferAdjustedUnitPrice,
+} = require("../utils/offerPricing");
+const {
   computeOrderTotals,
   normalizeShippingOption,
 } = require("../utils/checkoutPricing");
@@ -66,6 +70,18 @@ router.post(
       return res.status(400).json({ message: "Cart is empty" });
     }
 
+    const missingProductItems = (cart.items || []).filter((i) => !i?.productId);
+    if (missingProductItems.length > 0) {
+      return res.status(400).json({
+        message:
+          "Some items in your cart are no longer available. Please remove them and try again.",
+      });
+    }
+
+    const activeOffer = await getActiveOfferForProductIds(
+      (cart.items || []).map((i) => i?.productId?._id || i?.productId)
+    );
+
     let subtotal = 0;
     for (const i of cart.items) {
       if ((i.productId.stock || 0) < i.qty) {
@@ -73,7 +89,12 @@ router.post(
           .status(400)
           .json({ message: "Insufficient stock for some items" });
       }
-      subtotal += normalizePrice(i.productId.price) * i.qty;
+      const unitPrice = getOfferAdjustedUnitPrice({
+        productId: i.productId._id || i.productId,
+        basePrice: i.productId.price,
+        activeOffer,
+      });
+      subtotal += unitPrice * i.qty;
     }
 
     let discount = 0;
@@ -152,7 +173,11 @@ router.post(
     const orderItems = cart.items.map((i) => ({
       productId: i.productId._id || i.productId,
       qty: i.qty,
-      price: normalizePrice(i.productId.price),
+      price: getOfferAdjustedUnitPrice({
+        productId: i.productId._id || i.productId,
+        basePrice: i.productId.price,
+        activeOffer,
+      }),
       variant: i.variant || {},
     }));
 

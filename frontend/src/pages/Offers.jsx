@@ -1,6 +1,150 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import Seo from "../components/Seo";
+import { API_BASE } from "../lib/api";
+import { formatCurrency } from "../lib/format";
 
 export default function Offers() {
+  const [activeOffer, setActiveOffer] = useState(null);
+  const [nowTs, setNowTs] = useState(Date.now());
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_BASE}/api/offers/active`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data?.active && data?.offer?.products?.length) {
+          setActiveOffer(data.offer);
+        } else {
+          setActiveOffer(null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setActiveOffer(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!activeOffer?.endsAt) return undefined;
+    const timer = setInterval(() => {
+      setNowTs(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [activeOffer?.endsAt]);
+
+  const timeLeftLabel = useMemo(() => {
+    if (!activeOffer?.endsAt) return "";
+    const leftMs = new Date(activeOffer.endsAt).getTime() - nowTs;
+    if (leftMs <= 0) return "Offer expired";
+
+    const totalSecs = Math.floor(leftMs / 1000);
+    const days = Math.floor(totalSecs / (24 * 3600));
+    const hours = Math.floor((totalSecs % (24 * 3600)) / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+
+    if (days > 0) return `${days}d ${hours}h ${mins}m ${secs}s left`;
+    if (hours > 0) return `${hours}h ${mins}m ${secs}s left`;
+    return `${mins}m ${secs}s left`;
+  }, [activeOffer?.endsAt, nowTs]);
+
+  const resolveProductImage = (url) => {
+    if (!url) return "/images/home-hero.jpeg";
+    if (/^https?:\/\//i.test(url)) return url;
+    return `${API_BASE}${url}`;
+  };
+
+  const toNum = (v, fallback = 0) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  };
+
+  const getDisplayPrices = (product) => {
+    const original = toNum(product?.originalPrice, toNum(product?.price, 0));
+    let discounted = toNum(product?.price, original);
+
+    // fallback in case API returns only original/base value
+    if (discounted >= original && activeOffer?.discountValue) {
+      if (activeOffer.discountType === "percent") {
+        discounted = original - (original * toNum(activeOffer.discountValue, 0)) / 100;
+      } else {
+        discounted = original - toNum(activeOffer.discountValue, 0);
+      }
+    }
+
+    discounted = Math.max(0, discounted);
+    const rawPct = original > 0 ? ((original - discounted) / original) * 100 : 0;
+    const discountPercent = Math.max(0, Math.round(rawPct));
+
+    return { original, discounted, discountPercent };
+  };
+
+  if (activeOffer?.products?.length) {
+    return (
+      <div className="px-4 sm:px-6 lg:px-10 py-6 sm:py-8 lg:py-10 min-h-[82vh]">
+        <Seo
+          title="Exclusive Offers | HI-TECH Electronics Store"
+          description="Limited-time special offers on selected products."
+          canonicalPath="/offers"
+        />
+        <div className="max-w-6xl mx-auto">
+          <div className="rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-rose-500 via-orange-400 to-amber-300 text-white shadow-lg">
+            <h1 className="text-2xl sm:text-3xl font-bold">{activeOffer.title || "Exclusive Special Offer"}</h1>
+            <p className="mt-2 text-sm sm:text-base">
+              Valid from {new Date(activeOffer.startsAt).toLocaleString()} to {new Date(activeOffer.endsAt).toLocaleString()}
+            </p>
+            <p className="mt-1 text-sm sm:text-base font-semibold">
+              {activeOffer.discountType === "percent"
+                ? `${Number(activeOffer.discountValue || 0)}% OFF`
+                : `€${Number(activeOffer.discountValue || 0)} OFF`}
+            </p>
+            <p className="mt-1 text-sm sm:text-base font-semibold">{timeLeftLabel}</p>
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {activeOffer.products.map((p) => (
+              <Link key={p._id} to={`/product/${p._id}`} className="card p-4 relative overflow-hidden">
+                {(() => {
+                  const { discountPercent } = getDisplayPrices(p);
+                  return discountPercent > 0 ? (
+                    <span className="absolute top-3 right-3 rounded-full bg-red-600 text-white text-xs font-bold px-2.5 py-1 shadow">
+                      {discountPercent}% OFF
+                    </span>
+                  ) : null;
+                })()}
+                <img
+                  src={resolveProductImage(p.images?.[0])}
+                  alt={p.name}
+                  className="h-44 w-full object-cover rounded-xl"
+                />
+                <div className="mt-3">
+                  <div className="font-semibold line-clamp-1">{p.name}</div>
+                  <div className="text-sm text-gray-600 line-clamp-1">{p.brand}</div>
+                  {(() => {
+                    const { original, discounted } = getDisplayPrices(p);
+                    return (
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-blue-700 font-bold">{formatCurrency(discounted)}</span>
+                    {original > discounted && (
+                      <span className="text-gray-500 text-sm line-through">{formatCurrency(original)}</span>
+                    )}
+                  </div>
+                    );
+                  })()}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const offersBgDesktop =
     "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772785501/ChatGPT_Image_Mar_6_2026_01_54_47_PM_v0uijm.png";
   const offersBgMobile =

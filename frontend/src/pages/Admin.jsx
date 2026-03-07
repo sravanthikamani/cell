@@ -8,7 +8,6 @@ import { formatCurrency } from "../lib/format";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { useAnimateBarLabel } from "@mui/x-charts/hooks";
 import Stack from "@mui/material/Stack";
-import Button from "@mui/material/Button";
 import { styled } from "@mui/material/styles";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
@@ -65,8 +64,9 @@ export default function Admin() {
   const { t, lang } = useI18n();
   const sectionWrapClass = "w-full max-w-6xl mx-auto";
   const fieldClass = "border px-2 py-1.5 text-xs h-8";
-  const primaryBtnClass = "bg-black text-white px-4 py-2 text-sm h-10";
-  const actionBtnClass = "border px-3 py-1.5 text-sm h-9 disabled:opacity-50";
+  const primaryBtnClass = "bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm h-10 border border-blue-600 disabled:opacity-50 disabled:cursor-not-allowed";
+  const actionBtnClass = "bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-1.5 text-sm h-9 border border-blue-600 disabled:opacity-50 disabled:cursor-not-allowed";
+  const iconBtnClass = "inline-flex items-center justify-center p-1 text-slate-500 hover:text-slate-700 transition-colors";
   const compactCouponFieldWidthClass = "w-full md:w-[420px] lg:w-[520px]";
   const compactProductSearchWidthClass = "w-full sm:w-[420px] md:w-[520px] lg:w-[620px] sm:flex-none";
 
@@ -111,6 +111,18 @@ export default function Admin() {
     maxDiscount: "",
     active: true,
   });
+  const [offerForm, setOfferForm] = useState({
+    title: "Exclusive Special Offer",
+    durationValue: 3,
+    durationUnit: "days",
+    discountType: "percent",
+    discountValue: 10,
+  });
+  const [offerProductIds, setOfferProductIds] = useState([]);
+  const [currentOffer, setCurrentOffer] = useState(null);
+  const [isOfferActive, setIsOfferActive] = useState(false);
+  const [offerMsg, setOfferMsg] = useState("");
+  const [isSavingOffer, setIsSavingOffer] = useState(false);
   const [analyticsChartKey, runAnalyticsAnimation] = React.useReducer((v) => v + 1, 0);
 
   const groupOptions = ["device", "category"];
@@ -181,6 +193,36 @@ export default function Admin() {
       .then(setAnalytics)
       .catch(() => {});
   }, [token]);
+
+  const loadCurrentOffer = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/offers/current`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setOfferMsg(data.error || "Failed to load current offer");
+        return;
+      }
+      setCurrentOffer(data.offer || null);
+      setIsOfferActive(Boolean(data.active));
+      if (data.offer) {
+        setOfferProductIds((data.offer.productIds || []).map((p) => String(p._id)));
+        setOfferForm((prev) => ({
+          ...prev,
+          title: data.offer.title || prev.title,
+          discountType: data.offer.discountType || prev.discountType,
+          discountValue: Number(data.offer.discountValue || prev.discountValue),
+        }));
+      }
+    } catch {
+      setOfferMsg("Failed to load current offer");
+    }
+  }, [token]);
+
+  useEffect(() => {
+    loadCurrentOffer().catch(() => {});
+  }, [loadCurrentOffer]);
 
   useEffect(() => {
     if (!editingId) return;
@@ -355,6 +397,76 @@ export default function Admin() {
     }
   };
 
+  const toggleOfferProduct = (productId) => {
+    const key = String(productId);
+    setOfferProductIds((prev) =>
+      prev.includes(key) ? prev.filter((id) => id !== key) : [...prev, key]
+    );
+  };
+
+  const createSpecialOffer = async () => {
+    setOfferMsg("");
+    if (!offerProductIds.length) {
+      setOfferMsg("Select at least one product for the special offer");
+      return;
+    }
+    setIsSavingOffer(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/offers`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: offerForm.title,
+          productIds: offerProductIds,
+          durationValue: Number(offerForm.durationValue || 3),
+          durationUnit: offerForm.durationUnit,
+          discountType: offerForm.discountType,
+          discountValue: Number(offerForm.discountValue || 0),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setOfferMsg(data.error || "Failed to create special offer");
+        return;
+      }
+      setOfferMsg("Special offer saved");
+      setCurrentOffer(data.offer || null);
+      setIsOfferActive(true);
+      await loadCurrentOffer();
+    } catch {
+      setOfferMsg("Failed to create special offer");
+    } finally {
+      setIsSavingOffer(false);
+    }
+  };
+
+  const disableCurrentOffer = async () => {
+    if (!currentOffer?._id) return;
+    setOfferMsg("");
+    setIsSavingOffer(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/offers/${currentOffer._id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setOfferMsg(data.error || "Failed to disable offer");
+        return;
+      }
+      setOfferMsg("Offer disabled");
+      setCurrentOffer(null);
+      setIsOfferActive(false);
+    } catch {
+      setOfferMsg("Failed to disable offer");
+    } finally {
+      setIsSavingOffer(false);
+    }
+  };
+
   const topProducts = Array.isArray(analytics?.topProducts) ? analytics.topProducts : [];
   const ordersByDay = Array.isArray(analytics?.ordersByDay) ? analytics.ordersByDay : [];
   const topProductLabels = topProducts.map((p) => p.product?.name || p._id || "-");
@@ -365,9 +477,12 @@ export default function Admin() {
   return (
     <div className="admin-page-bg">
       <div className="w-full mx-auto px-4 md:px-8 lg:px-10 py-6 md:py-10">
-      <h1 className="text-2xl font-bold mb-4">{t("Admin - Add Product")}</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center">{t("Admin - Add Product")}</h1>
 
-      <div ref={productFormRef} className={`mb-3 card p-4 ${sectionWrapClass}`}>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+      <div>
+
+      <div ref={productFormRef} className="mb-3 card p-4 w-full max-w-[300px] mx-auto">
         <input
           type="file"
           accept="image/*"
@@ -395,7 +510,7 @@ export default function Admin() {
       </div>
 
       <div
-        className={`card p-4 grid grid-cols-1 md:grid-cols-2 gap-3 ${sectionWrapClass}`}
+        className="card p-4 grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-[700px] mx-auto"
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
@@ -444,93 +559,12 @@ export default function Admin() {
       <button type="button" onClick={submitProductForm} className={`w-full sm:w-auto sm:min-w-[160px] sm:mx-auto block mt-3 ${primaryBtnClass}`}>
         {editingId ? t("Update Product") : t("Add Product")}
       </button>
-
-      <h2 className="text-xl font-bold mt-10">{t("All Products")}</h2>
-      <div className={`flex flex-col sm:flex-row gap-2 mb-3 mt-2 ${sectionWrapClass}`}>
-        <input
-          className={`${fieldClass} ${compactProductSearchWidthClass}`}
-          placeholder="Search products"
-          value={productSearch}
-          onChange={(e) => setProductSearch(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              loadProducts(1);
-            }
-          }}
-        />
-        <button type="button" className={`${primaryBtnClass} w-full sm:w-auto`} onClick={() => loadProducts(1)}>
-          Search
-        </button>
       </div>
 
-      {products.length > 0 && (
-        <div className="w-full py-4 bg-gray-100 rounded-lg product-center-slider">
-          <div className="w-11/12 mx-auto">
-            <Slider {...productSliderSettings}>
-              {products.map((p) => (
-                <div key={p._id} className="px-3">
-                  <div className="product-slide-card bg-white rounded-2xl shadow-md p-4 text-center transition-transform duration-300">
-                    <img
-                      src={resolveProductImage(p.images?.[0])}
-                      alt={p.name}
-                      className="mx-auto h-44 w-full object-contain rounded"
-                    />
-                    <h3 className="mt-3 text-lg font-semibold truncate">{p.name}</h3>
-                    <p className="text-sm text-gray-600 truncate">{p.brand}</p>
-                    <p className="text-blue-700 font-bold mt-1">{formatCurrency(p.price, lang)}</p>
-                    <p className="text-xs text-gray-500 mt-1">Stock: {p.stock ?? 0}</p>
-                    <div className="mt-3 flex justify-center gap-2">
-                      <button
-                        onClick={() => {
-                          setEditingId(p._id);
-                          setForm({
-                            name: p.name,
-                            price: p.price,
-                            brand: p.brand,
-                            group: p.group,
-                            type: p.type,
-                            images: (p.images || []).join(","),
-                            stock: p.stock ?? 0,
-                            sizes: (p.sizes || []).join(","),
-                            colors: (p.colors || []).join(","),
-                          });
-                        }}
-                        className={actionBtnClass}
-                      >
-                        {t("Edit")}
-                      </button>
-                      <button
-                        onClick={() =>
-                          fetch(`${API_BASE}/api/admin/products/${p._id}`, {
-                            method: "DELETE",
-                            headers: { Authorization: `Bearer ${token}` },
-                          }).then(() => loadProducts(productPage, productSearch))
-                        }
-                        className={`${actionBtnClass} text-red-600`}
-                      >
-                        {t("Delete")}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </Slider>
-          </div>
-        </div>
-      )}
-
-      {products.length === 0 && <div className="text-sm text-gray-600 mt-2">No products found.</div>}
-
-      <div className="flex gap-2 mt-3">
-        <button className={actionBtnClass} disabled={productPage <= 1} onClick={() => loadProducts(productPage - 1)}>Prev</button>
-        <div className="text-sm px-2 py-1">Page {productPage} / {productTotalPages}</div>
-        <button className={actionBtnClass} disabled={productPage >= productTotalPages} onClick={() => loadProducts(productPage + 1)}>Next</button>
-      </div>
-
-      <h2 className="text-xl font-bold mt-10">{t("Coupons")}</h2>
+      <div>
+      <h2 className="text-xl font-bold mt-1 xl:mt-0 text-center">{t("Coupons")}</h2>
       <div
-        className={`card p-4 mt-3 ${sectionWrapClass}`}
+        className="card p-4 mt-3 w-full max-w-[600px] mx-auto"
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
@@ -552,13 +586,16 @@ export default function Admin() {
       </div>
 
       {coupons.map((c) => (
-        <div key={c._id} className="card p-3 mt-2 flex justify-between">
+        <div key={c._id} className="card p-3 mt-2 flex justify-between w-full max-w-[300px] mx-auto">
           <div>
             <div className="font-semibold">{c.code}</div>
             <div className="text-sm text-gray-600">{c.type} {c.value} {c.active ? "active" : "inactive"}</div>
           </div>
           <button
-            className={`${actionBtnClass} text-red-600`}
+            type="button"
+            title={t("Delete")}
+            aria-label={t("Delete")}
+            className={`${iconBtnClass} text-red-500 hover:text-red-700`}
             onClick={async () => {
               await fetch(`${API_BASE}/api/admin/coupons/${c._id}`, {
                 method: "DELETE",
@@ -567,12 +604,271 @@ export default function Admin() {
               setCoupons(coupons.filter((x) => x._id !== c._id));
             }}
           >
-            Delete
+            <svg
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-5 w-5"
+            >
+              <path d="M3 6h18" />
+              <path d="M8 6V4h8v2" />
+              <path d="M19 6l-1 14H6L5 6" />
+              <path d="M10 11v6" />
+              <path d="M14 11v6" />
+            </svg>
           </button>
         </div>
       ))}
+      </div>
+      </div>
 
-      <h2 className="text-xl font-bold mt-10">{t("User Management")}</h2>
+      <div className="w-full max-w-[480px] mx-auto mt-10">
+        <h2 className="text-xl font-bold mb-2 text-center">{t("All Products")}</h2>
+        <div className="flex flex-col sm:flex-row gap-2 mb-3">
+          <input
+            className={`${fieldClass} w-full`}
+            placeholder="Search products"
+            value={productSearch}
+            onChange={(e) => setProductSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                loadProducts(1);
+              }
+            }}
+          />
+          <button type="button" className={`${primaryBtnClass} w-full sm:w-auto sm:flex-none`} onClick={() => loadProducts(1)}>
+            Search
+          </button>
+        </div>
+      </div>
+
+      {products.length > 0 && (
+        <div className="w-full py-4 bg-gray-100 rounded-lg product-center-slider">
+          <div className="w-11/12 mx-auto">
+            <Slider {...productSliderSettings}>
+              {products.map((p) => (
+                <div key={p._id} className="px-3">
+                  <div className="product-slide-card bg-white rounded-2xl shadow-md p-4 text-center transition-transform duration-300">
+                    <img
+                      src={resolveProductImage(p.images?.[0])}
+                      alt={p.name}
+                      className="mx-auto h-44 w-full object-contain rounded"
+                    />
+                    <h3 className="mt-3 text-lg font-semibold truncate">{p.name}</h3>
+                    <p className="text-sm text-gray-600 truncate">{p.brand}</p>
+                    <p className="text-blue-700 font-bold mt-1">{formatCurrency(p.price, lang)}</p>
+                    <p className="text-xs text-gray-500 mt-1">Stock: {p.stock ?? 0}</p>
+                    <div className="mt-3 flex justify-center gap-2">
+                      <button
+                        type="button"
+                        title={t("Edit")}
+                        aria-label={t("Edit")}
+                        onClick={() => {
+                          setEditingId(p._id);
+                          setForm({
+                            name: p.name,
+                            price: p.price,
+                            brand: p.brand,
+                            group: p.group,
+                            type: p.type,
+                            images: (p.images || []).join(","),
+                            stock: p.stock ?? 0,
+                            sizes: (p.sizes || []).join(","),
+                            colors: (p.colors || []).join(","),
+                          });
+                        }}
+                        className={iconBtnClass}
+                      >
+                        <svg
+                          aria-hidden="true"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-5 w-5"
+                        >
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        title={t("Delete")}
+                        aria-label={t("Delete")}
+                        onClick={() =>
+                          fetch(`${API_BASE}/api/admin/products/${p._id}`, {
+                            method: "DELETE",
+                            headers: { Authorization: `Bearer ${token}` },
+                          }).then(() => loadProducts(productPage, productSearch))
+                        }
+                        className={`${iconBtnClass} text-red-500 hover:text-red-700`}
+                      >
+                        <svg
+                          aria-hidden="true"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-5 w-5"
+                        >
+                          <path d="M3 6h18" />
+                          <path d="M8 6V4h8v2" />
+                          <path d="M19 6l-1 14H6L5 6" />
+                          <path d="M10 11v6" />
+                          <path d="M14 11v6" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </Slider>
+          </div>
+        </div>
+      )}
+
+      {products.length === 0 && <div className="text-sm text-gray-600 mt-2">No products found.</div>}
+
+      <div className="flex gap-2 mt-3">
+        <button className={actionBtnClass} disabled={productPage <= 1} onClick={() => loadProducts(productPage - 1)}>Prev</button>
+        <div className="text-sm px-2 py-1">Page {productPage} / {productTotalPages}</div>
+        <button className={actionBtnClass} disabled={productPage >= productTotalPages} onClick={() => loadProducts(productPage + 1)}>Next</button>
+      </div>
+
+      <h2 className="text-xl font-bold mt-10 text-center">Special Offers</h2>
+      <div className={`card p-4 mt-3 ${sectionWrapClass}`}>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <input
+            className={fieldClass}
+            placeholder="Offer title"
+            value={offerForm.title}
+            onChange={(e) => setOfferForm((prev) => ({ ...prev, title: e.target.value }))}
+          />
+          <input
+            className={fieldClass}
+            type="number"
+            min="1"
+            placeholder="Duration"
+            value={offerForm.durationValue}
+            onChange={(e) => setOfferForm((prev) => ({ ...prev, durationValue: e.target.value }))}
+          />
+          <select
+            className={`${fieldClass} bg-white`}
+            value={offerForm.durationUnit}
+            onChange={(e) => setOfferForm((prev) => ({ ...prev, durationUnit: e.target.value }))}
+          >
+            <option value="hours">hours</option>
+            <option value="days">days</option>
+            <option value="nights">nights</option>
+            <option value="months">months</option>
+          </select>
+          <select
+            className={`${fieldClass} bg-white`}
+            value={offerForm.discountType}
+            onChange={(e) => setOfferForm((prev) => ({ ...prev, discountType: e.target.value }))}
+          >
+            <option value="percent">percent off (%)</option>
+            <option value="fixed">fixed off (€)</option>
+          </select>
+          <input
+            className={fieldClass}
+            type="number"
+            min="0.01"
+            step="0.01"
+            placeholder={offerForm.discountType === "percent" ? "Discount %" : "Discount value"}
+            value={offerForm.discountValue}
+            onChange={(e) => setOfferForm((prev) => ({ ...prev, discountValue: e.target.value }))}
+          />
+        </div>
+
+        <div className="text-xs text-gray-600 mt-2">
+          Tip: Set <strong>3 days</strong> to run a limited offer and auto-return to the present offers page after expiry.
+        </div>
+
+        <div className="mt-3 border rounded p-3 max-h-56 overflow-auto bg-white">
+          <div className="text-sm font-semibold mb-2">Select products for this offer</div>
+          {products.length === 0 ? (
+            <div className="text-sm text-gray-600">Load/search products first, then select them here.</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {products.map((p) => {
+                const checked = offerProductIds.includes(String(p._id));
+                return (
+                  <label key={p._id} className="border rounded px-2 py-2 text-sm flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleOfferProduct(p._id)}
+                    />
+                    <span className="truncate">{p.name}</span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className={primaryBtnClass}
+            onClick={createSpecialOffer}
+            disabled={isSavingOffer}
+          >
+            {isSavingOffer ? "Saving..." : "Save Special Offer"}
+          </button>
+          <button
+            type="button"
+            className={actionBtnClass}
+            onClick={disableCurrentOffer}
+            disabled={isSavingOffer || !currentOffer?._id}
+          >
+            Disable Current Offer
+          </button>
+        </div>
+
+        {offerMsg && <div className="text-sm mt-2 text-blue-700">{offerMsg}</div>}
+
+        <div className="text-sm mt-3">
+          {currentOffer ? (
+            <>
+              <div>
+                <strong>Current offer:</strong> {currentOffer.title || "Exclusive Special Offer"}
+              </div>
+              <div>
+                <strong>Status:</strong> {isOfferActive ? "Active" : "Scheduled"}
+              </div>
+              <div>
+                <strong>Window:</strong> {new Date(currentOffer.startsAt).toLocaleString()} - {new Date(currentOffer.endsAt).toLocaleString()}
+              </div>
+              <div>
+                <strong>Products:</strong> {(currentOffer.productIds || []).length}
+              </div>
+              <div>
+                <strong>Discount:</strong> {currentOffer.discountType === "percent"
+                  ? `${Number(currentOffer.discountValue || 0)}% off`
+                  : `€${Number(currentOffer.discountValue || 0)} off`}
+              </div>
+            </>
+          ) : (
+            <div className="text-gray-600">No active/scheduled special offer. Default offers page will be shown to users.</div>
+          )}
+        </div>
+      </div>
+
+      <h2 className="text-xl font-bold mt-10 text-center">{t("User Management")}</h2>
       <div className={`card p-4 mt-3 ${sectionWrapClass}`}>
         <div className="flex gap-2 mb-3">
           <input
@@ -628,7 +924,7 @@ export default function Admin() {
             <button
               key={u._id}
               type="button"
-              className={`w-full flex items-center justify-center rounded-full border-2 aspect-square overflow-hidden ${selectedUserId === u._id ? "border-teal-600" : "border-gray-200"}`}
+              className={`w-full flex items-center justify-center rounded-full border-2 aspect-square overflow-hidden bg-blue-600 text-white ${selectedUserId === u._id ? "border-blue-800" : "border-blue-600"}`}
               onClick={() => setSelectedUserId(u._id)}
               title={u.name || u.email}
             >
@@ -664,8 +960,30 @@ export default function Admin() {
               <button className={actionBtnClass} onClick={() => updateUser(selectedUser._id, { isBlocked: !selectedUser.isBlocked })}>
                 {selectedUser.isBlocked ? "Unblock" : "Block"}
               </button>
-              <button className={`${actionBtnClass} text-red-600`} onClick={() => deleteUser(selectedUser._id)}>
-                Delete
+              <button
+                type="button"
+                title={t("Delete")}
+                aria-label={t("Delete")}
+                className={`${iconBtnClass} text-red-500 hover:text-red-700`}
+                onClick={() => deleteUser(selectedUser._id)}
+              >
+                <svg
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-5 w-5"
+                >
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4h8v2" />
+                  <path d="M19 6l-1 14H6L5 6" />
+                  <path d="M10 11v6" />
+                  <path d="M14 11v6" />
+                </svg>
               </button>
             </div>
           </div>
@@ -680,7 +998,7 @@ export default function Admin() {
         </div>
       </div>
 
-      <h2 className="text-xl font-bold mt-10">{t("Analytics")}</h2>
+      <h2 className="text-xl font-bold mt-10 text-center">{t("Analytics")}</h2>
       {!analytics && <div className="text-sm">{t("Loading analytics...")}</div>}
       {analytics && (
         <div className={`card p-4 mt-3 ${sectionWrapClass}`}>
@@ -735,9 +1053,9 @@ export default function Admin() {
               </div>
             </div>
 
-            <Button variant="outlined" onClick={() => runAnalyticsAnimation()}>
+            <button type="button" className={`${primaryBtnClass} w-[250px] mx-auto block`} onClick={() => runAnalyticsAnimation()}>
               Run Animation
-            </Button>
+            </button>
           </Stack>
         </div>
       )}
