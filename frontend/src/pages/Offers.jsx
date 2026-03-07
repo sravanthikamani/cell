@@ -1,8 +1,10 @@
 import Seo from "../components/Seo";
 
 export default function Offers() {
-  const offersBg =
+  const offersBgDesktop =
     "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772785501/ChatGPT_Image_Mar_6_2026_01_54_47_PM_v0uijm.png";
+  const offersBgMobile =
+    "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772866981/ChatGPT_Image_Mar_7_2026_12_32_08_PM_ltqnfo.png";
   const flyers = Array.from({ length: 18 }, (_, i) => {
     const direction = i % 2 === 0 ? 1 : -1;
     return {
@@ -18,9 +20,9 @@ export default function Offers() {
 
   return (
     <div
-      className="px-4 sm:px-6 lg:px-10 py-6 sm:py-8 lg:py-10 min-h-[82vh] sm:min-h-[86vh] lg:min-h-[90vh] bg-cover bg-center bg-no-repeat flex items-end justify-center"
+      className="offers-page-bg px-4 sm:px-6 lg:px-10 py-6 sm:py-8 lg:py-10 min-h-[82vh] sm:min-h-[86vh] lg:min-h-[90vh] bg-cover bg-no-repeat flex items-end justify-center"
       style={{
-        backgroundImage: `url('${offersBg}')`,
+        backgroundImage: `url('${offersBgDesktop}')`,
       }}
     >
       <Seo
@@ -28,7 +30,7 @@ export default function Offers() {
         description="Latest offers and promotions from HI-TECH Electronics Store."
         canonicalPath="/offers"
       />
-      <div className="w-full p-4 sm:p-8 lg:p-10 text-center max-w-4xl mx-auto bg-transparent">
+      <div className="offers-page-content w-full p-4 sm:p-8 lg:p-10 text-center max-w-4xl mx-auto bg-transparent">
         <div className="gift-wrap mx-auto">
           <div className="flyers-layer" aria-hidden="true">
             {flyers.map((flyer, idx) => (
@@ -60,11 +62,41 @@ export default function Offers() {
         </div>
       </div>
       <style>{`
+        .offers-page-bg {
+          background-position: center 14%;
+          background-size: cover;
+        }
+        @media (max-width: 640px) {
+          .offers-page-bg {
+            background-image: url('${offersBgMobile}') !important;
+            background-size: cover;
+            background-position: center top;
+            background-color: #1f2433;
+            min-height: 68vh;
+            padding-bottom: 0;
+            padding-top: 0;
+          }
+          .offers-page-content {
+            padding: 0;
+          }
+        }
+        @media (max-width: 420px) {
+          .offers-page-bg {
+            background-size: 104% auto;
+          }
+        }
+        @media (min-width: 641px) and (max-width: 1024px) {
+          .offers-page-bg {
+            background-position: center 18%;
+            background-size: 130% auto;
+          }
+        }
         .gift-wrap {
           width: min(92vw, 340px);
           max-width: 100%;
           position: relative;
           padding-top: 10px;
+          margin-top: 72px;
         }
         .gift-box {
           width: clamp(150px, 36vw, 180px);
@@ -149,7 +181,7 @@ export default function Offers() {
         .gift-message {
           display: inline-block;
           margin-bottom: clamp(10px, 2.4vw, 18px);
-          margin-left: clamp(50px, 20vw, 112px);
+          margin-left: clamp(86px, 22vw, 132px);
           line-height: 1.2;
           padding-bottom: 0.14em;
           background: linear-gradient(90deg, #facc15, #fb7185);
@@ -157,6 +189,8 @@ export default function Offers() {
           background-clip: text;
           color: transparent;
           text-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+          position: relative;
+          z-index: 6;
           opacity: 0;
           transform: translateY(10px) scale(0.97);
           animation:
@@ -166,21 +200,45 @@ export default function Offers() {
         @media (max-width: 640px) {
           .gift-wrap {
             width: min(88vw, 300px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: -188px;
           }
           .paper-flyer {
             width: 7px;
             height: 11px;
           }
           .gift-message {
-            margin-left: clamp(36px, 17vw, 64px);
+            margin-left: 56px;
+            margin-bottom: 14px;
+            display: block;
+            text-align: center;
+          }
+          .gift-box {
+            margin-top: 6px;
           }
         }
         @media (min-width: 641px) and (max-width: 1024px) {
           .gift-wrap {
             width: min(70vw, 330px);
+            margin-top: 0;
           }
           .gift-message {
-            margin-left: clamp(66px, 16vw, 96px);
+            margin-left: clamp(96px, 18vw, 126px);
+          }
+        }
+        @media (min-width: 1025px) {
+          .gift-wrap {
+            margin-top: 92px;
+          }
+          .gift-message {
+            margin-left: clamp(64px, 14vw, 96px);
+          }
+        }
+        @media (max-width: 420px) {
+          .gift-wrap {
+            margin-top: -176px;
           }
         }
         @keyframes giftOpen {
