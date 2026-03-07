@@ -27,7 +27,7 @@ export default function Profile() {
   });
   const fileInputRef = useRef(null);
   const profileBg =
-    "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772627049/jason-leung-Xaanw0s0pMk-unsplash_cazp5h.jpg";
+    "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772861785/annie-spratt-zA7I5BtFbvw-unsplash_1_e7zoni.jpg";
 
   useEffect(() => {
     fetch(`${API_BASE}/api/users/me`, {
