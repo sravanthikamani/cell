@@ -1,10 +1,20 @@
+import { useEffect } from "react";
 import { useI18n } from "../context/I18nContext";
 import Seo from "../components/Seo";
 
 export default function About() {
   const { t } = useI18n();
+
+  useEffect(() => {
+    document.body.classList.add("about-bg-active");
+    return () => {
+      document.body.classList.remove("about-bg-active");
+    };
+  }, []);
+
   return (
-    <div className="max-w-5xl mx-auto p-10">
+    <div className="about-page-bg">
+      <div className="max-w-5xl mx-auto p-10">
       <Seo
         title={t("About Us")}
         description={t(
@@ -13,10 +23,10 @@ export default function About() {
         canonicalPath="/about"
       />
 
-      <h1 className="text-4xl font-bold mb-4 text-teal-600">
+      <h1 className="text-4xl font-extrabold mb-4 text-blue-900">
         {t("About Us")}
       </h1>
-      <p className="text-gray-600 leading-relaxed">
+      <p className="text-blue-900 font-bold leading-relaxed">
         {t(
           "CELL is a modern electronics brand delivering smartphones, accessories, and innovative tech products with quality and trust."
         )}
@@ -41,6 +51,7 @@ export default function About() {
           className="w-full h-64 md:h-80 object-cover rounded-2xl"
           loading="lazy"
         />
+      </div>
       </div>
     </div>
   );
