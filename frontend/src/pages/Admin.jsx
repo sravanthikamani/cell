@@ -343,18 +343,19 @@ export default function Admin() {
 
   const productSliderSettings = {
     dots: false,
-    infinite: products.length > 3,
+    infinite: products.length > 1,
     speed: 500,
-    slidesToShow: Math.min(3, Math.max(1, products.length || 1)),
+    slidesToShow: 1,
+    slidesToScroll: 1,
     centerMode: products.length > 1,
-    centerPadding: "60px",
-    autoplay: products.length > 3,
+    centerPadding: "80px",
+    autoplay: products.length > 1,
     autoplaySpeed: 2500,
     responsive: [
       {
         breakpoint: 1024,
         settings: {
-          slidesToShow: Math.min(2, Math.max(1, products.length || 1)),
+          slidesToShow: 1,
           centerPadding: "40px",
         },
       },
@@ -362,7 +363,7 @@ export default function Admin() {
         breakpoint: 640,
         settings: {
           slidesToShow: 1,
-          centerPadding: "20px",
+          centerPadding: "10px",
         },
       },
     ],
@@ -676,8 +677,8 @@ export default function Admin() {
           <div className="w-11/12 mx-auto">
             <Slider {...productSliderSettings}>
               {products.map((p) => (
-                <div key={p._id} className="px-3">
-                  <div className="product-slide-card bg-white rounded-2xl shadow-md p-4 text-center transition-transform duration-300">
+                <div key={p._id} className="px-2 sm:px-3">
+                  <div className="product-slide-card bg-white rounded-2xl shadow-md p-4 text-center transition-transform duration-300 w-full max-w-[280px] sm:max-w-[340px] mx-auto">
                     <img
                       src={resolveProductImage(p.images?.[0])}
                       alt={p.name}
