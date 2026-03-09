@@ -41,7 +41,7 @@ export default function Home() {
   }));
   const [featured, setFeatured] = useState([]);
   const [activeOfferInfo, setActiveOfferInfo] = useState(null);
-  const [offerNowTs, setOfferNowTs] = useState(Date.now());
+  const [offerNowTs, setOfferNowTs] = useState(() => Date.now());
   const { t, lang } = useI18n();
 
   useEffect(() => {
