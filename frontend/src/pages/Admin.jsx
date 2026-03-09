@@ -119,6 +119,9 @@ export default function Admin() {
     discountValue: 10,
   });
   const [offerProductIds, setOfferProductIds] = useState([]);
+  const [offerSearch, setOfferSearch] = useState("");
+  const [offerCategoryFilter, setOfferCategoryFilter] = useState("");
+  const [offerDeviceFilter, setOfferDeviceFilter] = useState("");
   const [currentOffer, setCurrentOffer] = useState(null);
   const [isOfferActive, setIsOfferActive] = useState(false);
   const [offerMsg, setOfferMsg] = useState("");
@@ -473,6 +476,26 @@ export default function Admin() {
   const topProductQtyData = topProducts.map((p) => Number(p.qty || 0));
   const ordersByDayLabels = ordersByDay.map((d) => d._id || "-");
   const ordersByDayCountData = ordersByDay.map((d) => Number(d.count || 0));
+  const normalizedOfferSearch = offerSearch.trim().toLowerCase();
+  const hasOfferTypeFilter = Boolean(offerCategoryFilter || offerDeviceFilter);
+  const offerProducts = products.filter((p) => {
+    const textMatched = !normalizedOfferSearch
+      || [p.name, p.brand, p.type, p.group].some((field) =>
+        String(field || "").toLowerCase().includes(normalizedOfferSearch)
+      );
+
+    if (!textMatched) return false;
+    if (!hasOfferTypeFilter) return true;
+
+    const isCategoryMatch = Boolean(
+      offerCategoryFilter && p.group === "category" && p.type === offerCategoryFilter
+    );
+    const isDeviceMatch = Boolean(
+      offerDeviceFilter && p.group === "device" && p.type === offerDeviceFilter
+    );
+
+    return isCategoryMatch || isDeviceMatch;
+  });
 
   return (
     <div className="admin-page-bg">
@@ -798,12 +821,44 @@ export default function Admin() {
         </div>
 
         <div className="mt-3 border rounded p-3 max-h-56 overflow-auto bg-white">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
+            <input
+              className={fieldClass}
+              placeholder="Search offer products"
+              value={offerSearch}
+              onChange={(e) => setOfferSearch(e.target.value)}
+            />
+            <select
+              className={`${fieldClass} bg-white`}
+              value={offerCategoryFilter}
+              onChange={(e) => setOfferCategoryFilter(e.target.value)}
+            >
+              <option value="">All categories</option>
+              {typeOptions.category.map((category) => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+            <select
+              className={`${fieldClass} bg-white`}
+              value={offerDeviceFilter}
+              onChange={(e) => setOfferDeviceFilter(e.target.value)}
+            >
+              <option value="">All devices</option>
+              {typeOptions.device.map((device) => (
+                <option key={device} value={device}>{device}</option>
+              ))}
+            </select>
+          </div>
           <div className="text-sm font-semibold mb-2">Select products for this offer</div>
-          {products.length === 0 ? (
-            <div className="text-sm text-gray-600">Load/search products first, then select them here.</div>
+          {offerProducts.length === 0 ? (
+            <div className="text-sm text-gray-600">
+              {products.length === 0
+                ? "Load/search products first, then select them here."
+                : "No products match the selected search/filters."}
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              {products.map((p) => {
+              {offerProducts.map((p) => {
                 const checked = offerProductIds.includes(String(p._id));
                 return (
                   <label key={p._id} className="border rounded px-2 py-2 text-sm flex items-center gap-2 cursor-pointer">
