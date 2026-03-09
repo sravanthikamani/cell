@@ -320,20 +320,6 @@ export default function Navbar() {
         icon: "",
         searchIndex: "products product catalog shop",
       },
-      {
-        key: "about",
-        label: t("ABOUT US"),
-        path: "/about",
-        icon: "",
-        searchIndex: "about us company",
-      },
-      {
-        key: "warranty",
-        label: t("WARRANTY"),
-        path: "/warranty",
-        icon: "",
-        searchIndex: "warranty support",
-      },
     ];
 
     if (user) {
@@ -396,13 +382,6 @@ export default function Navbar() {
         icon: item.icon,
         searchIndex: `${item.label} ${t(item.label)} category`,
       })),
-      ...menuData.faq.map((item) => ({
-        key: `faq-${item.label}`,
-        label: t(item.label),
-        path: `/faq/${toSlug(item.label)}`,
-        icon: item.icon,
-        searchIndex: `${item.label} ${t(item.label)} faq support`,
-      })),
     ];
 
     return [...links, ...menuLinks];
@@ -451,7 +430,7 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full">
-      <div className="flex items-center justify-between bg-gradient-to-r from-blue-600 to-slate-900 px-6 py-2 text-white text-xs md:text-sm font-semibold">
+      <div className="flex items-center justify-between bg-gradient-to-r from-blue-600 to-slate-900 px-6 py-2 text-white text-xs lg:text-sm font-semibold">
         <button className="px-2" onClick={() => setTopIndex((i) => (i - 1 + 4) % 4)}>
           <ChevronLeft />
         </button>
@@ -468,16 +447,16 @@ export default function Navbar() {
         </button>
       </div>
 
-      <div className="flex items-center justify-between bg-white/90 backdrop-blur px-6 py-4 shadow-md sticky top-0 z-40">
+      <div className="flex items-center justify-between bg-white/90 backdrop-blur px-4 lg:px-6 py-2 lg:py-4 shadow-md sticky top-0 z-40">
         <Link to="/">
           <img 
             src="https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772512421/ChatGPT_Image_Mar_3_2026_10_03_22_AM_xofi3i.png"
             alt="CELL Logo"
-            className="h-20 object-contain"
+            className="h-12 lg:h-20 object-contain"
           />
         </Link>
 
-        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-gray-700">
+        <nav className="hidden lg:flex items-center gap-4 lg:gap-8 text-sm font-semibold text-gray-700">
           <NavLink to="/" className={({ isActive }) => (isActive ? "text-blue-600" : "")}>
             {t("HOME")}
           </NavLink>
@@ -542,29 +521,9 @@ export default function Navbar() {
             </NavLink>
           )}
 
-          <NavLink to="/warranty">{t("WARRANTY")}</NavLink>
-
-          <Dropdown
-            dropdownKey="desktop-faq"
-            title={t("FAQ")}
-            items={menuData.faq}
-            basePath="faq"
-            searchable
-            openDropdown={openDropdown}
-            setOpenDropdown={setOpenDropdown}
-            faqSearch={faqSearch}
-            setFaqSearch={setFaqSearch}
-            toSlug={toSlug}
-            navigate={navigate}
-            setMobileOpen={setMobileOpen}
-            dropdownRef={dropdownRef}
-            t={t}
-          />
-
-          <NavLink to="/about">{t("ABOUT US")}</NavLink>
         </nav>
 
-        <div className="hidden md:flex items-center gap-6">
+        <div className="hidden lg:flex items-center gap-6">
           <div
             className="relative"
             data-global-search="true"
@@ -683,25 +642,28 @@ export default function Navbar() {
           </select>
         </div>
 
-        <button className="md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
+        <button className="lg:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <X /> : <Menu />}
         </button>
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden bg-white shadow-lg px-6 py-4 space-y-2 border-t">
+        <div
+          className="lg:hidden bg-white shadow-lg px-6 py-3 space-y-1 border-t"
+          onPointerDown={(e) => e.stopPropagation()}
+        >
           <NavLink to="/" onClick={() => setMobileOpen(false)} className="block py-2 text-base font-medium text-gray-800">
             {t("HOME")}
           </NavLink>
 
           <div className="py-1">
-            <button
-              type="button"
-              className="w-full flex items-center justify-between py-2 text-base font-medium text-gray-800"
-              onClick={() =>
-                setOpenDropdown(openDropdown === "mobile-device" ? null : "mobile-device")
-              }
-            >
+              <button
+                type="button"
+                className="w-full flex items-center justify-between py-1.5 text-base font-medium text-gray-800"
+                onClick={() =>
+                  setOpenDropdown(openDropdown === "mobile-device" ? null : "mobile-device")
+                }
+              >
               {t("DEVICE")}
               <ChevronDown size={18} />
             </button>
@@ -726,13 +688,13 @@ export default function Navbar() {
           </div>
 
           <div className="py-1">
-            <button
-              type="button"
-              className="w-full flex items-center justify-between py-2 text-base font-medium text-gray-800"
-              onClick={() =>
-                setOpenDropdown(openDropdown === "mobile-category" ? null : "mobile-category")
-              }
-            >
+              <button
+                type="button"
+                className="w-full flex items-center justify-between py-1.5 text-base font-medium text-gray-800"
+                onClick={() =>
+                  setOpenDropdown(openDropdown === "mobile-category" ? null : "mobile-category")
+                }
+              >
               {t("CATEGORY")}
               <ChevronDown size={18} />
             </button>
@@ -780,7 +742,7 @@ export default function Navbar() {
             <div className="py-1">
               <button
                 type="button"
-                className="w-full flex items-center justify-between py-2 text-base font-medium text-gray-800"
+                className="w-full flex items-center justify-between py-1.5 text-base font-medium text-gray-800"
                 onClick={() =>
                   setOpenDropdown(openDropdown === "mobile-admin" ? null : "mobile-admin")
                 }
