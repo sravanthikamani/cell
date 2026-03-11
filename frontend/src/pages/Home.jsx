@@ -39,6 +39,15 @@ export default function Home() {
     dur: `${(1.4 + (i % 6) * 0.28).toFixed(2)}s`,
     size: `${4 + (i % 4)}px`,
   }));
+  const offerIconTypes = ["phone", "headphones", "watch", "charger", "tablet", "earbuds"];
+  const offerIcons = Array.from({ length: 26 }, (_, i) => ({
+    type: offerIconTypes[i % offerIconTypes.length],
+    left: `${6 + ((i * 9) % 88)}%`,
+    top: `${10 + ((i * 17) % 78)}%`,
+    delay: `${(i * 0.27).toFixed(2)}s`,
+    dur: `${(3.4 + (i % 5) * 0.45).toFixed(2)}s`,
+    size: `${14 + (i % 5) * 2}px`,
+  }));
   const [featured, setFeatured] = useState([]);
   const [activeOfferInfo, setActiveOfferInfo] = useState(null);
   const [offerNowTs, setOfferNowTs] = useState(() => Date.now());
@@ -110,6 +119,60 @@ export default function Home() {
     return `${m}m ${s}s left`;
   })();
 
+  const renderOfferIcon = (type) => {
+    switch (type) {
+      case "phone":
+        return (
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="7" y="2.5" width="10" height="19" rx="2.3" ry="2.3" />
+            <line x1="10" y1="5" x2="14" y2="5" />
+            <circle cx="12" cy="18.4" r="0.9" />
+          </svg>
+        );
+      case "headphones":
+        return (
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 13a7 7 0 0 1 14 0" />
+            <rect x="4" y="12" width="4" height="7" rx="1.2" />
+            <rect x="16" y="12" width="4" height="7" rx="1.2" />
+          </svg>
+        );
+      case "watch":
+        return (
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="9" y="1.7" width="6" height="3.4" rx="1" />
+            <rect x="7" y="5.2" width="10" height="13.6" rx="2" />
+            <rect x="9" y="18.8" width="6" height="3.5" rx="1" />
+            <circle cx="12" cy="12" r="2.7" />
+          </svg>
+        );
+      case "charger":
+        return (
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 6h6v6H9z" />
+            <line x1="10.5" y1="3.5" x2="10.5" y2="6" />
+            <line x1="13.5" y1="3.5" x2="13.5" y2="6" />
+            <path d="M12 12v3.5c0 2.2-1.8 4-4 4H6.5" />
+          </svg>
+        );
+      case "tablet":
+        return (
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="5" y="3.2" width="14" height="17.6" rx="2" />
+            <circle cx="12" cy="17.6" r="0.85" />
+          </svg>
+        );
+      default:
+        return (
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 7c0-1.8 1.5-3.3 3.3-3.3H12v7.2H9.8A1.8 1.8 0 0 1 8 9.1V7z" />
+            <path d="M16 7c0-1.8-1.5-3.3-3.3-3.3H12v7.2h2.2A1.8 1.8 0 0 0 16 9.1V7z" />
+            <path d="M12 10.8v7.4" />
+          </svg>
+        );
+    }
+  };
+
   return (
     <div>
       <Seo
@@ -161,11 +224,6 @@ export default function Home() {
         to="/offers"
         className="mt-8 sm:mt-10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-white exclusive-offers-section relative overflow-hidden min-h-[260px] sm:min-h-[310px] md:min-h-[350px] flex items-center"
       >
-        <img
-          src="/images/sale images/grandsalelimit.jpg"
-          alt="Exclusive offers"
-          className="absolute inset-0 h-full w-full object-cover object-center"
-        />
         <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/20 to-black/35" />
         <div className="firework firework-left" aria-hidden="true">
           <span className="blast-core" />
@@ -255,7 +313,28 @@ export default function Home() {
             />
           ))}
         </div>
-        <div className="relative z-10 w-full sm:max-w-2xl sm:ml-auto text-center sm:text-right rounded-xl sm:rounded-2xl bg-black/28 sm:bg-black/18 backdrop-blur-[1px] p-3 sm:p-4 md:p-5">
+        <div className="offer-icons-layer" aria-hidden="true">
+          {offerIcons.map((icon, idx) => (
+            <span
+              key={`${icon.type}-${idx}`}
+              className="offer-float-icon"
+              style={{
+                left: icon.left,
+                top: icon.top,
+                "--icon-delay": icon.delay,
+                "--icon-dur": icon.dur,
+                "--icon-size": icon.size,
+              }}
+            >
+              {renderOfferIcon(icon.type)}
+            </span>
+          ))}
+        </div>
+        <div className="grand-sale-left" aria-hidden="true">
+          <span className="grand-sale-word">GRAND</span>
+          <span className="grand-sale-word">SALE</span>
+        </div>
+        <div className="relative z-10 w-full sm:max-w-2xl sm:ml-auto text-right rounded-xl sm:rounded-2xl bg-black/28 sm:bg-black/18 backdrop-blur-[1px] p-3 sm:p-4 md:p-5">
           <p className="offer-copy mt-1 text-white/95">
             {activeOfferInfo ? (
               <>
