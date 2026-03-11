@@ -1,9 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { API_BASE } from "../lib/api";
 
 export default function ImageGallery({ images }) {
   const [active, setActive] = useState(0);
   const [zoom, setZoom] = useState(false);
+
+  useEffect(() => {
+    setActive(0);
+  }, [JSON.stringify(images || [])]);
 
   if (!images || images.length === 0) return null;
   const resolveSrc = (src) =>

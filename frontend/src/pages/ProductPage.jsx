@@ -8,6 +8,7 @@ import { useI18n } from "../context/I18nContext";
 import { formatCurrency } from "../lib/format";
 import Seo from "../components/Seo";
 import { Heart, ShoppingCart, Star, StarHalf } from "lucide-react";
+import { normalizeColorName, resolveColorSwatch } from "../lib/colors";
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -247,6 +248,58 @@ export default function ProductPage() {
           reviews.length
         ).toFixed(1);
 
+  const specificationRows = [
+    ...(product?.specs && typeof product.specs === "object"
+      ? Object.entries(product.specs)
+          .map(([feature, value]) => ({
+            feature: String(feature || "").trim(),
+            value: String(value || "").trim(),
+          }))
+          .filter((row) => row.feature && row.value)
+      : []),
+  ];
+
+  const fallbackSpecs = [
+    { feature: "Display", value: product.display },
+    { feature: "Processor", value: product.processor },
+    { feature: "RAM", value: product.ram },
+    { feature: "Storage", value: product.storage },
+    { feature: "Camera", value: product.camera },
+    { feature: "Battery", value: product.battery },
+    { feature: "OS", value: product.os },
+  ];
+
+  const finalSpecificationRows = specificationRows.length ? specificationRows : fallbackSpecs;
+
+  const colorImageMap = (product?.colorImageMap && typeof product.colorImageMap === "object")
+    ? product.colorImageMap
+    : {};
+
+  const getColorImage = (colorName = "") => {
+    if (!colorName) return "";
+    const exact = colorImageMap[colorName];
+    if (exact) return exact;
+    const normalizedTarget = normalizeColorName(colorName);
+    const matchKey = Object.keys(colorImageMap).find(
+      (k) => normalizeColorName(k) === normalizedTarget
+    );
+    if (matchKey) return colorImageMap[matchKey];
+
+    const colorIndex = Array.isArray(product.colors)
+      ? product.colors.findIndex((c) => normalizeColorName(c) === normalizedTarget)
+      : -1;
+    if (colorIndex >= 0 && Array.isArray(product.images) && product.images[colorIndex]) {
+      return product.images[colorIndex];
+    }
+
+    return "";
+  };
+
+  const selectedColorImage = getColorImage(selectedColor);
+  const galleryImages = selectedColorImage
+    ? [selectedColorImage, ...(product.images || []).filter((img) => img !== selectedColorImage)]
+    : (product.images || []);
+
   return (
     <div
       className="min-h-screen bg-cover bg-center bg-no-repeat"
@@ -255,7 +308,10 @@ export default function ProductPage() {
       <div className="max-w-5xl mx-auto p-6 md:p-10">
       <Seo
         title={product.name || "Product Details"}
-        description={`${product.brand || "Electronics"} product details, stock, reviews, and pricing.`}
+        description={
+          product.seoDescription ||
+          `${product.brand || "Electronics"} product details, stock, reviews, and pricing.`
+        }
         canonicalPath={`/product/${id}`}
         type="product"
         keywords={`${product.brand || ""}, ${product.name || ""}, electronics product`}
@@ -264,7 +320,7 @@ export default function ProductPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         {/* 🖼 IMAGE GALLERY + ZOOM */}
         <div className="card p-4">
-          <ImageGallery images={product.images} />
+          <ImageGallery images={galleryImages} />
         </div>
 
         <div className="card p-6">
@@ -280,21 +336,38 @@ export default function ProductPage() {
               ? t("Stock: {count}", { count: product.stock })
               : t("Out of stock")}
           </p>
+          {(product.longDescription || product.description) && (
+            <p className="mt-3 text-sm leading-6 text-gray-700">
+              {product.longDescription || product.description}
+            </p>
+          )}
 
           {(product.colors?.length > 0 || product.sizes?.length > 0) && (
             <div className="mt-4 flex gap-4">
               {product.colors?.length > 0 && (
-                <select
-                  className="border px-3 py-2 bg-white rounded"
-                  value={selectedColor}
-                  onChange={(e) => setSelectedColor(e.target.value)}
-                >
-                  {product.colors.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex flex-wrap gap-2 items-center">
+                  {product.colors.map((c) => {
+                    const active = selectedColor === c;
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setSelectedColor(c)}
+                        className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition ${
+                          active ? "border-slate-800 bg-slate-100" : "border-slate-300 bg-white hover:bg-slate-50"
+                        }`}
+                        title={c}
+                        aria-label={`Select color ${c}`}
+                      >
+                        <span
+                          className="inline-block h-3.5 w-3.5 rounded-full border border-slate-300"
+                          style={{ backgroundColor: resolveColorSwatch(c) }}
+                        />
+                        {c}
+                      </button>
+                    );
+                  })}
+                </div>
               )}
               {product.sizes?.length > 0 && (
                 <select
@@ -334,6 +407,28 @@ export default function ProductPage() {
               />
             </button>
           </div>
+        </div>
+      </div>
+
+      <div className="mt-10 rounded-2xl border border-slate-700 bg-slate-900/95 text-slate-100 p-4 md:p-6 shadow-lg">
+        <h2 className="text-xl md:text-2xl font-bold mb-4">Specifications</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm md:text-base border-collapse">
+            <thead>
+              <tr className="border-b border-slate-700/80 text-slate-100">
+                <th className="text-left font-semibold py-3 pr-4">Feature</th>
+                <th className="text-left font-semibold py-3">Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {finalSpecificationRows.map((row) => (
+                <tr key={row.feature} className="border-b border-slate-800/90 last:border-b-0">
+                  <td className="py-3 pr-4 text-slate-100">{row.feature}</td>
+                  <td className="py-3 text-slate-200">{row.value || "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
