@@ -315,6 +315,74 @@ body.about-bg-active {
   transform-origin: top center;
 }
 
+.exclusive-offers-section {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(135deg, #5b2a86, #4c1d95, #2563eb, #7c3aed);
+  background-size: 220% 220%;
+  animation: exclusiveOfferBackground 9s ease-in-out infinite;
+}
+
+.exclusive-offers-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 12% 22%, rgba(255, 185, 240, 0.26) 0 1.5px, transparent 2px),
+    radial-gradient(circle at 28% 68%, rgba(191, 219, 254, 0.24) 0 1.2px, transparent 2px),
+    radial-gradient(circle at 64% 32%, rgba(216, 180, 254, 0.25) 0 1.4px, transparent 2px),
+    radial-gradient(circle at 84% 76%, rgba(125, 211, 252, 0.2) 0 1.3px, transparent 2px),
+    linear-gradient(115deg, rgba(255, 255, 255, 0.14) 12%, rgba(255, 255, 255, 0) 27%),
+    linear-gradient(125deg, rgba(196, 181, 253, 0.24) 18%, rgba(255, 255, 255, 0) 36%),
+    linear-gradient(140deg, rgba(191, 219, 254, 0.16) 24%, rgba(255, 255, 255, 0) 40%);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 145% 100%, 160% 100%, 180% 100%;
+  background-position: center, center, center, center, -14% 0%, -10% 0%, -22% 0%;
+  animation: offerStreaks 7.8s linear infinite;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.exclusive-offers-section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 45%, rgba(30, 41, 99, 0.2) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.exclusive-offers-section .grand-sale-left {
+  position: absolute;
+  left: clamp(0.85rem, 2.8vw, 2.6rem);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: min(42vw, 360px);
+  display: flex;
+  flex-direction: column;
+  line-height: 0.88;
+  pointer-events: none;
+  user-select: none;
+}
+
+.exclusive-offers-section .grand-sale-word {
+  display: block;
+  font-family: "Arial Black", "Montserrat", "Roboto", sans-serif;
+  font-size: clamp(2.45rem, 6.5vw, 5.35rem);
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #f5d0fe 0%, #e879f9 35%, #c026d3 64%, #a21caf 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow:
+    0 3px 0 rgba(76, 29, 149, 0.45),
+    0 0 12px rgba(217, 70, 239, 0.85),
+    0 0 24px rgba(192, 38, 211, 0.7);
+  animation: slideIn 1.8s ease-out, glow 1.6s infinite alternate;
+}
+
 .exclusive-offers-section .offer-copy {
   display: inline-block;
   margin-top: 0.25rem;
@@ -495,6 +563,41 @@ body.about-bg-active {
   z-index: 3;
 }
 
+.exclusive-offers-section .offer-icons-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.exclusive-offers-section .offer-float-icon {
+  position: absolute;
+  width: var(--icon-size, 16px);
+  height: var(--icon-size, 16px);
+  margin-left: calc(var(--icon-size, 16px) * -0.5);
+  margin-top: calc(var(--icon-size, 16px) * -0.5);
+  color: #ffd76b;
+  opacity: 0.78;
+  filter:
+    drop-shadow(0 0 5px rgba(255, 215, 107, 0.75))
+    drop-shadow(0 0 10px rgba(245, 158, 11, 0.55));
+  animation:
+    zeroDriftFloat var(--icon-dur, 4.2s) ease-in-out infinite,
+    iconGoldPulse calc(var(--icon-dur, 4.2s) * 0.72) ease-in-out infinite;
+  animation-delay: var(--icon-delay, 0s), var(--icon-delay, 0s);
+}
+
+.exclusive-offers-section .offer-float-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .exclusive-offers-section .sparkle-star {
   position: absolute;
   width: var(--sparkle-size, 5px);
@@ -582,6 +685,14 @@ body.about-bg-active {
 .exclusive-offers-section .spark-8 { transform: translateX(-50%) rotate(66deg); animation-delay: 0.42s; }
 
 @media (max-width: 1024px) {
+  .exclusive-offers-section .grand-sale-left {
+    width: min(46vw, 280px);
+  }
+
+  .exclusive-offers-section .grand-sale-word {
+    font-size: clamp(2.15rem, 6.8vw, 3.75rem);
+  }
+
   .exclusive-offers-section .firework {
     width: 74px;
     height: 62px;
@@ -605,7 +716,23 @@ body.about-bg-active {
 }
 
 @media (max-width: 640px) {
+  .exclusive-offers-section .grand-sale-left {
+    left: 0.7rem;
+    top: 1rem;
+    transform: none;
+    width: min(56vw, 230px);
+  }
+
+  .exclusive-offers-section .grand-sale-word {
+    font-size: clamp(2rem, 10.8vw, 3.2rem);
+    letter-spacing: 0.02em;
+    line-height: 0.9;
+  }
+
   .exclusive-offers-section .offer-copy {
+    display: block;
+    width: 100%;
+    text-align: right;
     font-size: clamp(1rem, 4.8vw, 1.2rem);
     line-height: 1.35;
   }
@@ -618,6 +745,10 @@ body.about-bg-active {
 
   .exclusive-offers-section .firework {
     display: none;
+  }
+
+  .exclusive-offers-section .offer-float-icon {
+    opacity: 0.72;
   }
 
   .exclusive-offers-section .confetti-layer {
@@ -634,6 +765,44 @@ body.about-bg-active {
 
   .exclusive-offers-section .sparkles-layer {
     opacity: 0.85;
+  }
+}
+
+@keyframes offerStreaks {
+  0% {
+    background-position: center, center, center, center, -14% 0%, -10% 0%, -22% 0%;
+  }
+  100% {
+    background-position: center, center, center, center, 118% 0%, 126% 0%, 134% 0%;
+  }
+}
+
+@keyframes zeroDriftFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  35% {
+    transform: translate3d(0, -4px, 0) rotate(1.8deg) scale(1.03);
+  }
+  70% {
+    transform: translate3d(0, 3px, 0) rotate(-1.4deg) scale(0.98);
+  }
+}
+
+@keyframes iconGoldPulse {
+  0%,
+  100% {
+    opacity: 0.68;
+    filter:
+      drop-shadow(0 0 4px rgba(255, 215, 107, 0.65))
+      drop-shadow(0 0 9px rgba(245, 158, 11, 0.45));
+  }
+  50% {
+    opacity: 0.95;
+    filter:
+      drop-shadow(0 0 7px rgba(255, 235, 153, 0.95))
+      drop-shadow(0 0 14px rgba(251, 191, 36, 0.72));
   }
 }
 
@@ -766,6 +935,40 @@ body.about-bg-active {
     opacity: 0.2;
     transform: scale(0.6);
     filter: brightness(0.9);
+  }
+}
+
+@keyframes exclusiveOfferBackground {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes slideIn {
+  0% {
+    transform: translateY(-200px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 0 0 8px #faf5ff, 0 0 18px #e879f9, 0 0 30px #c026d3;
+  }
+
+  to {
+    text-shadow: 0 0 14px #faf5ff, 0 0 30px #d946ef, 0 0 46px #a21caf;
   }
 }
 
