@@ -159,7 +159,7 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button type="submit" className="w-full bg-black text-white py-2">
+        <button type="submit" className="w-[100px] bg-blue-600 text-white py-2 block mx-auto">
           {t("Login")}
         </button>
       </form>

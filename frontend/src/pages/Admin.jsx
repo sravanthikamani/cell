@@ -5,13 +5,11 @@ import { API_BASE } from "../lib/api";
 import { isAdminRole } from "../lib/auth";
 import { useI18n } from "../context/I18nContext";
 import { formatCurrency } from "../lib/format";
+import { parseColorImageMapInput, resolveColorSwatch, serializeColorImageMap } from "../lib/colors";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { useAnimateBarLabel } from "@mui/x-charts/hooks";
 import Stack from "@mui/material/Stack";
 import { styled } from "@mui/material/styles";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
 
 const Text = styled("text")(({ theme }) => ({
   ...theme?.typography?.body2,
@@ -75,14 +73,23 @@ export default function Admin() {
   const [typeWarning, setTypeWarning] = useState("");
   const [form, setForm] = useState({
     name: "",
+    description: "",
     price: "",
     brand: "",
     group: "",
     type: "",
+    display: "",
+    processor: "",
+    ram: "",
+    storage: "",
+    camera: "",
+    battery: "",
+    os: "",
     images: "",
     stock: "",
     sizes: "",
     colors: "",
+    colorImageMapInput: "",
   });
   
   const [products, setProducts] = useState([]);
@@ -131,13 +138,14 @@ export default function Admin() {
   const groupOptions = ["device", "category"];
   const productFormRef = useRef(null);
   const productNameInputRef = useRef(null);
+  const uploadInputRef = useRef(null);
   const typeOptions = {
     device: ["smartphones", "tablets", "wearables", "accessories"],
     category: ["audio", "chargers", "cables", "power banks"],
   };
 
   const loadProducts = useCallback(async (page = 1, search = "") => {
-    const params = new URLSearchParams({ page: String(page), limit: "20" });
+    const params = new URLSearchParams({ page: String(page), limit: "10" });
     if (search.trim()) params.set("q", search.trim());
     const res = await fetch(`${API_BASE}/api/admin/products?${params.toString()}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -267,6 +275,7 @@ export default function Admin() {
         images: form.images.split(",").map((i) => i.trim()).filter(Boolean),
         sizes: form.sizes.split(",").map((i) => i.trim()).filter(Boolean),
         colors: form.colors.split(",").map((i) => i.trim()).filter(Boolean),
+        colorImageMap: parseColorImageMapInput(form.colorImageMapInput),
       }),
     });
     const data = await res.json();
@@ -289,6 +298,7 @@ export default function Admin() {
         images: form.images.split(",").map((i) => i.trim()).filter(Boolean),
         sizes: form.sizes.split(",").map((i) => i.trim()).filter(Boolean),
         colors: form.colors.split(",").map((i) => i.trim()).filter(Boolean),
+        colorImageMap: parseColorImageMapInput(form.colorImageMapInput),
       }),
     });
     const data = await res.json();
@@ -339,34 +349,6 @@ export default function Admin() {
     if (!url) return "/images/home-hero.jpeg";
     if (/^https?:\/\//i.test(url)) return url;
     return `${API_BASE}${url}`;
-  };
-
-  const productSliderSettings = {
-    dots: false,
-    infinite: products.length > 1,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    centerMode: products.length > 1,
-    centerPadding: "80px",
-    autoplay: products.length > 1,
-    autoplaySpeed: 2500,
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 1,
-          centerPadding: "40px",
-        },
-      },
-      {
-        breakpoint: 640,
-        settings: {
-          slidesToShow: 1,
-          centerPadding: "10px",
-        },
-      },
-    ],
   };
 
   const createCoupon = async () => {
@@ -497,19 +479,36 @@ export default function Admin() {
 
     return isCategoryMatch || isDeviceMatch;
   });
+  const parsedColorNames = String(form.colors || "")
+    .split(",")
+    .map((c) => c.trim())
+    .filter(Boolean);
 
   return (
     <div className="admin-page-bg">
       <div className="w-full mx-auto px-4 md:px-8 lg:px-10 py-6 md:py-10">
-      <h1 className="text-2xl font-bold mb-4 text-center">{t("Admin - Add Product")}</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center text-[#000080]">{t("Admin - Add Product")}</h1>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+      <div className="grid grid-cols-1 gap-6 items-start">
       <div>
 
-      <div ref={productFormRef} className="mb-3 card p-4 w-full max-w-[300px] mx-auto">
+      <div
+        ref={productFormRef}
+        className="card p-4 w-full max-w-[700px] mx-auto"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            submitProductForm();
+          }
+        }}
+      >
+        <h2 className="text-lg font-bold text-center mb-3 text-[#000080]">Add new products</h2>
+
         <input
+          ref={uploadInputRef}
           type="file"
           accept="image/*"
+          className="hidden"
           onChange={async (e) => {
             const file = e.target.files?.[0];
             if (!file) return;
@@ -529,64 +528,84 @@ export default function Admin() {
             } else {
               alert(data.error || "Upload failed");
             }
+            e.target.value = "";
           }}
         />
-      </div>
+        <div className="mb-3 flex justify-center">
+          <button
+            type="button"
+            onClick={() => uploadInputRef.current?.click()}
+            className="bg-white border border-slate-300 rounded-lg px-4 py-2 text-sm text-slate-800 hover:bg-slate-50"
+          >
+            Upload image
+          </button>
+        </div>
 
-      <div
-        className="card p-4 grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-[700px] mx-auto"
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            submitProductForm();
-          }
-        }}
-      >
-        <input ref={productNameInputRef} className={fieldClass} placeholder={t("Name")} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-        <input className={fieldClass} placeholder={t("Price")} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
-        <input className={fieldClass} placeholder={t("Brand")} value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} />
-        <select className={`${fieldClass} bg-white`} value={form.group} onChange={(e) => {
-          setForm({ ...form, group: e.target.value, type: "" });
-          setTypeWarning("");
-        }}>
-          <option value="">Select group</option>
-          {groupOptions.map((g) => <option key={g} value={g}>{g}</option>)}
-        </select>
-        <select
-          className={`${fieldClass} bg-white`}
-          value={form.type}
-          onMouseDown={() => {
-            if (!form.group) setTypeWarning("first select group");
-          }}
-          onFocus={() => {
-            if (!form.group) setTypeWarning("first select group");
-          }}
-          onChange={(e) => {
-            if (!form.group) {
-              setTypeWarning("first select group");
-              return;
-            }
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <input ref={productNameInputRef} className={fieldClass} placeholder={t("Name")} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <input className={fieldClass} placeholder={t("Product Description")} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          <input className={fieldClass} placeholder={t("Price")} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+          <input className={fieldClass} placeholder={t("Brand")} value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} />
+          <select className={`${fieldClass} bg-white`} value={form.group} onChange={(e) => {
+            setForm({ ...form, group: e.target.value, type: "" });
             setTypeWarning("");
-            setForm({ ...form, type: e.target.value });
-          }}
-        >
-          <option value="">Select type</option>
-          {(typeOptions[form.group] || []).map((tp) => <option key={tp} value={tp}>{tp}</option>)}
-        </select>
-        {typeWarning && <p className="md:col-span-2 text-sm text-red-600">{typeWarning}</p>}
-        <input className={fieldClass} placeholder={t("Stock")} value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
-        <input className={`${fieldClass} md:col-span-2`} placeholder={t("Images (comma URLs)")} value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} />
-        <input className={fieldClass} placeholder={t("Sizes (comma)")} value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} />
-        <input className={fieldClass} placeholder={t("Colors (comma)")} value={form.colors} onChange={(e) => setForm({ ...form, colors: e.target.value })} />
-      </div>
+          }}>
+            <option value="">Select group</option>
+            {groupOptions.map((g) => <option key={g} value={g}>{g}</option>)}
+          </select>
+          <select
+            className={`${fieldClass} bg-white`}
+            value={form.type}
+            onMouseDown={() => {
+              if (!form.group) setTypeWarning("first select group");
+            }}
+            onFocus={() => {
+              if (!form.group) setTypeWarning("first select group");
+            }}
+            onChange={(e) => {
+              if (!form.group) {
+                setTypeWarning("first select group");
+                return;
+              }
+              setTypeWarning("");
+              setForm({ ...form, type: e.target.value });
+            }}
+          >
+            <option value="">Select type</option>
+            {(typeOptions[form.group] || []).map((tp) => <option key={tp} value={tp}>{tp}</option>)}
+          </select>
+          {typeWarning && <p className="md:col-span-2 text-sm text-red-600">{typeWarning}</p>}
+          <input className={fieldClass} placeholder={t("Stock")} value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
+          <input className={fieldClass} placeholder="Display" value={form.display} onChange={(e) => setForm({ ...form, display: e.target.value })} />
+          <input className={fieldClass} placeholder="Processor" value={form.processor} onChange={(e) => setForm({ ...form, processor: e.target.value })} />
+          <input className={fieldClass} placeholder="RAM" value={form.ram} onChange={(e) => setForm({ ...form, ram: e.target.value })} />
+          <input className={fieldClass} placeholder="Storage" value={form.storage} onChange={(e) => setForm({ ...form, storage: e.target.value })} />
+          <input className={fieldClass} placeholder="Camera" value={form.camera} onChange={(e) => setForm({ ...form, camera: e.target.value })} />
+          <input className={fieldClass} placeholder="Battery" value={form.battery} onChange={(e) => setForm({ ...form, battery: e.target.value })} />
+          <input className={fieldClass} placeholder="OS" value={form.os} onChange={(e) => setForm({ ...form, os: e.target.value })} />
+          <input className={`${fieldClass} md:col-span-2`} placeholder={t("Images (comma URLs)")} value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} />
+          <input className={fieldClass} placeholder={t("Sizes (comma)")} value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} />
+          <input className={fieldClass} placeholder={t("Colors (comma)")} value={form.colors} onChange={(e) => setForm({ ...form, colors: e.target.value })} />
+          <input className={`${fieldClass} md:col-span-2`} placeholder="Color Images (name:url, name:url)" value={form.colorImageMapInput} onChange={(e) => setForm({ ...form, colorImageMapInput: e.target.value })} />
+          {parsedColorNames.length > 0 && (
+            <div className="md:col-span-2 flex flex-wrap gap-2">
+              {parsedColorNames.map((colorName, idx) => (
+                <span key={`${colorName}-${idx}`} className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-2.5 py-1 text-xs bg-white">
+                  <span className="inline-block h-3.5 w-3.5 rounded-full border border-slate-300" style={{ backgroundColor: resolveColorSwatch(colorName) }} />
+                  {colorName}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
 
-      <button type="button" onClick={submitProductForm} className={`w-full sm:w-auto sm:min-w-[160px] sm:mx-auto block mt-3 ${primaryBtnClass}`}>
-        {editingId ? t("Update Product") : t("Add Product")}
-      </button>
+        <button type="button" onClick={submitProductForm} className={`w-full sm:w-auto sm:min-w-[160px] sm:mx-auto block mt-3 ${primaryBtnClass}`}>
+          {editingId ? t("Update Product") : t("Add Product")}
+        </button>
+      </div>
       </div>
 
       <div>
-      <h2 className="text-xl font-bold mt-1 xl:mt-0 text-center">{t("Coupons")}</h2>
       <div
         className="card p-4 mt-3 w-full max-w-[600px] mx-auto"
         onKeyDown={(e) => {
@@ -596,6 +615,7 @@ export default function Admin() {
           }
         }}
       >
+        <h2 className="text-xl font-bold mt-1 xl:mt-0 text-center mb-3 text-[#000080]">{t("Coupons")}</h2>
         <input className={`mb-2 ${fieldClass} ${compactCouponFieldWidthClass}`} placeholder={t("CODE")} value={couponForm.code} onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value })} />
         <select className={`mb-2 ${fieldClass} ${compactCouponFieldWidthClass}`} value={couponForm.type} onChange={(e) => setCouponForm({ ...couponForm, type: e.target.value })}>
           <option value="percent">{t("Percent")}</option>
@@ -607,172 +627,212 @@ export default function Admin() {
         <button type="button" className={`w-auto min-w-[160px] ${primaryBtnClass}`} onClick={createCoupon}>
           {t("Create Coupon")}
         </button>
-      </div>
-
-      {coupons.map((c) => (
-        <div key={c._id} className="card p-3 mt-2 flex justify-between w-full max-w-[300px] mx-auto">
-          <div>
-            <div className="font-semibold">{c.code}</div>
-            <div className="text-sm text-gray-600">{c.type} {c.value} {c.active ? "active" : "inactive"}</div>
-          </div>
-          <button
-            type="button"
-            title={t("Delete")}
-            aria-label={t("Delete")}
-            className={`${iconBtnClass} text-red-500 hover:text-red-700`}
-            onClick={async () => {
-              await fetch(`${API_BASE}/api/admin/coupons/${c._id}`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              setCoupons(coupons.filter((x) => x._id !== c._id));
-            }}
-          >
-            <svg
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-5 w-5"
-            >
-              <path d="M3 6h18" />
-              <path d="M8 6V4h8v2" />
-              <path d="M19 6l-1 14H6L5 6" />
-              <path d="M10 11v6" />
-              <path d="M14 11v6" />
-            </svg>
-          </button>
-        </div>
-      ))}
-      </div>
-      </div>
-
-      <div className="w-full max-w-[480px] mx-auto mt-10">
-        <h2 className="text-xl font-bold mb-2 text-center">{t("All Products")}</h2>
-        <div className="flex flex-col sm:flex-row gap-2 mb-3">
-          <input
-            className={`${fieldClass} w-full`}
-            placeholder="Search products"
-            value={productSearch}
-            onChange={(e) => setProductSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                loadProducts(1);
-              }
-            }}
-          />
-          <button type="button" className={`${primaryBtnClass} w-full sm:w-auto sm:flex-none`} onClick={() => loadProducts(1)}>
-            Search
-          </button>
+        <div className="mt-3 space-y-2">
+          {coupons.map((c) => (
+            <div key={c._id} className="card p-3 flex justify-between w-full max-w-[300px] mx-auto">
+              <div>
+                <div className="font-semibold">{c.code}</div>
+                <div className="text-sm text-gray-600">{c.type} {c.value} {c.active ? "active" : "inactive"}</div>
+              </div>
+              <button
+                type="button"
+                title={t("Delete")}
+                aria-label={t("Delete")}
+                className={`${iconBtnClass} text-red-500 hover:text-red-700`}
+                onClick={async () => {
+                  await fetch(`${API_BASE}/api/admin/coupons/${c._id}`, {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
+                  setCoupons(coupons.filter((x) => x._id !== c._id));
+                }}
+              >
+                <svg
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-5 w-5"
+                >
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4h8v2" />
+                  <path d="M19 6l-1 14H6L5 6" />
+                  <path d="M10 11v6" />
+                  <path d="M14 11v6" />
+                </svg>
+              </button>
+            </div>
+          ))}
         </div>
       </div>
+      </div>
+      </div>
 
-      {products.length > 0 && (
-        <div className="w-full py-4 bg-gray-100 rounded-lg product-center-slider">
-          <div className="w-11/12 mx-auto">
-            <Slider {...productSliderSettings}>
-              {products.map((p) => (
-                <div key={p._id} className="px-2 sm:px-3">
-                  <div className="product-slide-card bg-white rounded-2xl shadow-md p-4 text-center transition-transform duration-300 w-full max-w-[280px] sm:max-w-[340px] mx-auto">
-                    <img
-                      src={resolveProductImage(p.images?.[0])}
-                      alt={p.name}
-                      className="mx-auto h-44 w-full object-contain rounded"
-                    />
-                    <h3 className="mt-3 text-lg font-semibold truncate">{p.name}</h3>
-                    <p className="text-sm text-gray-600 truncate">{p.brand}</p>
-                    <p className="text-blue-700 font-bold mt-1">{formatCurrency(p.price, lang)}</p>
-                    <p className="text-xs text-gray-500 mt-1">Stock: {p.stock ?? 0}</p>
-                    <div className="mt-3 flex justify-center gap-2">
-                      <button
-                        type="button"
-                        title={t("Edit")}
-                        aria-label={t("Edit")}
-                        onClick={() => {
-                          setEditingId(p._id);
-                          setForm({
-                            name: p.name,
-                            price: p.price,
-                            brand: p.brand,
-                            group: p.group,
-                            type: p.type,
-                            images: (p.images || []).join(","),
-                            stock: p.stock ?? 0,
-                            sizes: (p.sizes || []).join(","),
-                            colors: (p.colors || []).join(","),
-                          });
-                        }}
-                        className={iconBtnClass}
-                      >
-                        <svg
-                          aria-hidden="true"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="h-5 w-5"
-                        >
-                          <path d="M12 20h9" />
-                          <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        title={t("Delete")}
-                        aria-label={t("Delete")}
-                        onClick={() =>
-                          fetch(`${API_BASE}/api/admin/products/${p._id}`, {
-                            method: "DELETE",
-                            headers: { Authorization: `Bearer ${token}` },
-                          }).then(() => loadProducts(productPage, productSearch))
-                        }
-                        className={`${iconBtnClass} text-red-500 hover:text-red-700`}
-                      >
-                        <svg
-                          aria-hidden="true"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="h-5 w-5"
-                        >
-                          <path d="M3 6h18" />
-                          <path d="M8 6V4h8v2" />
-                          <path d="M19 6l-1 14H6L5 6" />
-                          <path d="M10 11v6" />
-                          <path d="M14 11v6" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </Slider>
+      <div className="w-full max-w-6xl mx-auto mt-10 rounded-xl border border-slate-200 bg-white/90 shadow-sm overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+          <h2 className="text-xl font-bold mb-2 text-center text-[#000080]">{t("All Products")}</h2>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              className={`${fieldClass} w-full`}
+              placeholder="Search products"
+              value={productSearch}
+              onChange={(e) => setProductSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  loadProducts(1);
+                }
+              }}
+            />
+            <button type="button" className={`${primaryBtnClass} w-full sm:w-auto sm:flex-none`} onClick={() => loadProducts(1)}>
+              Search
+            </button>
           </div>
         </div>
+
+      {products.length > 0 ? (
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[780px] text-sm">
+              <thead className="bg-slate-100 text-slate-700">
+                <tr>
+                  <th className="text-left px-3 py-2 font-semibold">Image</th>
+                  <th className="text-left px-3 py-2 font-semibold">Name</th>
+                  <th className="text-left px-3 py-2 font-semibold">Brand</th>
+                  <th className="text-left px-3 py-2 font-semibold">Price</th>
+                  <th className="text-left px-3 py-2 font-semibold">Stock</th>
+                  <th className="text-left px-3 py-2 font-semibold">Colors</th>
+                  <th className="text-center px-3 py-2 font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((p) => (
+                  <tr key={p._id} className="border-t border-slate-200 hover:bg-slate-50/70">
+                    <td className="px-3 py-2">
+                      <img
+                        src={resolveProductImage(p.images?.[0])}
+                        alt={p.name}
+                        className="h-12 w-12 rounded object-cover border border-slate-200"
+                      />
+                    </td>
+                    <td className="px-3 py-2 font-medium text-slate-800 max-w-[220px] truncate">{p.name}</td>
+                    <td className="px-3 py-2 text-slate-600">{p.brand}</td>
+                    <td className="px-3 py-2 text-blue-700 font-semibold">{formatCurrency(p.price, lang)}</td>
+                    <td className="px-3 py-2 text-slate-600">{p.stock ?? 0}</td>
+                    <td className="px-3 py-2">
+                      <div className="flex flex-wrap gap-1.5">
+                        {(p.colors || []).slice(0, 4).map((c, idx) => (
+                          <span key={`${p._id}-${c}-${idx}`} className="inline-flex items-center gap-1 rounded-full border border-slate-300 px-2 py-0.5 text-[11px] bg-white">
+                            <span className="inline-block h-2.5 w-2.5 rounded-full border border-slate-300" style={{ backgroundColor: resolveColorSwatch(c) }} />
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          title={t("Edit")}
+                          aria-label={t("Edit")}
+                          onClick={() => {
+                            setEditingId(p._id);
+                            setForm({
+                              name: p.name,
+                              description: p.description || "",
+                              price: p.price,
+                              brand: p.brand,
+                              group: p.group,
+                              type: p.type,
+                              display: p.display || "",
+                              processor: p.processor || "",
+                              ram: p.ram || "",
+                              storage: p.storage || "",
+                              camera: p.camera || "",
+                              battery: p.battery || "",
+                              os: p.os || "",
+                              images: (p.images || []).join(","),
+                              stock: p.stock ?? 0,
+                              sizes: (p.sizes || []).join(","),
+                              colors: (p.colors || []).join(","),
+                              colorImageMapInput: serializeColorImageMap(p.colorImageMap || {}),
+                            });
+                          }}
+                          className={iconBtnClass}
+                        >
+                          <svg
+                            aria-hidden="true"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="h-5 w-5"
+                          >
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          title={t("Delete")}
+                          aria-label={t("Delete")}
+                          onClick={() =>
+                            fetch(`${API_BASE}/api/admin/products/${p._id}`, {
+                              method: "DELETE",
+                              headers: { Authorization: `Bearer ${token}` },
+                            }).then(() => loadProducts(productPage, productSearch))
+                          }
+                          className={`${iconBtnClass} text-red-500 hover:text-red-700`}
+                        >
+                          <svg
+                            aria-hidden="true"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="h-5 w-5"
+                          >
+                            <path d="M3 6h18" />
+                            <path d="M8 6V4h8v2" />
+                            <path d="M19 6l-1 14H6L5 6" />
+                            <path d="M10 11v6" />
+                            <path d="M14 11v6" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-slate-200 bg-slate-50">
+            <button className={actionBtnClass} disabled={productPage <= 1} onClick={() => loadProducts(productPage - 1, productSearch)}>
+              Prev
+            </button>
+            <div className="text-sm text-slate-700">Page {productPage} / {productTotalPages}</div>
+            <button className={actionBtnClass} disabled={productPage >= productTotalPages} onClick={() => loadProducts(productPage + 1, productSearch)}>
+              Next
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="px-4 py-4 text-sm text-gray-600">No products found.</div>
       )}
-
-      {products.length === 0 && <div className="text-sm text-gray-600 mt-2">No products found.</div>}
-
-      <div className="flex gap-2 mt-3">
-        <button className={actionBtnClass} disabled={productPage <= 1} onClick={() => loadProducts(productPage - 1)}>Prev</button>
-        <div className="text-sm px-2 py-1">Page {productPage} / {productTotalPages}</div>
-        <button className={actionBtnClass} disabled={productPage >= productTotalPages} onClick={() => loadProducts(productPage + 1)}>Next</button>
       </div>
 
-      <h2 className="text-xl font-bold mt-10 text-center">Special Offers</h2>
       <div className={`card p-4 mt-3 ${sectionWrapClass}`}>
+        <h2 className="text-xl font-bold text-center mb-3 text-[#000080]">Special Offers</h2>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
           <input
             className={fieldClass}
@@ -879,7 +939,7 @@ export default function Admin() {
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
-            className={primaryBtnClass}
+            className={`${primaryBtnClass} w-[190px] justify-center`}
             onClick={createSpecialOffer}
             disabled={isSavingOffer}
           >
@@ -887,7 +947,7 @@ export default function Admin() {
           </button>
           <button
             type="button"
-            className={actionBtnClass}
+            className={`${primaryBtnClass} w-[190px] justify-center bg-slate-500 border-slate-500 hover:bg-slate-600 disabled:bg-slate-400 disabled:border-slate-400`}
             onClick={disableCurrentOffer}
             disabled={isSavingOffer || !currentOffer?._id}
           >
@@ -924,8 +984,8 @@ export default function Admin() {
         </div>
       </div>
 
-      <h2 className="text-xl font-bold mt-10 text-center">{t("User Management")}</h2>
       <div className={`card p-4 mt-3 ${sectionWrapClass}`}>
+        <h2 className="text-xl font-bold text-center mb-3 text-[#000080]">{t("User Management")}</h2>
         <div className="flex gap-2 mb-3">
           <input
             className={`${fieldClass} w-full md:w-[380px] lg:w-[460px]`}
@@ -1054,16 +1114,16 @@ export default function Admin() {
         </div>
       </div>
 
-      <h2 className="text-xl font-bold mt-10 text-center">{t("Analytics")}</h2>
       {!analytics && <div className="text-sm">{t("Loading analytics...")}</div>}
       {analytics && (
         <div className={`card p-4 mt-3 ${sectionWrapClass}`}>
+          <h2 className="text-xl font-bold text-center mb-3 text-[#000080]">{t("Analytics")}</h2>
           <div>{t("Total Orders:")} {analytics.totalOrders}</div>
           <div>{t("Total Sales:")} {formatCurrency(analytics.totalSales, lang)}</div>
           <Stack spacing={2} className="mt-4">
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <div>
-                <h3 className="font-semibold mb-2">{t("Top Products")}</h3>
+                <h3 className="font-semibold mb-2 text-[#000080]">{t("Top Products")}</h3>
                 {topProducts.length === 0 ? (
                   <div className="text-sm text-gray-500">No data</div>
                 ) : (
@@ -1086,7 +1146,7 @@ export default function Admin() {
               </div>
 
               <div>
-                <h3 className="font-semibold mb-2">{t("Orders by Day")}</h3>
+                <h3 className="font-semibold mb-2 text-[#000080]">{t("Orders by Day")}</h3>
                 {ordersByDay.length === 0 ? (
                   <div className="text-sm text-gray-500">No data</div>
                 ) : (

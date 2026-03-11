@@ -6,6 +6,9 @@
     "start": "node server.js",
     "admin:fix": "node scripts/fixAdminFlags.js",
     "migrate:prices:eur": "node scripts/convertProductPricesToEur.js",
+    "migrate:products:descriptions": "node scripts/backfillProductDescriptions.js",
+    "migrate:products:provided-details": "node scripts/applyProvidedProductDetails.js",
+    "migrate:products:missing-specs": "node scripts/backfillMissingSpecs.js",
     "perf:load": "node scripts/loadTest.js"
   },
   "dependencies": {

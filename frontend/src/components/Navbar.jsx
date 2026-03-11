@@ -8,7 +8,9 @@ import {
   Search,
   ShoppingBag,
 } from "lucide-react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleQuestion } from "@fortawesome/free-solid-svg-icons";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
@@ -35,6 +37,9 @@ const DEFAULT_MENU_DATA = {
     { label: "General", icon: "" },
   ],
 };
+
+const NAVBAR_GRADIENT_CLASS = "bg-[linear-gradient(90deg,#051937_0%,#004d7a_25%,#008793_50%,#00bf72_75%,#a8eb12_100%)]";
+const ACTIVE_NAV_CLASS = "text-red-400 animate-pulse [text-shadow:0_0_10px_rgba(248,113,113,0.9)]";
 
 const sanitizeMenuSection = (value, fallback) => {
   if (!Array.isArray(value)) return fallback;
@@ -66,6 +71,7 @@ const Dropdown = ({
   navigate,
   setMobileOpen,
   dropdownRef,
+  isActive,
   t,
 }) => {
   const filteredItems = searchable
@@ -86,7 +92,7 @@ const Dropdown = ({
         onClick={() =>
           setOpenDropdown(openDropdown === dropdownKey ? null : dropdownKey)
         }
-          className="flex items-center gap-1 hover:text-blue-600"
+        className={`flex items-center gap-1 hover:text-blue-600 ${isActive ? ACTIVE_NAV_CLASS : ""}`}
         aria-expanded={openDropdown === dropdownKey}
         aria-haspopup="menu"
       >
@@ -95,7 +101,7 @@ const Dropdown = ({
       </button>
 
       {openDropdown === dropdownKey && (
-        <div className="absolute left-0 mt-2 w-56 bg-white shadow-lg rounded-md z-50">
+        <div className="absolute left-0 mt-2 w-56 bg-slate-900/95 border border-white/15 shadow-lg rounded-md z-50">
           {searchable && (
             <input
               className="w-full px-3 py-2 border-b text-sm outline-none"
@@ -112,7 +118,7 @@ const Dropdown = ({
                 <li key={item.label}>
                   <button
                     type="button"
-                    className="w-full text-left flex items-center gap-2 px-4 py-2 hover:bg-gray-100"
+                    className="w-full text-left flex items-center gap-2 px-4 py-2 text-white hover:bg-white/10"
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(path);
@@ -142,6 +148,7 @@ const SimpleDropdown = ({
   navigate,
   setMobileOpen,
   dropdownRef,
+  isActive,
 }) => (
   <div
     className="relative"
@@ -154,7 +161,7 @@ const SimpleDropdown = ({
       onClick={() =>
         setOpenDropdown(openDropdown === dropdownKey ? null : dropdownKey)
       }
-        className="flex items-center gap-1 hover:text-blue-600"
+      className={`flex items-center gap-1 hover:text-blue-600 ${isActive ? ACTIVE_NAV_CLASS : ""}`}
       aria-expanded={openDropdown === dropdownKey}
       aria-haspopup="menu"
     >
@@ -162,13 +169,13 @@ const SimpleDropdown = ({
       <ChevronDown size={16} />
     </button>
     {openDropdown === dropdownKey && (
-      <div className="absolute left-0 mt-2 w-56 bg-white shadow-lg rounded-md z-50">
+      <div className="absolute left-0 mt-2 w-56 bg-slate-900/95 border border-white/15 shadow-lg rounded-md z-50">
         <ul className="py-2">
           {items.map((item) => (
             <li key={item.label}>
               <button
                 type="button"
-                className="w-full text-left flex items-center gap-2 px-4 py-2 hover:bg-gray-100"
+                className="w-full text-left flex items-center gap-2 px-4 py-2 text-white hover:bg-white/10"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(item.path);
@@ -186,6 +193,10 @@ const SimpleDropdown = ({
   </div>
 );
 
+const FaqBubbleIcon = ({ size = 22, className = "" }) => (
+  <FontAwesomeIcon icon={faCircleQuestion} className={className} style={{ fontSize: `${size}px` }} />
+);
+
 export default function Navbar() {
   const { cartCount } = useCart();
   const { user, token, logout } = useAuth();
@@ -194,7 +205,7 @@ export default function Navbar() {
   const isAdmin = isAdminRole(user?.role) || isAdminRole(decodeJwtRole(token));
 
   // Icon color
-  const iconColor = "#374151";
+  const iconColor = "#ffffff";
 
   const [menuData, setMenuData] = useState(DEFAULT_MENU_DATA);
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -208,6 +219,7 @@ export default function Navbar() {
 
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
+  const location = useLocation();
   const navigate = useNavigate();
   const toSlug = (value = "") =>
     String(value)
@@ -428,6 +440,15 @@ export default function Navbar() {
     navigateFromSearch(`/products?q=${encodeURIComponent(term)}`);
   };
 
+  const desktopNavClass = ({ isActive }) =>
+    isActive ? ACTIVE_NAV_CLASS : "";
+  const desktopRelativeNavClass = ({ isActive }) =>
+    `relative ${isActive ? ACTIVE_NAV_CLASS : ""}`.trim();
+  const mobileNavClass = ({ isActive }) =>
+    `block py-2 text-base font-medium ${isActive ? "text-red-500 animate-pulse [text-shadow:0_0_8px_rgba(239,68,68,0.5)]" : "text-gray-800"}`;
+  const mobileFaqNavClass = ({ isActive }) =>
+    `flex items-center gap-2 py-2 text-base font-medium ${isActive ? "text-red-500 animate-pulse [text-shadow:0_0_8px_rgba(239,68,68,0.5)]" : "text-gray-800"}`;
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full">
       <div className="flex items-center justify-between bg-gradient-to-r from-blue-600 to-slate-900 px-6 py-2 text-white text-xs lg:text-sm font-semibold">
@@ -447,7 +468,7 @@ export default function Navbar() {
         </button>
       </div>
 
-      <div className="flex items-center justify-between bg-white/90 backdrop-blur px-4 lg:px-6 py-2 lg:py-4 shadow-md sticky top-0 z-40">
+      <div className={`flex items-center justify-between px-4 lg:px-6 py-2 lg:py-4 shadow-md sticky top-0 z-40 text-white ${NAVBAR_GRADIENT_CLASS}`}>
         <Link to="/">
           <img 
             src="https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772512421/ChatGPT_Image_Mar_3_2026_10_03_22_AM_xofi3i.png"
@@ -456,8 +477,8 @@ export default function Navbar() {
           />
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-4 lg:gap-8 text-sm font-semibold text-gray-700">
-          <NavLink to="/" className={({ isActive }) => (isActive ? "text-blue-600" : "")}>
+        <nav className="hidden lg:flex items-center gap-4 lg:gap-8 text-sm font-semibold text-white/95">
+          <NavLink to="/" className={desktopNavClass}>
             {t("HOME")}
           </NavLink>
 
@@ -474,6 +495,7 @@ export default function Navbar() {
             navigate={navigate}
             setMobileOpen={setMobileOpen}
             dropdownRef={dropdownRef}
+            isActive={location.pathname.startsWith("/device/")}
             t={t}
           />
           <Dropdown
@@ -489,9 +511,10 @@ export default function Navbar() {
             navigate={navigate}
             setMobileOpen={setMobileOpen}
             dropdownRef={dropdownRef}
+            isActive={location.pathname.startsWith("/category/")}
             t={t}
           />
-          <NavLink to="/products">{t("PRODUCTS")}</NavLink>
+          <NavLink to="/products" className={desktopNavClass}>{t("PRODUCTS")}</NavLink>
 
           {isAdmin && (
             <SimpleDropdown
@@ -506,12 +529,13 @@ export default function Navbar() {
               navigate={navigate}
               setMobileOpen={setMobileOpen}
               dropdownRef={dropdownRef}
+              isActive={location.pathname.startsWith("/admin")}
             />
           )}
-          <NavLink to="/orders">{t("MY ORDERS")}</NavLink>
-          {user && <NavLink to="/profile">{t("PROFILE")}</NavLink>}
+          <NavLink to="/orders" className={desktopNavClass}>{t("MY ORDERS")}</NavLink>
+          {user && <NavLink to="/profile" className={desktopNavClass}>{t("PROFILE")}</NavLink>}
           {user && (
-            <NavLink to="/wishlist" className="relative">
+            <NavLink to="/wishlist" className={desktopRelativeNavClass}>
               {t("WISHLIST")}
               {wishlistCount > 0 && (
                 <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs px-1.5 rounded-full">
@@ -520,10 +544,20 @@ export default function Navbar() {
               )}
             </NavLink>
           )}
+          <NavLink to="/about" className={desktopNavClass}>{t("ABOUT US")}</NavLink>
 
         </nav>
 
         <div className="hidden lg:flex items-center gap-6">
+          <NavLink
+            to="/faq"
+            className={({ isActive }) => `group cursor-pointer transition hover:scale-110 ${isActive ? ACTIVE_NAV_CLASS : ""}`}
+            aria-label={t("FAQ")}
+            title={t("FAQ")}
+          >
+            <FaqBubbleIcon size={22} className="text-white" />
+          </NavLink>
+
           <div
             className="relative"
             data-global-search="true"
@@ -531,7 +565,7 @@ export default function Navbar() {
           >
             <button
               type="button"
-              className="cursor-pointer hover:text-teal-600"
+              className="cursor-pointer hover:text-white/80"
               onClick={() => setGlobalSearchOpen((open) => !open)}
               aria-label={t("Search")}
             >
@@ -546,7 +580,7 @@ export default function Navbar() {
                     value={globalSearch}
                     onChange={(e) => setGlobalSearch(e.target.value)}
                     placeholder={t("Search by name or brand...")}
-                    className="w-full rounded border px-3 py-2 text-sm outline-none focus:border-teal-500"
+                    className="w-full rounded border px-3 py-2 text-sm text-black placeholder:text-gray-500 outline-none focus:border-teal-500"
                   />
                 </form>
 
@@ -612,12 +646,12 @@ export default function Navbar() {
           {!user ? (
             <button
               onClick={() => navigate("/login")}
-              className="px-3 py-1 bg-slate-900 text-white rounded-full text-sm"
+              className="text-sm font-semibold hover:text-blue-600"
             >
               {t("Login")}
             </button>
           ) : (
-            <button onClick={() => logout("manual")} className="px-3 py-1 border rounded-full text-sm">
+            <button onClick={() => logout("manual")} className="px-3 py-1 bg-white text-blue-700 rounded-full text-sm font-bold border border-white">
               {t("Logout")}
             </button>
           )}
@@ -632,7 +666,7 @@ export default function Navbar() {
           </Link>
 
           <select
-            className="text-xs border rounded px-2 py-1"
+            className="text-xs border rounded px-2 py-1 bg-white text-slate-800"
             value={lang}
             onChange={(e) => setLang(e.target.value)}
             aria-label="Language"
@@ -642,17 +676,17 @@ export default function Navbar() {
           </select>
         </div>
 
-        <button className="lg:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
+        <button className="lg:hidden text-white" onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <X /> : <Menu />}
         </button>
       </div>
 
       {mobileOpen && (
         <div
-          className="lg:hidden bg-white shadow-lg px-6 py-3 space-y-1 border-t"
+          className="lg:hidden bg-white shadow-lg px-6 py-3 space-y-1 border-t max-h-[calc(100vh-8.5rem)] overflow-y-auto overscroll-contain"
           onPointerDown={(e) => e.stopPropagation()}
         >
-          <NavLink to="/" onClick={() => setMobileOpen(false)} className="block py-2 text-base font-medium text-gray-800">
+          <NavLink to="/" onClick={() => setMobileOpen(false)} className={mobileNavClass}>
             {t("HOME")}
           </NavLink>
 
@@ -718,23 +752,30 @@ export default function Navbar() {
             )}
           </div>
 
-          <NavLink to="/products" onClick={() => setMobileOpen(false)} className="block py-2 text-base font-medium text-gray-800">
+          <NavLink to="/products" onClick={() => setMobileOpen(false)} className={mobileNavClass}>
             {t("PRODUCTS")}
           </NavLink>
-          <NavLink to="/orders" onClick={() => setMobileOpen(false)} className="block py-2 text-base font-medium text-gray-800">
+          <NavLink to="/faq" onClick={() => setMobileOpen(false)} className={mobileFaqNavClass}>
+            <FaqBubbleIcon size={16} className="text-current" />
+            <span>{t("FAQ")}</span>
+          </NavLink>
+          <NavLink to="/orders" onClick={() => setMobileOpen(false)} className={mobileNavClass}>
             {t("MY ORDERS")}
           </NavLink>
           {user && (
-            <NavLink to="/profile" onClick={() => setMobileOpen(false)} className="block py-2 text-base font-medium text-gray-800">
+            <NavLink to="/profile" onClick={() => setMobileOpen(false)} className={mobileNavClass}>
               {t("PROFILE")}
             </NavLink>
           )}
           {user && (
-            <NavLink to="/wishlist" onClick={() => setMobileOpen(false)} className="block py-2 text-base font-medium text-gray-800">
+            <NavLink to="/wishlist" onClick={() => setMobileOpen(false)} className={mobileNavClass}>
               {t("WISHLIST")}
             </NavLink>
           )}
-          <NavLink to="/cart" onClick={() => setMobileOpen(false)} className="block py-2 text-base font-medium text-gray-800">
+          <NavLink to="/about" onClick={() => setMobileOpen(false)} className={mobileNavClass}>
+            {t("ABOUT US")}
+          </NavLink>
+          <NavLink to="/cart" onClick={() => setMobileOpen(false)} className={mobileNavClass}>
             {t("CART")} ({cartCount})
           </NavLink>
 
@@ -802,7 +843,7 @@ export default function Navbar() {
                   setMobileOpen(false);
                   navigate("/login");
                 }}
-                className="w-full px-3 py-2 bg-slate-900 text-white rounded-md text-sm font-medium"
+                className="w-full text-left py-2 text-base font-medium text-gray-800"
               >
                 {t("Login")}
               </button>
@@ -813,7 +854,7 @@ export default function Navbar() {
                   setMobileOpen(false);
                   logout("manual");
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-800"
+                className="w-full px-3 py-2 bg-white border border-white rounded-md text-sm font-bold text-blue-700"
               >
                 {t("Logout")}
               </button>
