@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
@@ -9,9 +9,12 @@ import { formatCurrency } from "../lib/format";
 import Seo from "../components/Seo";
 import { Heart, ShoppingCart, Star, StarHalf } from "lucide-react";
 import { normalizeColorName, resolveColorSwatch } from "../lib/colors";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBackward } from "@fortawesome/free-solid-svg-icons";
 
 export default function ProductPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user, token } = useAuth();
   const { refreshCart } = useCart();
   const { t, lang } = useI18n();
@@ -28,6 +31,7 @@ export default function ProductPage() {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const productDetailsBg =
     "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772629203/drew-beamer-kUHfMW8awpE-unsplash_aqbeir.jpg";
+  const backAccentColor = "#77ea2f";
   const reviewFileInputRef = useRef(null);
 
   // 🔹 Load single product
@@ -316,6 +320,25 @@ export default function ProductPage() {
         type="product"
         keywords={`${product.brand || ""}, ${product.name || ""}, electronics product`}
       />
+
+      <button
+        type="button"
+        onClick={() => {
+          if (window.history.length > 1) {
+            navigate(-1);
+            return;
+          }
+          navigate("/products");
+        }}
+        className="mb-4 inline-flex items-center gap-2 rounded-full px-1 py-1 text-lg md:text-xl font-semibold transition hover:opacity-80"
+        style={{ color: backAccentColor }}
+        aria-label="Back"
+      >
+        <span className="product-back-wave inline-flex items-center justify-center">
+          <FontAwesomeIcon icon={faBackward} className="text-xl md:text-2xl" />
+        </span>
+        <span className="product-back-wave" style={{ animationDelay: "0.12s" }}>{t("Back")}</span>
+      </button>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         {/* 🖼 IMAGE GALLERY + ZOOM */}

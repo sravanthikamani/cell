@@ -6,7 +6,7 @@ import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
 import { formatCurrency } from "../lib/format";
 import Seo from "../components/Seo";
-import { ShoppingCart } from "lucide-react";
+import { ArrowDownUp, ShoppingCart, SlidersHorizontal } from "lucide-react";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -21,6 +21,7 @@ export default function Products() {
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [catalogOptions, setCatalogOptions] = useState({
     groups: [],
     types: [],
@@ -28,6 +29,20 @@ export default function Products() {
   });
   const [catalogTree, setCatalogTree] = useState({});
   const hasSearchQuery = Boolean(q.trim());
+  const hasActiveFilters = Boolean(
+    q || brand || group || type || priceMin || priceMax || sortBy !== "newest"
+  );
+  const activeFilterCount = [
+    q,
+    brand,
+    group,
+    type,
+    priceMin,
+    priceMax,
+    sortBy !== "newest" ? "sort" : "",
+  ].filter(Boolean).length;
+  const filterControlClass = "h-10 w-full rounded-lg border border-slate-300/90 bg-white px-3 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 hover:border-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
+  const filterButtonClass = "h-10 w-full rounded-lg border border-slate-300/90 bg-slate-100 px-3 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-200 hover:border-slate-400";
   const productsBg =
     "https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772628644/nordwood-themes-R53t-Tg6J4c-unsplash_um5hxv.jpg";
 
@@ -155,6 +170,16 @@ export default function Products() {
     alert(t("Added to cart"));
   };
 
+  const clearFilters = () => {
+    setQ("");
+    setBrand("");
+    setGroup("");
+    setType("");
+    setPriceMin("");
+    setPriceMax("");
+    setSortBy("newest");
+  };
+
   return (
     <div
       className="min-h-screen bg-cover bg-center bg-no-repeat"
@@ -175,87 +200,192 @@ export default function Products() {
 
       <h1 className="text-3xl font-bold mb-6">{t("Products")}</h1>
 
-      <div className="card p-4 md:p-5 mb-8 animate-fade-up">
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
-        <input
-          className="md:col-span-2 border px-3 py-2"
-          placeholder={t("Search by name or brand...")}
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-        <select
-          className="border px-3 py-2 bg-white"
-          value={brand}
-          onChange={(e) => setBrand(e.target.value)}
-        >
-          <option value="">{t("All Brands")}</option>
-          {getBrandOptions().map((b) => (
-            <option key={b} value={b}>
-              {b}
-            </option>
-          ))}
-        </select>
-        <select
-          className="border px-3 py-2 bg-white"
-          value={group}
-          onChange={(e) => setGroup(e.target.value)}
-        >
-          <option value="">{t("All Groups")}</option>
-          {catalogOptions.groups.map((g) => (
-            <option key={g} value={g}>
-              {g}
-            </option>
-          ))}
-        </select>
-        <select
-          className="border px-3 py-2 bg-white"
-          value={type}
-          onChange={(e) => setType(e.target.value)}
-        >
-          <option value="">{t("All Types")}</option>
-          {getTypeOptions().map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
-        <div className="md:col-span-6 grid grid-cols-1 md:grid-cols-6 gap-3">
+      <div className="md:hidden sticky top-24 z-20 mb-3">
+        <div className="rounded-xl border border-slate-200 bg-white/95 backdrop-blur px-2 py-2 shadow-md">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              className={`${filterButtonClass} h-9 inline-flex items-center justify-center gap-1.5 ${hasActiveFilters ? "border-blue-400 text-blue-700" : ""}`}
+              onClick={() => setIsMobileFiltersOpen((open) => !open)}
+            >
+              <SlidersHorizontal size={14} />
+              <span>{isMobileFiltersOpen ? "Hide Filters" : "Filters"}</span>
+              {activeFilterCount > 0 && (
+                <span className="inline-flex min-w-5 h-5 items-center justify-center rounded-full bg-blue-600 px-1 text-[11px] font-semibold text-white">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+
+            <div className="relative">
+              <ArrowDownUp
+                size={14}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+                aria-hidden="true"
+              />
+              <select
+                className={`${filterControlClass} h-9 pl-8`}
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="newest">{t("Newest")}</option>
+                <option value="price_asc">{t("Price: Low to High")}</option>
+                <option value="popularity">{t("Popularity")}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className={`card p-3 md:p-5 mb-8 animate-fade-up ${isMobileFiltersOpen ? "block" : "hidden"} md:block`}>
+        <div className="grid grid-cols-2 gap-2.5 md:hidden">
           <input
-            className="border px-3 py-2"
+            className={`${filterControlClass} col-span-2`}
+            placeholder={t("Search by name or brand...")}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+
+          <select
+            className={filterControlClass}
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+          >
+            <option value="">{t("All Brands")}</option>
+            {getBrandOptions().map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className={filterControlClass}
+            value={group}
+            onChange={(e) => setGroup(e.target.value)}
+          >
+            <option value="">{t("All Groups")}</option>
+            {catalogOptions.groups.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className={filterControlClass}
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+          >
+            <option value="">{t("All Types")}</option>
+            {getTypeOptions().map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+
+          <input
+            className={filterControlClass}
             placeholder={t("Min €")}
             value={priceMin}
             onChange={(e) => setPriceMin(e.target.value)}
           />
+
           <input
-            className="border px-3 py-2"
+            className={filterControlClass}
             placeholder={t("Max €")}
             value={priceMax}
             onChange={(e) => setPriceMax(e.target.value)}
           />
-          <select
-            className="border px-3 py-2 bg-white"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="newest">{t("Newest")}</option>
-            <option value="price_asc">{t("Price: Low to High")}</option>
-            <option value="popularity">{t("Popularity")}</option>
-          </select>
-          <button
-            className="bg-gray-100 border px-3 py-2"
-            onClick={() => {
-              setQ("");
-              setBrand("");
-              setGroup("");
-              setType("");
-              setPriceMin("");
-              setPriceMax("");
-              setSortBy("newest");
-            }}
-          >
-            {t("Clear Filters")}
-          </button>
+
+          <button className={`${filterButtonClass} col-span-2`} onClick={clearFilters}>{t("Clear Filters")}</button>
         </div>
+
+        <div className="hidden md:grid md:grid-cols-12 gap-3">
+          <input
+            className={`${filterControlClass} md:col-span-4`}
+            placeholder={t("Search by name or brand...")}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+
+          <select
+            className={`${filterControlClass} md:col-span-2`}
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+          >
+            <option value="">{t("All Brands")}</option>
+            {getBrandOptions().map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className={`${filterControlClass} md:col-span-2`}
+            value={group}
+            onChange={(e) => setGroup(e.target.value)}
+          >
+            <option value="">{t("All Groups")}</option>
+            {catalogOptions.groups.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className={`${filterControlClass} md:col-span-2`}
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+          >
+            <option value="">{t("All Types")}</option>
+            {getTypeOptions().map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+
+          <div className="relative md:col-span-2">
+            <ArrowDownUp
+              size={14}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+              aria-hidden="true"
+            />
+            <select
+              className={`${filterControlClass} pl-8`}
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="newest">{t("Newest")}</option>
+              <option value="price_asc">{t("Price: Low to High")}</option>
+              <option value="popularity">{t("Popularity")}</option>
+            </select>
+          </div>
+
+          <div className="md:col-span-4 flex items-center gap-2 rounded-lg border border-slate-300/90 bg-white px-2 h-10 shadow-sm">
+            <span className="inline-flex items-center justify-center rounded bg-slate-100 text-slate-600 text-xs font-semibold px-2 h-6">€</span>
+            <input
+              className="w-full min-w-0 border-0 p-0 text-sm text-slate-700 outline-none focus:ring-0"
+              placeholder={t("Min €")}
+              value={priceMin}
+              onChange={(e) => setPriceMin(e.target.value)}
+            />
+            <span className="h-5 w-px bg-slate-300" aria-hidden="true" />
+            <span className="text-xs font-medium text-slate-500 whitespace-nowrap">{t("to")}</span>
+            <span className="inline-flex items-center justify-center rounded bg-slate-100 text-slate-600 text-xs font-semibold px-2 h-6">€</span>
+            <input
+              className="w-full min-w-0 border-0 p-0 text-sm text-slate-700 outline-none focus:ring-0"
+              placeholder={t("Max €")}
+              value={priceMax}
+              onChange={(e) => setPriceMax(e.target.value)}
+            />
+          </div>
+
+          <button className={`${filterButtonClass} md:col-span-2 md:ml-auto`} onClick={clearFilters}>{t("Clear Filters")}</button>
         </div>
       </div>
 
