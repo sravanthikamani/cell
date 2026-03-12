@@ -134,6 +134,10 @@ export default function Admin() {
   const [offerMsg, setOfferMsg] = useState("");
   const [isSavingOffer, setIsSavingOffer] = useState(false);
   const [analyticsChartKey, runAnalyticsAnimation] = React.useReducer((v) => v + 1, 0);
+  const topProductsChartRef = useRef(null);
+  const ordersByDayChartRef = useRef(null);
+  const [topProductsChartWidth, setTopProductsChartWidth] = useState(460);
+  const [ordersByDayChartWidth, setOrdersByDayChartWidth] = useState(460);
 
   const groupOptions = ["device", "category"];
   const productFormRef = useRef(null);
@@ -204,6 +208,38 @@ export default function Admin() {
       .then(setAnalytics)
       .catch(() => {});
   }, [token]);
+
+  useEffect(() => {
+    const observerCleanups = [];
+
+    const bindChartObserver = (ref, setWidth) => {
+      const element = ref.current;
+      if (!element) return;
+
+      const updateWidth = () => {
+        const nextWidth = Math.max(260, Math.min(460, Math.floor(element.clientWidth) - 8));
+        setWidth(nextWidth);
+      };
+
+      updateWidth();
+
+      if (typeof ResizeObserver !== "undefined") {
+        const resizeObserver = new ResizeObserver(updateWidth);
+        resizeObserver.observe(element);
+        observerCleanups.push(() => resizeObserver.disconnect());
+      }
+
+      window.addEventListener("resize", updateWidth);
+      observerCleanups.push(() => window.removeEventListener("resize", updateWidth));
+    };
+
+    bindChartObserver(topProductsChartRef, setTopProductsChartWidth);
+    bindChartObserver(ordersByDayChartRef, setOrdersByDayChartWidth);
+
+    return () => {
+      observerCleanups.forEach((cleanup) => cleanup());
+    };
+  }, [analytics]);
 
   const loadCurrentOffer = useCallback(async () => {
     try {
@@ -1122,7 +1158,7 @@ export default function Admin() {
           <div>{t("Total Sales:")} {formatCurrency(analytics.totalSales, lang)}</div>
           <Stack spacing={2} className="mt-4">
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <div>
+              <div ref={topProductsChartRef} className="w-full min-w-0 overflow-hidden">
                 <h3 className="font-semibold mb-2 text-[#000080]">{t("Top Products")}</h3>
                 {topProducts.length === 0 ? (
                   <div className="text-sm text-gray-500">No data</div>
@@ -1137,7 +1173,7 @@ export default function Admin() {
                         data: topProductQtyData,
                       },
                     ]}
-                    width={460}
+                    width={topProductsChartWidth}
                     height={320}
                     barLabel="value"
                     slots={{ barLabel: AnimatedBarLabel }}
@@ -1145,7 +1181,7 @@ export default function Admin() {
                 )}
               </div>
 
-              <div>
+              <div ref={ordersByDayChartRef} className="w-full min-w-0 overflow-hidden">
                 <h3 className="font-semibold mb-2 text-[#000080]">{t("Orders by Day")}</h3>
                 {ordersByDay.length === 0 ? (
                   <div className="text-sm text-gray-500">No data</div>
@@ -1160,7 +1196,7 @@ export default function Admin() {
                         data: ordersByDayCountData,
                       },
                     ]}
-                    width={460}
+                    width={ordersByDayChartWidth}
                     height={320}
                     barLabel="value"
                     slots={{ barLabel: AnimatedBarLabel }}
