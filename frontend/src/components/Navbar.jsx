@@ -40,6 +40,7 @@ const DEFAULT_MENU_DATA = {
 
 const NAVBAR_GRADIENT_CLASS = "bg-[linear-gradient(90deg,#051937_0%,#004d7a_25%,#008793_50%,#00bf72_75%,#a8eb12_100%)]";
 const ACTIVE_NAV_CLASS = "text-red-400 animate-pulse [text-shadow:0_0_10px_rgba(248,113,113,0.9)]";
+const FAQ_ACTIVE_NAV_CLASS = "text-[#ff4fa3] animate-pulse [text-shadow:0_0_10px_rgba(255,79,163,0.9)]";
 
 const sanitizeMenuSection = (value, fallback) => {
   if (!Array.isArray(value)) return fallback;
@@ -447,7 +448,7 @@ export default function Navbar() {
   const mobileNavClass = ({ isActive }) =>
     `block py-2 text-base font-medium ${isActive ? "text-red-500 animate-pulse [text-shadow:0_0_8px_rgba(239,68,68,0.5)]" : "text-gray-800"}`;
   const mobileFaqNavClass = ({ isActive }) =>
-    `flex items-center gap-2 py-2 text-base font-medium ${isActive ? "text-red-500 animate-pulse [text-shadow:0_0_8px_rgba(239,68,68,0.5)]" : "text-gray-800"}`;
+    `flex items-center gap-2 py-2 text-base font-medium ${isActive ? "text-[#ff4fa3] animate-pulse [text-shadow:0_0_8px_rgba(255,79,163,0.6)]" : "text-gray-800"}`;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full">
@@ -471,9 +472,9 @@ export default function Navbar() {
       <div className={`flex items-center justify-between px-4 lg:px-6 py-2 lg:py-4 shadow-md sticky top-0 z-40 text-white ${NAVBAR_GRADIENT_CLASS}`}>
         <Link to="/">
           <img 
-            src="https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772512421/ChatGPT_Image_Mar_3_2026_10_03_22_AM_xofi3i.png"
+            src="/images/logo.png"
             alt="CELL Logo"
-            className="h-12 lg:h-20 object-contain"
+            className="h-12 lg:h-20 object-contain bg-transparent"
           />
         </Link>
 
@@ -551,11 +552,11 @@ export default function Navbar() {
         <div className="hidden lg:flex items-center gap-6">
           <NavLink
             to="/faq"
-            className={({ isActive }) => `group cursor-pointer transition hover:scale-110 ${isActive ? ACTIVE_NAV_CLASS : ""}`}
+            className={({ isActive }) => `group cursor-pointer transition hover:scale-110 ${isActive ? FAQ_ACTIVE_NAV_CLASS : ""}`}
             aria-label={t("FAQ")}
             title={t("FAQ")}
           >
-            <FaqBubbleIcon size={22} className="text-white" />
+            <FaqBubbleIcon size={22} className="text-current" />
           </NavLink>
 
           <div
