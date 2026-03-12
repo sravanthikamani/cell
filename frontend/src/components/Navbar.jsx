@@ -38,7 +38,7 @@ const DEFAULT_MENU_DATA = {
   ],
 };
 
-const NAVBAR_GRADIENT_CLASS = "bg-[linear-gradient(90deg,#051937_0%,#004d7a_25%,#008793_50%,#00bf72_75%,#a8eb12_100%)]";
+const NAVBAR_GRADIENT_CLASS = "bg-[linear-gradient(90deg,#a8eb12_0%,#00bf72_25%,#008793_50%,#004d7a_75%,#051937_100%)]";
 const ACTIVE_NAV_CLASS = "text-red-400 animate-pulse [text-shadow:0_0_10px_rgba(248,113,113,0.9)]";
 
 const sanitizeMenuSection = (value, fallback) => {
@@ -473,7 +473,7 @@ export default function Navbar() {
           <img 
             src="https://res.cloudinary.com/dlx9tnj7p/image/upload/v1772512421/ChatGPT_Image_Mar_3_2026_10_03_22_AM_xofi3i.png"
             alt="CELL Logo"
-            className="h-12 lg:h-20 object-contain"
+            className="h-12 lg:h-20 object-contain bg-transparent"
           />
         </Link>
 
