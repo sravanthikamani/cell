@@ -383,8 +383,13 @@ export default function Home() {
                     ? `${API_BASE}${p.images?.[0]}`
                     : p.images?.[0]
                 }
+                srcSet={p.images?.[0] ? `${p.images?.[0]} 400w, ${p.images?.[0]} 800w` : undefined}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 alt={p.name}
                 className="h-40 sm:h-44 w-full object-cover rounded-xl"
+                width="320"
+                height="176"
+                loading="lazy"
               />
               <div className="mt-3">
                 <div className="font-semibold">{p.name}</div>
