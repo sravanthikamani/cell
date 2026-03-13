@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { API_BASE } from "../lib/api";
 
-export default function ImageGallery({ images }) {
+export default function ImageGallery({ images, altText }) {
   const [active, setActive] = useState(0);
   const [zoom, setZoom] = useState(false);
 
@@ -20,9 +20,12 @@ export default function ImageGallery({ images }) {
       {/* MAIN IMAGE */}
       <img
         src={resolveSrc(images[active])}
-        alt=""
+        alt={altText || "Product image"}
         className="w-full h-96 object-contain border cursor-zoom-in"
         onClick={() => setZoom(true)}
+        width="600"
+        height="384"
+        loading="lazy"
       />
 
       {/* THUMBNAILS */}
@@ -31,10 +34,14 @@ export default function ImageGallery({ images }) {
           <img
             key={i}
             src={resolveSrc(img)}
+            alt={altText ? `${altText} ${i + 1}` : `Product image ${i + 1}`}
             onClick={() => setActive(i)}
             className={`w-16 h-16 object-cover border cursor-pointer ${
               i === active ? "border-black" : ""
             }`}
+            width="64"
+            height="64"
+            loading="lazy"
           />
         ))}
       </div>
@@ -47,7 +54,11 @@ export default function ImageGallery({ images }) {
         >
           <img
             src={resolveSrc(images[active])}
+            alt={altText || "Product image"}
             className="max-h-[90vh] max-w-[90vw]"
+            width="600"
+            height="384"
+            loading="lazy"
           />
         </div>
       )}
