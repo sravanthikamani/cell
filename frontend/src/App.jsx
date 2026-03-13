@@ -36,101 +36,38 @@ export default function App() {
     <>
       <UrlNormalizer />
       <Navbar />
-      <div className="pt-36 md:pt-40 app-content">
+      <main className="pt-36 md:pt-40 app-content" id="main-content">
         <Suspense fallback={<div className="p-10">Loading...</div>}>
           <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/offers" element={<Offers />} />
-
-          <Route path="/:group/:type" element={<CatalogPage />} />
-          <Route path="/:group/:type/:brand" element={<BrandPage />} />
-          <Route path="/product/:id" element={<ProductPage />} />
-
-          <Route path="/about" element={<About />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/faq/:item" element={<FAQ />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/session-timeout" element={<SessionTimeout />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-
-          <Route
-            path="/warranty"
-            element={
-              <ProtectedRoute>
-                <Warranty />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/cart" element={<Cart />} />
-          <Route
-            path="/checkout"
-            element={
-              <ProtectedRoute>
-                <Checkout />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/order-confirmation"
-            element={
-              <ProtectedRoute>
-                <OrderConfirmation />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/orders"
-            element={
-              <ProtectedRoute>
-                <Orders />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/wishlist"
-            element={
-              <ProtectedRoute>
-              <Wishlist />
-            </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <Admin />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/orders"
-            element={
-              <AdminRoute>
-                <AdminOrders />
-              </AdminRoute>
-            }
-          />
-
-          <Route
-            path="*"
-            element={<NotFound />}
-          />
+            <Route path="/" element={<Home />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/offers" element={<Offers />} />
+            <Route path=":/group/:type" element={<CatalogPage />} />
+            <Route path=":/group/:type/:brand" element={<BrandPage />} />
+            <Route path="/product/:id" element={<ProductPage />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/faq/:item" element={<FAQ />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/session-timeout" element={<SessionTimeout />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/warranty" element={<ProtectedRoute><Warranty /></ProtectedRoute>} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+            <Route path="/order-confirmation" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
+            <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+            <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+            <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
-        <Footer />
-      </div>
+      </main>
+      <Footer />
     </>
   );
 }
