@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import ImageGallery from "../components/ImageGallery";
+import { Helmet } from "react-helmet-async";
 import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
 import { formatCurrency } from "../lib/format";
@@ -304,12 +305,43 @@ export default function ProductPage() {
     ? [selectedColorImage, ...(product.images || []).filter((img) => img !== selectedColorImage)]
     : (product.images || []);
 
+  // JSON-LD structured data for SEO
+  const productJsonLd = product
+    ? {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        "name": product.name,
+        "image": (product.images || []).map((img) => resolveImageUrl(img)),
+        "description": product.longDescription || product.description || product.seoDescription || "",
+        "sku": product._id,
+        "brand": {
+          "@type": "Brand",
+          "name": product.brand || "HI-TECH"
+        },
+        "offers": {
+          "@type": "Offer",
+          "priceCurrency": "EUR",
+          "price": product.price,
+          "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          "url": typeof window !== "undefined" ? window.location.href : ""
+        },
+        "aggregateRating": reviews.length > 0
+          ? {
+              "@type": "AggregateRating",
+              "ratingValue": avgRating,
+              "reviewCount": reviews.length
+            }
+          : undefined
+      }
+    : null;
+
   return (
     <div
       className="min-h-screen bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url(${productDetailsBg})` }}
     >
       <div className="max-w-5xl mx-auto p-6 md:p-10">
+
       <Seo
         title={product.name || "Product Details"}
         description={
@@ -320,6 +352,13 @@ export default function ProductPage() {
         type="product"
         keywords={`${product.brand || ""}, ${product.name || ""}, electronics product`}
       />
+      {productJsonLd && (
+        <Helmet>
+          <script type="application/ld+json">
+            {JSON.stringify(productJsonLd)}
+          </script>
+        </Helmet>
+      )}
 
       <button
         type="button"
@@ -343,7 +382,8 @@ export default function ProductPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         {/* 🖼 IMAGE GALLERY + ZOOM */}
         <div className="card p-4">
-          <ImageGallery images={galleryImages} />
+          {/* Pass alt text as product name for accessibility */}
+          <ImageGallery images={galleryImages} altText={product.name} />
         </div>
 
         <div className="card p-6">
