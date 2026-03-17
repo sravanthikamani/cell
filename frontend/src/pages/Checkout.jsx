@@ -180,6 +180,9 @@ export default function Checkout() {
   const [paypalSdkReady, setPaypalSdkReady] = useState(false);
   const paypalButtonsRef = useRef(null);
   const paypalClientId = String(import.meta.env.VITE_PAYPAL_CLIENT_ID || "").trim();
+  const stripePublishableKey = String(
+    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || ""
+  ).trim();
   const paypalCurrency = String(import.meta.env.VITE_PAYPAL_CURRENCY || "EUR")
     .trim()
     .toUpperCase();
@@ -662,7 +665,11 @@ export default function Checkout() {
             {paymentInitError && (
               <div className="mb-3 text-sm text-red-600">{paymentInitError}</div>
             )}
-            {!clientSecret ? (
+            {!stripePublishableKey ? (
+              <div className="text-sm text-red-600">
+                Stripe is not configured. Set `VITE_STRIPE_PUBLISHABLE_KEY` on the frontend.
+              </div>
+            ) : !clientSecret ? (
               <div className="text-sm text-gray-600">
                 {isPaymentLoading ? t("Loading payment...") : t("Payment unavailable. Please try again.")}
               </div>
