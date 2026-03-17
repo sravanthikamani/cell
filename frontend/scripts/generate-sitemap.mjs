@@ -2,7 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const rawSiteUrl =
-  process.env.VITE_SITE_URL || process.env.SITE_URL || "https://cell.com";
+  process.env.VITE_SITE_URL || process.env.SITE_URL || "https://hitechcinisello.it";
 const siteUrl = String(rawSiteUrl).trim().replace(/\/+$/, "");
 const today = new Date().toISOString().slice(0, 10);
 
@@ -13,8 +13,7 @@ const urls = [
   { loc: "/warranty", changefreq: "monthly", priority: "0.6" },
   { loc: "/faq/shipping", changefreq: "monthly", priority: "0.6" },
   { loc: "/faq/product", changefreq: "monthly", priority: "0.6" },
-  { loc: "/faq/warranty", changefreq: "monthly", priority: "0.6" },
-  { loc: "/faq/general", changefreq: "monthly", priority: "0.6" },
+  { loc: "/faq/warranty", changefreq: "monthly", priority: "0.6" } , { loc: "/faq/general", changefreq: "monthly", priority: "0.6" },
   { loc: "/device/smartphones", changefreq: "weekly", priority: "0.8" },
   { loc: "/device/tablets", changefreq: "weekly", priority: "0.8" },
   { loc: "/device/wearables", changefreq: "weekly", priority: "0.8" },
