@@ -7,4 +7,4 @@ const isLocalhost =
 
 export const API_BASE =
   envApiBase ||
-  (isLocalhost ? "http://localhost:5000" : "");
+  (isLocalhost ? "http://localhost:5001" : "");
