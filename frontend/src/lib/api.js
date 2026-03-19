@@ -5,6 +5,13 @@ const isLocalhost =
   (window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1");
 
+// Use HTTPS for production, HTTP for localhost
 export const API_BASE =
   envApiBase ||
-  (isLocalhost ? "http://localhost:5001" : "");
+  (isLocalhost
+    ? "http://localhost:5001"
+    : "https://hitechcinisello.it/api");
+
+if (isBrowser) {
+  console.log("[DEBUG] API_BASE:", API_BASE);
+}

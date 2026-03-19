@@ -10,10 +10,7 @@ function round2(value) {
 function normalizePrice(value) {
   const n = Number(value || 0);
   if (!Number.isFinite(n)) return 0;
-  if (n > PRICE_AUTO_CONVERT_THRESHOLD) {
-    return round2(n / INR_TO_EUR_RATE);
-  }
-  return round2(n);
+  return round2(n); // Price is already in EUR, no conversion
 }
 
 function normalizeProductPrice(product) {

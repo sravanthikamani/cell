@@ -199,9 +199,13 @@ const FaqBubbleIcon = ({ size = 22, className = "" }) => (
 );
 
 export default function Navbar() {
-  const { cartCount } = useCart();
-  const { user, token, logout } = useAuth();
-  const { lang, setLang, t } = useI18n();
+  //const { cartCount } = useCart();
+  const cartContext = useCart() || {};
+  const { cartCount = 0 } = cartContext;
+  const authContext = useAuth() || {};
+  const { user = null, token = null, logout = () => {} } = authContext;
+  const i18nContext = useI18n() || {};
+  const { lang = 'en', setLang = () => {}, t = (x) => x } = i18nContext;
   const [wishlistCount, setWishlistCount] = useState(0);
   const isAdmin = isAdminRole(user?.role) || isAdminRole(decodeJwtRole(token));
 
