@@ -305,7 +305,7 @@ export default function Navbar() {
       fetch(`${API_BASE}/api/products/search?q=${encodeURIComponent(term)}`)
         .then((res) => res.json())
         .then((data) =>
-          setProductResults(Array.isArray(data) ? data.slice(0, 6) : [])
+          setProductResults(Array.isArray(data) ? data : [])
         )
         .catch(() => setProductResults([]));
     }, 250);
@@ -624,11 +624,11 @@ export default function Navbar() {
                           <li key={product._id}>
                             <button
                               type="button"
-                              className="w-full text-left flex items-center justify-between gap-3 px-3 py-2 hover:bg-gray-100"
+                              className="w-full text-left flex items-center gap-3 px-3 py-2 hover:bg-gray-100"
                               onClick={() => navigateFromSearch(`/product/${product._id}`)}
                             >
-                              <span className="truncate">{product.name}</span>
-                              <span className="text-xs text-gray-500 truncate">
+                              <span className="truncate font-semibold text-black" style={{minWidth: '180px'}}>{product.name}</span>
+                              <span className="text-xs text-gray-500 truncate ml-2">
                                 {product.brand || t("Product")}
                               </span>
                             </button>
