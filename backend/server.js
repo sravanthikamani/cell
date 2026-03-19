@@ -321,7 +321,7 @@ app.get("/api/products/search", async (req, res) => {
         (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
       );
     }
-    setCached(cacheKey, products, 60);
+    setCached(cacheKey, Array.isArray(products) ? products : [products], 60);
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });
