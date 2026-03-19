@@ -603,10 +603,7 @@ export default function Navbar() {
                               className="w-full text-left flex items-center justify-between px-3 py-2 hover:bg-gray-100"
                               onClick={() => navigateFromSearch(item.path)}
                             >
-                              <span className="truncate">
-                                {item.icon ? `${item.icon} ` : ""}
-                                {item.label}
-                              </span>
+                              <span className="truncate">{item.label}</span>
                             </button>
                           </li>
                         ))}
