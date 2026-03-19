@@ -30,7 +30,7 @@ export default function CatalogPage() {
       });
   }, [group, type]);
 
-  const title = `${t(type).toUpperCase()} | ${t(group).toUpperCase()} | HI-TECH`;
+  const title = `${t(type || "").toUpperCase()} | ${t(group || "").toUpperCase()} | HI-TECH`;
 
   return (
     <div className="max-w-6xl mx-auto p-10">

@@ -3,7 +3,7 @@ function getShippingConfig() {
     process.env.SHIPPING_STANDARD || process.env.SHIPPING_FLAT || 0
   );
   const expressBase = Number(
-    process.env.SHIPPING_EXPRESS || standardBase + 50
+    process.env.SHIPPING_EXPRESS || standardBase + 3
   );
   const freeThreshold = Number(process.env.SHIPPING_FREE_THRESHOLD || 999);
   const taxRate = Number(process.env.TAX_RATE || 0);

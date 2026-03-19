@@ -33,6 +33,10 @@ const { buildCacheKey, getCached, setCached } = require("./utils/cache");
 const app = express();
 // Render and similar platforms run behind a reverse proxy.
 // Required so express-rate-limit reads client IP safely from X-Forwarded-For.
+app.use(cors({
+  origin: ['https://www.hitechcinisello.it', 'https://hitechcinisello.it'],
+  credentials: true // if you need cookies
+}));
 app.set("trust proxy", 1);
 
 const slowRequestMs = Number(process.env.SLOW_REQUEST_MS || 600);
@@ -159,6 +163,7 @@ app.get("/api/cart/:userId", async (req, res) => {
   const cart = await Cart.findOne({ userId: req.params.userId })
     .populate("items.productId");
 
+  // Normalize prices for all cart items
   res.json(normalizeCartProductPrices(cart) || { items: [] });
 });
 
@@ -383,7 +388,7 @@ app.post("/api/cart/add", async (req, res) => {
 /* =========================
    SERVER
 ========================= */
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 
 process.on("unhandledRejection", (reason) => {
   console.error("❌ Unhandled promise rejection:", reason);
@@ -408,8 +413,10 @@ async function startServer() {
       console.warn("[startup] Review index sync failed:", indexErr.message);
     }
 
-    const server = app.listen(PORT, () => {
-      console.log(`✅ Backend running on http://localhost:${PORT}`);
+
+
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      console.log(`✅ Backend running on http://0.0.0.0:${PORT}`);
     });
 
     server.on("error", (err) => {
