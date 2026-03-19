@@ -1,46 +1,27 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { useAuth } from "./AuthContext";
 import { API_BASE } from "../lib/api";
+import { getUserId, fetchCartCount } from "../lib/user";
 
 const CartContext = createContext();
 
-export function CartProvider({ children }) {
-  const { user, token } = useAuth();
+export function CartProvider({ children, user, token }) {
   const [cartCount, setCartCount] = useState(0);
 
-  const fetchCartCount = async () => {
-    const userId = user?.id || user?._id;
-    if (!userId || !token) {
-      setCartCount(0);
-      return;
-    }
-
-    const res = await fetch(
-      `${API_BASE}/api/cart/${userId}`,
-      {
-        headers: { Authorization: token },
-      }
-    );
-
-    const cart = await res.json();
-    const count = cart.items?.reduce(
-      (sum, item) => sum + item.qty,
-      0
-    ) || 0;
-
+  const refreshCart = async () => {
+    const userId = getUserId(user);
+    const count = await fetchCartCount(userId, token, API_BASE);
     setCartCount(count);
   };
 
-  // 🔁 REFRESH CART COUNT WHEN USER LOGS IN
   useEffect(() => {
-    fetchCartCount();
+    refreshCart();
   }, [user, token]);
 
   return (
     <CartContext.Provider
       value={{
         cartCount,
-        refreshCart: fetchCartCount, // 👈 expose this
+        refreshCart,
       }}
     >
       {children}

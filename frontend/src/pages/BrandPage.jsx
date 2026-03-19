@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
@@ -8,7 +8,10 @@ import { formatCurrency } from "../lib/format";
 import Seo from "../components/Seo";
 
 export default function BrandPage() {
-  const { group, type, brand } = useParams();
+  const { type, brand } = useParams();
+  const location = useLocation();
+  // Infer group from pathname
+  const group = location.pathname.startsWith("/device") ? "device" : location.pathname.startsWith("/category") ? "category" : "";
   const navigate = useNavigate();
   const { refreshCart } = useCart();
   const { user, token } = useAuth();
@@ -28,18 +31,10 @@ export default function BrandPage() {
   });
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/catalog`)
+    fetch(`${API_BASE}/api/products/search?group=${group}&type=${encodeURIComponent(type)}&brand=${encodeURIComponent(brand)}`)
       .then(res => res.json())
       .then(data => {
-        const findKey = (obj, key) =>
-          Object.keys(obj || {}).find(
-            (k) => normalizeSegment(k) === normalizeSegment(key)
-          );
-        const groupKey = findKey(data, group);
-        const typeKey = findKey(data?.[groupKey], type);
-        const brandKey = findKey(data?.[groupKey]?.[typeKey], brand);
-        const list = data?.[groupKey]?.[typeKey]?.[brandKey] || [];
-        setProducts(list);
+        setProducts(Array.isArray(data) ? data : []);
       });
   }, [group, type, brand]);
 

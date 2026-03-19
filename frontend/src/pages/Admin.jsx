@@ -580,7 +580,7 @@ export default function Admin() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <input ref={productNameInputRef} className={fieldClass} placeholder={t("Name")} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <input className={fieldClass} placeholder={t("Product Description")} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          <input className={fieldClass} placeholder={t("Price")} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+          <input className={fieldClass} placeholder={t("Price (EUR)")} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
           <input className={fieldClass} placeholder={t("Brand")} value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} />
           <select className={`${fieldClass} bg-white`} value={form.group} onChange={(e) => {
             setForm({ ...form, group: e.target.value, type: "" });
