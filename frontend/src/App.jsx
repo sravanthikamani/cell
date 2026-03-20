@@ -1,3 +1,4 @@
+import { useAuth } from "./context/AuthContext";
 
 import { Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
@@ -18,6 +19,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import Register from "./pages/Register";
 import Wishlist from "./pages/Wishlist";
 import SessionTimeout from "./pages/SessionTimeout";
+import { CartProvider } from "./context/CartContext";
 
 const Home = lazy(() => import("./pages/Home"));
 const Warranty = lazy(() => import("./pages/Warranty"));
@@ -33,8 +35,9 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Offers = lazy(() => import("./pages/Offers"));
 
 export default function App() {
+  const { user, token } = useAuth();
   return (
-    <>
+    <CartProvider user={user} token={token}>
       <UrlNormalizer />
       <Navbar />
       <main className="pt-36 md:pt-40 app-content" id="main-content">
@@ -69,6 +72,6 @@ export default function App() {
         </Suspense>
       </main>
       <Footer />
-    </>
+    </CartProvider>
   );
 }
