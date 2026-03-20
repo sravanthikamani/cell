@@ -47,5 +47,18 @@ productSchema.index({ group: 1, type: 1, brand: 1, status: 1 });
 productSchema.index({ name: "text", brand: "text", description: "text" });
 productSchema.index({ createdAt: -1 });
 productSchema.index({ price: 1 });
+// Middleware to convert Map fields to plain objects for JSON serialization
+function mapFieldsToObject(doc, ret) {
+  if (ret.specs instanceof Map) {
+    ret.specs = Object.fromEntries(ret.specs);
+  }
+  if (ret.colorImageMap instanceof Map) {
+    ret.colorImageMap = Object.fromEntries(ret.colorImageMap);
+  }
+  return ret;
+}
+
+productSchema.set("toJSON", { transform: mapFieldsToObject });
+productSchema.set("toObject", { transform: mapFieldsToObject });
 
 module.exports = mongoose.model("Product", productSchema);
