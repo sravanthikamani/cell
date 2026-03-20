@@ -67,7 +67,10 @@ export default function Admin() {
   const iconBtnClass = "inline-flex items-center justify-center p-1 text-slate-500 hover:text-slate-700 transition-colors";
   const compactCouponFieldWidthClass = "w-full md:w-[420px] lg:w-[520px]";
   const compactProductSearchWidthClass = "w-full sm:w-[420px] md:w-[520px] lg:w-[620px] sm:flex-none";
-
+// Feature input state
+const [featureName, setFeatureName] = useState("");
+const [featureDescription, setFeatureDescription] = useState("");
+const [features, setFeatures] = useState([]);
   // state hooks must always be called unconditionally at the top of the component
   const [editingId, setEditingId] = useState(null);
   const [typeWarning, setTypeWarning] = useState("");
@@ -78,18 +81,12 @@ export default function Admin() {
     brand: "",
     group: "",
     type: "",
-    display: "",
-    processor: "",
-    ram: "",
-    storage: "",
-    camera: "",
-    battery: "",
-    os: "",
     images: "",
     stock: "",
     sizes: "",
     colors: "",
     colorImageMapInput: "",
+    specs: {},
   });
   
   const [products, setProducts] = useState([]);
@@ -312,6 +309,10 @@ export default function Admin() {
         sizes: form.sizes.split(",").map((i) => i.trim()).filter(Boolean),
         colors: form.colors.split(",").map((i) => i.trim()).filter(Boolean),
         colorImageMap: parseColorImageMapInput(form.colorImageMapInput),
+        specs: features.reduce((acc, f) => {
+          acc[f.name] = f.description;
+          return acc;
+        }, {}),
       }),
     });
     const data = await res.json();
@@ -335,6 +336,10 @@ export default function Admin() {
         sizes: form.sizes.split(",").map((i) => i.trim()).filter(Boolean),
         colors: form.colors.split(",").map((i) => i.trim()).filter(Boolean),
         colorImageMap: parseColorImageMapInput(form.colorImageMapInput),
+        specs: features.reduce((acc, f) => {
+          acc[f.name] = f.description;
+          return acc;
+        }, {}),
       }),
     });
     const data = await res.json();
@@ -578,16 +583,16 @@ export default function Admin() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <input ref={productNameInputRef} className={fieldClass} placeholder={t("Name")} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          <input className={fieldClass} placeholder={t("Product Description")} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          <input className={fieldClass} placeholder={t("Price (EUR)")} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
-          <input className={fieldClass} placeholder={t("Brand")} value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} />
-          <select className={`${fieldClass} bg-white`} value={form.group} onChange={(e) => {
+          <input ref={productNameInputRef} className={fieldClass} placeholder={t("Name")} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+          <input className={fieldClass} placeholder={t("Product Description")} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+          <input className={fieldClass} placeholder={t("Price (EUR)")} value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} />
+          <input className={fieldClass} placeholder={t("Brand")} value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} />
+          <select className={`${fieldClass} bg-white`} value={form.group} onChange={e => {
             setForm({ ...form, group: e.target.value, type: "" });
             setTypeWarning("");
           }}>
             <option value="">Select group</option>
-            {groupOptions.map((g) => <option key={g} value={g}>{g}</option>)}
+            {groupOptions.map(g => <option key={g} value={g}>{g}</option>)}
           </select>
           <select
             className={`${fieldClass} bg-white`}
@@ -598,7 +603,7 @@ export default function Admin() {
             onFocus={() => {
               if (!form.group) setTypeWarning("first select group");
             }}
-            onChange={(e) => {
+            onChange={e => {
               if (!form.group) {
                 setTypeWarning("first select group");
                 return;
@@ -608,29 +613,31 @@ export default function Admin() {
             }}
           >
             <option value="">Select type</option>
-            {(typeOptions[form.group] || []).map((tp) => <option key={tp} value={tp}>{tp}</option>)}
+            {(typeOptions[form.group] || []).map(tp => <option key={tp} value={tp}>{tp}</option>)}
           </select>
           {typeWarning && <p className="md:col-span-2 text-sm text-red-600">{typeWarning}</p>}
-          <input className={fieldClass} placeholder={t("Stock")} value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
-          <input className={fieldClass} placeholder="Display" value={form.display} onChange={(e) => setForm({ ...form, display: e.target.value })} />
-          <input className={fieldClass} placeholder="Processor" value={form.processor} onChange={(e) => setForm({ ...form, processor: e.target.value })} />
-          <input className={fieldClass} placeholder="RAM" value={form.ram} onChange={(e) => setForm({ ...form, ram: e.target.value })} />
-          <input className={fieldClass} placeholder="Storage" value={form.storage} onChange={(e) => setForm({ ...form, storage: e.target.value })} />
-          <input className={fieldClass} placeholder="Camera" value={form.camera} onChange={(e) => setForm({ ...form, camera: e.target.value })} />
-          <input className={fieldClass} placeholder="Battery" value={form.battery} onChange={(e) => setForm({ ...form, battery: e.target.value })} />
-          <input className={fieldClass} placeholder="OS" value={form.os} onChange={(e) => setForm({ ...form, os: e.target.value })} />
-          <input className={`${fieldClass} md:col-span-2`} placeholder={t("Images (comma URLs)")} value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} />
-          <input className={fieldClass} placeholder={t("Sizes (comma)")} value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} />
-          <input className={fieldClass} placeholder={t("Colors (comma)")} value={form.colors} onChange={(e) => setForm({ ...form, colors: e.target.value })} />
-          <input className={`${fieldClass} md:col-span-2`} placeholder="Color Images (name:url, name:url)" value={form.colorImageMapInput} onChange={(e) => setForm({ ...form, colorImageMapInput: e.target.value })} />
-          {parsedColorNames.length > 0 && (
-            <div className="md:col-span-2 flex flex-wrap gap-2">
-              {parsedColorNames.map((colorName, idx) => (
-                <span key={`${colorName}-${idx}`} className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-2.5 py-1 text-xs bg-white">
-                  <span className="inline-block h-3.5 w-3.5 rounded-full border border-slate-300" style={{ backgroundColor: resolveColorSwatch(colorName) }} />
-                  {colorName}
-                </span>
-              ))}
+          <input className={fieldClass} placeholder={t("Stock")} value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} />
+          <input className={`${fieldClass} md:col-span-2`} placeholder={t("Images (comma URLs)")} value={form.images} onChange={e => setForm({ ...form, images: e.target.value })} />
+          <input className={fieldClass} placeholder={t("Colors (comma)")} value={form.colors} onChange={e => setForm({ ...form, colors: e.target.value })} />
+          <input className={`${fieldClass} md:col-span-2`} placeholder="Color Images (name:url, name:url)" value={form.colorImageMapInput} onChange={e => setForm({ ...form, colorImageMapInput: e.target.value })} />
+          <input className={fieldClass} placeholder="Feature Name" value={featureName} onChange={e => setFeatureName(e.target.value)} />
+          <input className={fieldClass} placeholder="Feature Description" value={featureDescription} onChange={e => setFeatureDescription(e.target.value)} />
+          <button type="button" className={actionBtnClass} onClick={() => {
+            if (!featureName.trim() || !featureDescription.trim()) return;
+            setFeatures(f => [...f, { name: featureName.trim(), description: featureDescription.trim() }]);
+            setFeatureName("");
+            setFeatureDescription("");
+          }}>Add Feature</button>
+          {features.length > 0 && (
+            <div className="mt-2">
+              <h4 className="font-semibold text-sm mb-1">Features:</h4>
+              <ul className="list-disc pl-5">
+                {features.map((f, idx) => (
+                  <li key={idx} className="mb-1">
+                    <span className="font-bold">{f.name}:</span> {f.description}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </div>
@@ -1215,3 +1222,5 @@ export default function Admin() {
     </div>
   );
 }
+
+
