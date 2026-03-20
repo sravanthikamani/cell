@@ -253,28 +253,32 @@ export default function ProductPage() {
           reviews.length
         ).toFixed(1);
 
-  const specificationRows = [
-    ...(product?.specs && typeof product.specs === "object"
-      ? Object.entries(product.specs)
-          .map(([feature, value]) => ({
-            feature: String(feature || "").trim(),
-            value: String(value || "").trim(),
-          }))
-          .filter((row) => row.feature && row.value)
-      : []),
-  ];
+  const finalSpecificationRows = (() => {
+    if (!product?.specs) return [];
 
-  const fallbackSpecs = [
-    { feature: "Display", value: product.display },
-    { feature: "Processor", value: product.processor },
-    { feature: "RAM", value: product.ram },
-    { feature: "Storage", value: product.storage },
-    { feature: "Camera", value: product.camera },
-    { feature: "Battery", value: product.battery },
-    { feature: "OS", value: product.os },
-  ];
+    // Case 1: Object (correct format)
+    if (!Array.isArray(product.specs) && typeof product.specs === "object") {
+      return Object.entries(product.specs)
+        .map(([feature, value]) => ({
+          feature: String(feature || "").trim(),
+          value: String(value || "").trim(),
+        }))
+        .filter((row) => row.feature);
+    }
 
-  const finalSpecificationRows = specificationRows.length ? specificationRows : fallbackSpecs;
+    // Case 2: Array format (current issue)
+    if (Array.isArray(product.specs)) {
+      return product.specs.map((item) => ({
+        feature: item.name || item.feature || "",
+        value: item.description || item.value || "",
+      }));
+    }
+
+    return [];
+  })();
+
+  // Log actual structure for debugging
+  console.log(product?.specs);
 
   const colorImageMap = (product?.colorImageMap && typeof product.colorImageMap === "object")
     ? product.colorImageMap
