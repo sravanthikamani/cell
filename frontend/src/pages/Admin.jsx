@@ -295,6 +295,8 @@ const [features, setFeatures] = useState([]);
   if (!isAdminRole(user.role)) return <Navigate to="/" replace />;
 
   const addProduct = async () => {
+    // Before API call for product creation
+    console.log("FEATURES:", features);
     const res = await fetch(`${API_BASE}/api/admin/products`, {
       method: "POST",
       headers: {
@@ -322,6 +324,8 @@ const [features, setFeatures] = useState([]);
   };
 
   const updateProduct = async () => {
+    // Before API call for product update
+    console.log("FEATURES:", features);
     const res = await fetch(`${API_BASE}/api/admin/products/${editingId}`, {
       method: "PUT",
       headers: {
