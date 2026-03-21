@@ -1,8 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Seo from "../components/Seo";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBackward } from "@fortawesome/free-solid-svg-icons";
 
 export default function CategoryPage() {
+    const backAccentColor = "#77ea2f";
   const { type } = useParams();
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
@@ -33,6 +36,18 @@ export default function CategoryPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-8">
+      <button
+        type="button"
+        onClick={() => navigate("/")}
+        className="mb-4 inline-flex items-center gap-2 rounded-full px-1 py-1 text-lg md:text-xl font-semibold transition hover:opacity-80"
+        style={{ color: backAccentColor }}
+        aria-label="Back"
+      >
+        <span className="product-back-wave inline-flex items-center justify-center">
+          <FontAwesomeIcon icon={faBackward} className="text-xl md:text-2xl" />
+        </span>
+        <span className="product-back-wave" style={{ animationDelay: "0.12s" }}>{type === "product" ? t("Back") : t("Back")}</span>
+      </button>
       <Seo title={`Category: ${type}`} description={`Browse all products in category: ${type}.`} />
       <h1 className="text-3xl font-bold mb-6 capitalize">{type}</h1>
       {loading && <p>Loading brands...</p>}
