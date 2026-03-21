@@ -408,7 +408,7 @@ function interpolate(text, vars) {
 
 export function I18nProvider({ children }) {
   const [lang, setLang] = useState(
-    localStorage.getItem("lang") || "en"
+    localStorage.getItem("lang") || "it"
   );
 
   useEffect(() => {
