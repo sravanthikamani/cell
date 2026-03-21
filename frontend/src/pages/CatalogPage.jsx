@@ -2,9 +2,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBackward } from "@fortawesome/free-solid-svg-icons";
 import Seo from "../components/Seo";
 
 export default function CatalogPage() {
+    const backAccentColor = "#77ea2f";
   const { group, type } = useParams(); // device/category + smartphones/audio
   const navigate = useNavigate();
   const [brands, setBrands] = useState({});
@@ -34,6 +37,18 @@ export default function CatalogPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-10">
+      <button
+        type="button"
+        onClick={() => navigate("/")}
+        className="mb-4 inline-flex items-center gap-2 rounded-full px-1 py-1 text-lg md:text-xl font-semibold transition hover:opacity-80"
+        style={{ color: backAccentColor }}
+        aria-label="Back"
+      >
+        <span className="product-back-wave inline-flex items-center justify-center">
+          <FontAwesomeIcon icon={faBackward} className="text-xl md:text-2xl" />
+        </span>
+        <span className="product-back-wave" style={{ animationDelay: "0.12s" }}>{t("Back")}</span>
+      </button>
       <Seo
         title={title}
         description={`${t("Browse all products")}: ${t(type)} / ${t(group)} | HI-TECH`}
