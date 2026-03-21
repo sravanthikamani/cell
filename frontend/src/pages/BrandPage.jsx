@@ -8,6 +8,7 @@ import { formatCurrency } from "../lib/format";
 import Seo from "../components/Seo";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBackward } from "@fortawesome/free-solid-svg-icons";
+import { ShoppingCart } from "lucide-react";
 
 export default function BrandPage() {
     const backAccentColor = "#77ea2f";
@@ -121,7 +122,8 @@ export default function BrandPage() {
             <div className="flex gap-3 mt-4">
               <button
                 onClick={() => navigate(`/product/${product._id}`)}
-                className="border px-4 py-1"
+                className="rounded-lg px-4 py-1 font-semibold text-white"
+                style={{ background: '#e27be5' }}
               >
                 {t("View")}
               </button>
@@ -147,9 +149,11 @@ export default function BrandPage() {
                   }
                   await refreshCart();
                 }}
-                className="bg-teal-600 text-white px-4 py-1"
+                className="inline-flex items-center justify-center rounded-full p-2 bg-blue-600 hover:bg-blue-700 text-white"
+                aria-label={t("Add to Cart")}
+                title={t("Add to Cart")}
               >
-                {t("Add to Cart")}
+                <ShoppingCart size={18} />
               </button>
             </div>
           </div>
