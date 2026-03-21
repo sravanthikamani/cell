@@ -450,9 +450,9 @@ export default function Navbar() {
   const desktopRelativeNavClass = ({ isActive }) =>
     `relative ${isActive ? ACTIVE_NAV_CLASS : ""}`.trim();
   const mobileNavClass = ({ isActive }) =>
-    `block py-2 text-base font-medium ${isActive ? "text-red-500 animate-pulse [text-shadow:0_0_8px_rgba(239,68,68,0.5)]" : "text-gray-800"}`;
+    `block py-2 text-base font-medium capitalize ${isActive ? "text-red-500 animate-pulse [text-shadow:0_0_8px_rgba(239,68,68,0.5)]" : "text-gray-800"}`;
   const mobileFaqNavClass = ({ isActive }) =>
-    `flex items-center gap-2 py-2 text-base font-medium ${isActive ? "text-[#ff4fa3] animate-pulse [text-shadow:0_0_8px_rgba(255,79,163,0.6)]" : "text-gray-800"}`;
+    `flex items-center gap-2 py-2 text-base font-medium capitalize ${isActive ? "text-[#ff4fa3] animate-pulse [text-shadow:0_0_8px_rgba(255,79,163,0.6)]" : "text-gray-800"}`;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full">
@@ -755,30 +755,34 @@ export default function Navbar() {
           </div>
 
           <NavLink to="/products" onClick={() => setMobileOpen(false)} className={mobileNavClass}>
-            {t("PRODUCTS")}
+            {t("Products")}
           </NavLink>
-          <NavLink to="/faq" onClick={() => setMobileOpen(false)} className={mobileFaqNavClass}>
-            <FaqBubbleIcon size={16} className="text-current" />
-            <span>{t("FAQ")}</span>
+          <NavLink to="/faq" onClick={() => setMobileOpen(false)} className={mobileFaqNavClass} aria-label={t("FAQ")} title={t("FAQ")}> 
+            <FaqBubbleIcon size={20} className="text-current" />
           </NavLink>
           <NavLink to="/orders" onClick={() => setMobileOpen(false)} className={mobileNavClass}>
-            {t("MY ORDERS")}
+            {t("My Orders")}
           </NavLink>
           {user && (
             <NavLink to="/profile" onClick={() => setMobileOpen(false)} className={mobileNavClass}>
-              {t("PROFILE")}
+              {t("Profile")}
             </NavLink>
           )}
           {user && (
             <NavLink to="/wishlist" onClick={() => setMobileOpen(false)} className={mobileNavClass}>
-              {t("WISHLIST")}
+              {t("Wishlist")}
             </NavLink>
           )}
           <NavLink to="/about" onClick={() => setMobileOpen(false)} className={mobileNavClass}>
-            {t("ABOUT US")}
+            {t("About Us")}
           </NavLink>
-          <NavLink to="/cart" onClick={() => setMobileOpen(false)} className={mobileNavClass}>
-            {t("CART")} ({cartCount})
+          <NavLink to="/cart" onClick={() => setMobileOpen(false)} className={mobileNavClass} aria-label={t("Cart")} title={t("Cart")}> 
+            <span className="relative inline-flex items-center">
+              <ShoppingBag className="inline-block" size={22} />
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 rounded-full">{cartCount}</span>
+              )}
+            </span>
           </NavLink>
 
           {isAdmin && (

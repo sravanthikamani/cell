@@ -6,8 +6,12 @@ import { API_BASE } from "../lib/api";
 import { useI18n } from "../context/I18nContext";
 import { formatCurrency } from "../lib/format";
 import Seo from "../components/Seo";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBackward } from "@fortawesome/free-solid-svg-icons";
+import { ShoppingCart } from "lucide-react";
 
 export default function BrandPage() {
+    const backAccentColor = "#77ea2f";
   const { type, brand } = useParams();
   const location = useLocation();
   // Infer group from pathname
@@ -48,6 +52,18 @@ export default function BrandPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-10">
+      <button
+        type="button"
+        onClick={() => navigate("/")}
+        className="mb-4 inline-flex items-center gap-2 rounded-full px-1 py-1 text-lg md:text-xl font-semibold transition hover:opacity-80"
+        style={{ color: backAccentColor }}
+        aria-label="Back"
+      >
+        <span className="product-back-wave inline-flex items-center justify-center">
+          <FontAwesomeIcon icon={faBackward} className="text-xl md:text-2xl" />
+        </span>
+        <span className="product-back-wave" style={{ animationDelay: "0.12s" }}>{t("Back")}</span>
+      </button>
       <Seo
         title={`${brand} ${t(type)}`}
         description={`Browse ${brand} ${t(type)} products with filters and pricing.`}
@@ -106,7 +122,8 @@ export default function BrandPage() {
             <div className="flex gap-3 mt-4">
               <button
                 onClick={() => navigate(`/product/${product._id}`)}
-                className="border px-4 py-1"
+                className="rounded-lg px-4 py-1 font-semibold text-white"
+                style={{ background: '#e27be5' }}
               >
                 {t("View")}
               </button>
@@ -132,9 +149,11 @@ export default function BrandPage() {
                   }
                   await refreshCart();
                 }}
-                className="bg-teal-600 text-white px-4 py-1"
+                className="inline-flex items-center justify-center rounded-full p-2 bg-blue-600 hover:bg-blue-700 text-white"
+                aria-label={t("Add to Cart")}
+                title={t("Add to Cart")}
               >
-                {t("Add to Cart")}
+                <ShoppingCart size={18} />
               </button>
             </div>
           </div>
