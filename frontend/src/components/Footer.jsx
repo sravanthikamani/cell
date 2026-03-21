@@ -7,8 +7,9 @@ import {
   Mail,
   Phone,
   MapPin,
-  MessageCircle,
 } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -125,20 +126,21 @@ const Footer = () => {
                   href="https://wa.me/393533495253"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="ml-2 text-green-400 hover:text-green-600"
+                  className="ml-2 hover:opacity-80"
                   title="Chat on WhatsApp"
+                  style={{ display: 'flex', alignItems: 'center' }}
                 >
-                  <MessageCircle size={18} />
+                  <FontAwesomeIcon icon={faWhatsapp} style={{ color: '#25D366', fontSize: 22 }} />
                 </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail size={16} />
-                <a
-                  href="mailto:info@hitechcinisello.it"
+                <Link
+                  to="/contact"
                   className="text-slate-300 hover:text-blue-400 underline"
                 >
                   info@hitechcinisello.it
-                </a>
+                </Link>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin size={16} className="mt-1" />
