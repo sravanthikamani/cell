@@ -7,6 +7,7 @@ import {
   Mail,
   Phone,
   MapPin,
+  MessageCircle,
 } from "lucide-react";
 
 const Footer = () => {
@@ -120,10 +121,24 @@ const Footer = () => {
               <li className="flex items-center gap-2">
                 <Phone size={16} />
                 <span className="text-slate-300">+39 353 349 5253</span>
+                <a
+                  href="https://wa.me/393533495253"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-2 text-green-400 hover:text-green-600"
+                  title="Chat on WhatsApp"
+                >
+                  <MessageCircle size={18} />
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail size={16} />
-                <span className="text-slate-300">info@hitechcinisello.it</span>
+                <a
+                  href="mailto:info@hitechcinisello.it"
+                  className="text-slate-300 hover:text-blue-400 underline"
+                >
+                  info@hitechcinisello.it
+                </a>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin size={16} className="mt-1" />
