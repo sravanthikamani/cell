@@ -119,16 +119,16 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-center gap-2">
                 <Phone size={16} />
-                <span className="text-slate-300">+1 (800) 123-4567</span>
+                <span className="text-slate-300">+39 353 349 5253</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail size={16} />
-                <span className="text-slate-300">support@sprig.com</span>
+                <span className="text-slate-300">info@hitechcinisello.it</span>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin size={16} className="mt-1" />
                 <span className="text-slate-300">
-                  123 Tech Street, Silicon Valley, CA 94025
+                  Viale Rinascita, 96, 20092 Cinisello Balsamo MI, Italy
                 </span>
               </li>
             </ul>
