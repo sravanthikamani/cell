@@ -1,3 +1,4 @@
+import { CartProvider } from "./context/CartContext";
 import { useAuth } from "./context/AuthContext";
 
 import { Routes, Route } from "react-router-dom";
@@ -19,7 +20,8 @@ import VerifyEmail from "./pages/VerifyEmail";
 import Register from "./pages/Register";
 import Wishlist from "./pages/Wishlist";
 import SessionTimeout from "./pages/SessionTimeout";
-import { CartProvider } from "./context/CartContext";
+
+import Contact from "./pages/Contact";
 
 const Home = lazy(() => import("./pages/Home"));
 const Warranty = lazy(() => import("./pages/Warranty"));
@@ -52,6 +54,7 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/faq/:item" element={<FAQ />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
