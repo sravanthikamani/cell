@@ -82,6 +82,15 @@ const ensureSocialUser = async ({ email, name = "" }) => {
   return user;
 };
 
+router.get("/google/config", (req, res) => {
+  const clientId = String(process.env.GOOGLE_CLIENT_ID || "").trim();
+  if (!clientId) {
+    return res.status(404).json({ error: "Google login is not configured" });
+  }
+
+  return res.json({ clientId });
+});
+
 /* REGISTER */
 router.post(
   "/register",

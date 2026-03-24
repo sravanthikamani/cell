@@ -9,10 +9,49 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [socialLoading, setSocialLoading] = useState(false);
+  const [googleClientId, setGoogleClientId] = useState("");
+  const [googleReady, setGoogleReady] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { t } = useI18n();
   const googleBtnRef = useRef(null);
+
+  const renderGoogleButton = () => {
+    if (!googleClientId || !googleBtnRef.current || !window.google?.accounts?.id) return;
+
+    googleBtnRef.current.innerHTML = "";
+    window.google.accounts.id.initialize({
+      client_id: googleClientId,
+      callback: async ({ credential }) => {
+        if (!credential) return;
+        const ok = await socialLogin("google", { credential });
+        if (!ok) {
+          renderGoogleButton();
+        }
+      },
+    });
+    window.google.accounts.id.renderButton(googleBtnRef.current, {
+      theme: "outline",
+      size: "large",
+      width: 320,
+    });
+    setGoogleReady(true);
+  };
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/auth/google/config`)
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Google login is not configured");
+        return data;
+      })
+      .then((data) => setGoogleClientId(String(data.clientId || "").trim()))
+      .catch((err) => {
+        console.error("Google config load failed:", err.message);
+        setGoogleClientId("");
+        setGoogleReady(false);
+      });
+  }, []);
 
   const socialLogin = async (provider, payload) => {
     setSocialLoading(true);
@@ -25,38 +64,27 @@ export default function Login() {
       const data = await res.json();
       if (!res.ok) {
         alert(data.error || `${provider} login failed`);
-        return;
+        return false;
       }
       login(data);
       navigate("/");
+      return true;
+    } catch (err) {
+      console.error(`${provider} login failed:`, err);
+      alert(err.message || `${provider} login failed`);
+      return false;
     } finally {
       setSocialLoading(false);
     }
   };
 
   useEffect(() => {
-    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     if (!googleClientId || !googleBtnRef.current) return;
 
     const existing = document.querySelector("script[data-google-gsi]");
-    const setupGoogle = () => {
-      if (!window.google?.accounts?.id) return;
-      window.google.accounts.id.initialize({
-        client_id: googleClientId,
-        callback: ({ credential }) => {
-          if (!credential) return;
-          socialLogin("google", { credential });
-        },
-      });
-      window.google.accounts.id.renderButton(googleBtnRef.current, {
-        theme: "outline",
-        size: "large",
-        width: 320,
-      });
-    };
 
     if (existing) {
-      setupGoogle();
+      renderGoogleButton();
       return;
     }
 
@@ -65,9 +93,30 @@ export default function Login() {
     script.async = true;
     script.defer = true;
     script.dataset.googleGsi = "true";
-    script.onload = setupGoogle;
+    script.onload = renderGoogleButton;
     document.body.appendChild(script);
-  }, []);
+  }, [googleClientId]);
+
+  const handleGoogleLogin = () => {
+    if (!googleClientId) {
+      alert("Google login is not configured.");
+      return;
+    }
+    if (!window.google?.accounts?.id) {
+      alert("Google login is still loading. Please try again.");
+      return;
+    }
+
+    renderGoogleButton();
+
+    const googleButton = googleBtnRef.current?.querySelector("div[role='button'], iframe");
+    if (googleButton && typeof googleButton.click === "function") {
+      googleButton.click();
+      return;
+    }
+
+    window.google.accounts.id.prompt();
+  };
 
   const handleFacebookLogin = () => {
     const appId = import.meta.env.VITE_FACEBOOK_APP_ID;
@@ -166,7 +215,22 @@ export default function Login() {
 
       <div className="my-4 text-center text-sm text-gray-500">or</div>
 
-      <div ref={googleBtnRef} className="mb-3 flex justify-center" />
+      <button
+        type="button"
+        onClick={handleGoogleLogin}
+        disabled={socialLoading || !googleClientId}
+        className="w-full bg-white border border-slate-300 text-slate-800 py-2 mb-3 disabled:opacity-60"
+      >
+        {socialLoading ? "Please wait..." : "Continue with Google"}
+      </button>
+
+      <div ref={googleBtnRef} className="hidden" aria-hidden="true" />
+
+      {!googleReady && googleClientId && (
+        <div className="mb-3 text-center text-xs text-slate-500">
+          Loading Google sign-in...
+        </div>
+      )}
 
       <button
         type="button"
