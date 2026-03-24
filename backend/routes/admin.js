@@ -399,7 +399,7 @@ router.put("/orders/:id", auth, async (req, res) => {
 
   const order = await Order.findById(req.params.id);
   const nextStatus = req.body.status;
-  const allowed = ["pending", "paid", "shipped", "delivered", "cancelled", "placed"];
+  const allowed = ["pending", "paid", "shipped", "delivered", "cancelled", "placed", "failed"];
   if (nextStatus) {
     if (!allowed.includes(nextStatus)) {
       return res.status(400).json({ error: "Invalid status" });

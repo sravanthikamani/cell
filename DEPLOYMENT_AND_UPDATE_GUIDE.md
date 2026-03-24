@@ -38,6 +38,23 @@ This file explains what you need to do when updating your code or making changes
   pm2 restart hitech-backend
   ```
 
+### Stripe production variables
+- Backend:
+  - `STRIPE_SECRET_KEY=sk_live_...`
+  - `STRIPE_WEBHOOK_SECRET=whsec_...`
+  - `STRIPE_CURRENCY=eur`
+- Frontend:
+  - `VITE_STRIPE_PUBLISHABLE_KEY=pk_live_...`
+
+### Stripe webhook endpoint
+- Production webhook URL:
+  - `https://your-domain.com/api/payments/stripe/webhook`
+- Recommended Stripe events:
+  - `payment_intent.succeeded`
+  - `payment_intent.processing`
+  - `payment_intent.payment_failed`
+  - `payment_intent.canceled`
+
 ---
 
 ## 4. **nginx Configuration**

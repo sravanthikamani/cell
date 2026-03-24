@@ -7,6 +7,7 @@ const auth = require("../middleware/auth");
 const User = require("../models/User");
 const { sendMail } = require("../utils/mailer");
 const Coupon = require("../models/Coupon");
+const Stripe = require("stripe");
 const { normalizePrice } = require("../utils/price");
 const {
   getActiveOfferForProductIds,
@@ -21,6 +22,38 @@ const {
   getPayPalCurrency,
   capturePayPalOrder,
 } = require("../utils/paypal");
+
+let stripe = null;
+try {
+  stripe = process.env.STRIPE_SECRET_KEY
+    ? new Stripe(process.env.STRIPE_SECRET_KEY)
+    : null;
+} catch (err) {
+  console.warn("Stripe initialization failed:", err.message);
+  stripe = null;
+}
+
+function isStripeConfigured() {
+  const key = String(process.env.STRIPE_SECRET_KEY || "").trim();
+  return key.startsWith("sk_");
+}
+
+function mapStripeIntentToOrderState(status) {
+  switch (status) {
+    case "succeeded":
+      return { orderStatus: "paid", paymentStatus: "succeeded" };
+    case "processing":
+      return { orderStatus: "pending", paymentStatus: "processing" };
+    case "requires_action":
+      return { orderStatus: "pending", paymentStatus: "requires_action" };
+    case "requires_payment_method":
+      return { orderStatus: "failed", paymentStatus: "failed" };
+    case "canceled":
+      return { orderStatus: "cancelled", paymentStatus: "cancelled" };
+    default:
+      return { orderStatus: "pending", paymentStatus: "pending" };
+  }
+}
 
 /* PLACE ORDER */
 router.post(
@@ -131,6 +164,53 @@ router.post(
     });
     const { tax, shipping, total, shippingOption: appliedShippingOption } = totals;
     let resolvedPaymentId = paymentId || "";
+    let orderStatus = "paid";
+    let paymentStatus = normalizedPaymentMethod === "paypal" ? "succeeded" : "pending";
+    let paymentCurrency = "";
+    let paymentAmount = 0;
+
+    if (["stripe", "klarna"].includes(normalizedPaymentMethod)) {
+      if (!resolvedPaymentId) {
+        return res.status(400).json({ message: "Stripe payment intent ID is required" });
+      }
+      if (!isStripeConfigured() || !stripe) {
+        return res.status(500).json({
+          message:
+            "Stripe is not configured. Set backend STRIPE_SECRET_KEY to a valid sk_test/sk_live key.",
+        });
+      }
+
+      const existingOrder = await Order.findOne({ paymentId: resolvedPaymentId });
+      if (existingOrder) {
+        if (String(existingOrder.userId) !== String(req.user.id)) {
+          return res.status(403).json({ message: "Forbidden" });
+        }
+        return res.json(existingOrder);
+      }
+
+      const paymentIntent = await stripe.paymentIntents.retrieve(resolvedPaymentId);
+      const expectedAmount = Math.round(total * 100);
+      const paidAmount = Number(paymentIntent.amount || 0);
+      const paidCurrency = String(paymentIntent.currency || "").toLowerCase();
+      const expectedCurrency = String(process.env.STRIPE_CURRENCY || "eur").toLowerCase();
+      const metadataUserId = String(paymentIntent?.metadata?.userId || "");
+
+      if (metadataUserId && metadataUserId !== String(req.user.id)) {
+        return res.status(400).json({ message: "Payment intent does not belong to this user" });
+      }
+      if (!Number.isFinite(paidAmount) || paidAmount !== expectedAmount) {
+        return res.status(400).json({ message: "Stripe paid amount mismatch" });
+      }
+      if (paidCurrency !== expectedCurrency) {
+        return res.status(400).json({ message: "Stripe currency mismatch" });
+      }
+
+      const mappedState = mapStripeIntentToOrderState(paymentIntent.status);
+      orderStatus = mappedState.orderStatus;
+      paymentStatus = mappedState.paymentStatus;
+      paymentCurrency = paidCurrency.toUpperCase();
+      paymentAmount = Number(paymentIntent.amount_received || paymentIntent.amount || 0) / 100;
+    }
 
     if (normalizedPaymentMethod === "paypal") {
       if (!paypalOrderId) {
@@ -168,6 +248,8 @@ router.post(
       }
 
       resolvedPaymentId = capture.id || paypalOrderId;
+      paymentCurrency = paidCurrency;
+      paymentAmount = paidAmount;
     }
 
     const orderItems = cart.items.map((i) => ({
@@ -195,8 +277,11 @@ router.post(
       address,
       paymentMethod: normalizedPaymentMethod,
       paymentId: resolvedPaymentId,
-      status: "paid",
-      statusHistory: [{ status: "paid", at: new Date() }],
+      paymentStatus,
+      paymentCurrency,
+      paymentAmount,
+      status: orderStatus,
+      statusHistory: [{ status: orderStatus, at: new Date() }],
     });
 
     // Decrease stock
@@ -216,8 +301,10 @@ router.post(
         await sendMail({
           to: user.email,
           subject: "Order confirmation",
-          text: `Your order ${order._id} has been placed. Total: EUR ${total}.`,
+          text: `Your order ${order._id} has been ${order.status === "paid" ? "confirmed" : "received"}. Total: EUR ${total}.`,
         });
+        order.confirmationSentAt = new Date();
+        await order.save();
       }
     } catch {
       // ignore email failures
@@ -230,4 +317,3 @@ router.post(
 });
 
 module.exports = router;
-

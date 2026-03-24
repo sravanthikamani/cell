@@ -92,9 +92,9 @@ function CheckoutForm({
     }
 
     setIsPaying(true);
-    const { error } = await stripe.confirmPayment({
+    const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
-      confirmParams: { return_url: window.location.origin },
+      confirmParams: { return_url: `${window.location.origin}/order-confirmation` },
       redirect: "if_required",
     });
 
@@ -116,6 +116,7 @@ function CheckoutForm({
           userId: user?.id,
           address: selectedAddress,
           paymentMethod,
+          paymentId: paymentIntent?.id,
           couponCode,
           shippingOption,
         }),
@@ -255,9 +256,12 @@ export default function Checkout() {
 
   const handleOrderSuccess = async (order) => {
     refreshCart();
-    navigate(`/order-confirmation?orderId=${order?._id || ""}`, {
+    navigate(
+      `/order-confirmation?orderId=${order?._id || ""}${order?.paymentId ? `&payment_intent=${encodeURIComponent(order.paymentId)}` : ""}`,
+      {
       state: { order },
-    });
+      }
+    );
   };
 
   const handleSaveAddress = async () => {

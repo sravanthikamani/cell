@@ -5,6 +5,7 @@ const auth = require("../middleware/auth");
 const { body, validationResult } = require("express-validator");
 const Cart = require("../models/Cart");
 const Coupon = require("../models/Coupon");
+const Order = require("../models/Order");
 const { normalizePrice } = require("../utils/price");
 const {
   getActiveOfferForProductIds,
@@ -33,6 +34,23 @@ try {
 function isStripeConfigured() {
   const key = String(process.env.STRIPE_SECRET_KEY || "").trim();
   return key.startsWith("sk_");
+}
+
+function mapStripeIntentStatus(status) {
+  switch (status) {
+    case "succeeded":
+      return "succeeded";
+    case "processing":
+      return "processing";
+    case "requires_payment_method":
+      return "failed";
+    case "canceled":
+      return "cancelled";
+    case "requires_action":
+      return "requires_action";
+    default:
+      return "pending";
+  }
 }
 
 async function loadPricingForCheckout({
@@ -179,6 +197,11 @@ router.post(
       let intentParams = {
         amount,
         currency: baseCurrency,
+        metadata: {
+          userId: String(userId),
+          shippingOption: String(pricing.shippingOption || "standard"),
+          couponCode: String(pricing.couponCode || ""),
+        },
       };
 
       if (paymentMethod === "klarna") {
@@ -254,5 +277,44 @@ router.post(
     }
   }
 );
+
+router.get("/status/:paymentId", auth, async (req, res) => {
+  try {
+    const paymentId = String(req.params.paymentId || "").trim();
+    if (!paymentId) {
+      return res.status(400).json({ error: "Payment ID is required" });
+    }
+    if (!isStripeConfigured()) {
+      return res.status(500).json({ error: "Stripe is not configured" });
+    }
+
+    const [paymentIntent, order] = await Promise.all([
+      stripe.paymentIntents.retrieve(paymentId),
+      Order.findOne({ paymentId }),
+    ]);
+
+    const metadataUserId = String(paymentIntent?.metadata?.userId || "");
+    const isOwnerFromMetadata = metadataUserId && metadataUserId === String(req.user.id);
+    const isOwnerFromOrder = order && String(order.userId) === String(req.user.id);
+    const isAdmin = req.user.role === "admin";
+
+    if (!isOwnerFromMetadata && !isOwnerFromOrder && !isAdmin) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    return res.json({
+      paymentId,
+      stripeStatus: paymentIntent.status,
+      paymentStatus: mapStripeIntentStatus(paymentIntent.status),
+      amount: Number(paymentIntent.amount_received || paymentIntent.amount || 0) / 100,
+      currency: String(paymentIntent.currency || "").toUpperCase(),
+      orderId: order?._id || null,
+      orderStatus: order?.status || null,
+    });
+  } catch (err) {
+    console.error("stripe status fetch failed:", err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;
