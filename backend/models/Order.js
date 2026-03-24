@@ -47,7 +47,20 @@ const orderSchema = new mongoose.Schema(
     grandTotal: Number,
     status: {
       type: String,
-      enum: ["pending", "paid", "shipped", "delivered", "cancelled", "placed"],
+      enum: ["pending", "paid", "shipped", "delivered", "cancelled", "placed", "failed"],
+      default: "pending",
+    },
+    paymentStatus: {
+      type: String,
+      enum: [
+        "pending",
+        "requires_payment_method",
+        "requires_action",
+        "processing",
+        "succeeded",
+        "failed",
+        "cancelled",
+      ],
       default: "pending",
     },
     statusHistory: [
@@ -57,6 +70,9 @@ const orderSchema = new mongoose.Schema(
       },
     ],
     paymentId: String,
+    paymentCurrency: String,
+    paymentAmount: Number,
+    confirmationSentAt: Date,
     shippedAt: Date,
     deliveredAt: Date,
     cancelledAt: Date,
@@ -68,5 +84,6 @@ const orderSchema = new mongoose.Schema(
 
 orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ status: 1, createdAt: -1 });
+orderSchema.index({ paymentId: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model("Order", orderSchema);

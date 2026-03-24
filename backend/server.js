@@ -16,6 +16,7 @@ const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
 const auth = require("./middleware/auth");
 const paymentRoutes = require("./routes/payments");
+const stripeWebhookRoutes = require("./routes/stripeWebhook");
 const reviewRoutes = require("./routes/reviews");
 const userRoutes = require("./routes/users");
 const couponRoutes = require("./routes/coupons");
@@ -73,6 +74,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 app.use(compression());
+app.use("/api/payments/stripe/webhook", stripeWebhookRoutes);
 app.use(express.json()); // ✅ REQUIRED for POST requests
 
 const uploadsDir = path.join(__dirname, "uploads");
