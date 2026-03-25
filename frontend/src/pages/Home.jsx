@@ -51,6 +51,9 @@ export default function Home() {
   const [featured, setFeatured] = useState([]);
   const [activeOfferInfo, setActiveOfferInfo] = useState(null);
   const [offerNowTs, setOfferNowTs] = useState(() => Date.now());
+  const [notifyEmail, setNotifyEmail] = useState("");
+  const [notifyMessage, setNotifyMessage] = useState("");
+  const [isNotifySubmitting, setIsNotifySubmitting] = useState(false);
   const { t, lang } = useI18n();
 
   useEffect(() => {
@@ -170,6 +173,44 @@ export default function Home() {
             <path d="M12 10.8v7.4" />
           </svg>
         );
+    }
+  };
+
+  const handleNotifySubmit = async () => {
+    const email = notifyEmail.trim();
+    if (!email) {
+      setNotifyMessage(t("Please enter your email."));
+      return;
+    }
+
+    try {
+      setIsNotifySubmitting(true);
+      setNotifyMessage("");
+
+      const res = await fetch(`${API_BASE}/api/notifications/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setNotifyMessage(data?.error || t("Failed to subscribe. Please try again."));
+        return;
+      }
+
+      setNotifyMessage(
+        data?.alreadySubscribed
+          ? t("This email is already subscribed.")
+          : t("Thanks for subscribing. Please check your email.")
+      );
+      if (!data?.alreadySubscribed) {
+        setNotifyEmail("");
+      }
+    } catch {
+      setNotifyMessage(t("Failed to subscribe. Please try again."));
+    } finally {
+      setIsNotifySubmitting(false);
     }
   };
 
@@ -330,10 +371,10 @@ export default function Home() {
             </span>
           ))}
         </div>
-        <div className="grand-sale-left" aria-hidden="true">
-          <span className="grand-sale-word">GRAND</span>
-          <span className="grand-sale-word">SALE</span>
-        </div>
+        <h1 className="grand-sale" aria-hidden="true">
+          <span>GRAND</span>
+          <span>SALE</span>
+        </h1>
         <div className="relative z-10 w-full sm:max-w-2xl sm:ml-auto text-right rounded-xl sm:rounded-2xl bg-black/28 sm:bg-black/18 backdrop-blur-[1px] p-3 sm:p-4 md:p-5">
           <p className="offer-copy mt-1 text-white/95">
             {activeOfferInfo ? (
@@ -438,14 +479,33 @@ export default function Home() {
           </div>
           <div className="mt-1 md:mt-0 flex flex-col sm:flex-row gap-2 w-full md:w-auto">
             <input
+              type="email"
+              value={notifyEmail}
+              onChange={(e) => setNotifyEmail(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (!isNotifySubmitting) {
+                    handleNotifySubmit();
+                  }
+                }
+              }}
               placeholder={t("Your email")}
               className="w-full sm:flex-1 md:w-64 rounded-full px-4 py-2 text-slate-900"
             />
-            <button className="btn-primary w-full sm:w-auto">
-              {t("Notify me")}
+            <button
+              type="button"
+              onClick={handleNotifySubmit}
+              disabled={isNotifySubmitting}
+              className="btn-primary w-full sm:w-auto disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isNotifySubmitting ? t("Processing...") : t("Notify me")}
             </button>
           </div>
         </div>
+        {notifyMessage ? (
+          <p className="mt-4 text-sm text-slate-200">{notifyMessage}</p>
+        ) : null}
       </div>
       </div>
     </div>
