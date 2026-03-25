@@ -27,9 +27,11 @@ const Home = lazy(() => import("./pages/Home"));
 const Warranty = lazy(() => import("./pages/Warranty"));
 const About = lazy(() => import("./pages/About"));
 const FAQ = lazy(() => import("./pages/FAQ"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const CatalogPage = lazy(() => import("./pages/CatalogPage"));
 const BrandPage = lazy(() => import("./pages/BrandPage"));
 const ProductPage = lazy(() => import("./pages/ProductPage"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const Cart = lazy(() => import("./pages/Cart"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
@@ -54,6 +56,8 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/faq/:item" element={<FAQ />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

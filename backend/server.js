@@ -23,6 +23,7 @@ const couponRoutes = require("./routes/coupons");
 const wishlistRoutes = require("./routes/wishlist");
 const offersRoutes = require("./routes/offers");
 const contactRoutes = require("./routes/contact");
+const notificationsRoutes = require("./routes/notifications");
 const {
   normalizePrice,
   normalizeProductPrice,
@@ -108,6 +109,7 @@ app.use("/api/wishlist", apiLimiter, wishlistRoutes);
 
 app.use("/api/offers", apiLimiter, offersRoutes);
 app.use("/api/contact", apiLimiter, contactRoutes);
+app.use("/api/notifications", apiLimiter, notificationsRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({ ok: true, uptime: Math.round(process.uptime()) });

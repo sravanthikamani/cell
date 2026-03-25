@@ -87,9 +87,6 @@ h3,
   @apply border border-slate-900/10 bg-white px-5 py-2 rounded-full text-slate-900 hover:bg-slate-50 transition;
 }
 
-.app-content h1 {
-  display: none !important;
-}
 
 .animate-fade-up {
   animation: fadeUp 0.5s ease both;
@@ -373,20 +370,99 @@ body.about-bg-active {
   pointer-events: none;
 }
 
-.exclusive-offers-section .grand-sale-left {
-  position: absolute;
-  left: clamp(0.85rem, 2.8vw, 2.6rem);
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
-  width: min(42vw, 360px);
-  display: flex;
-  flex-direction: column;
-  line-height: 0.88;
-  pointer-events: none;
-  user-select: none;
+
+.grand-sale {
+  text-align: center;
+  font-family: 'Bungee', 'Arial Black', sans-serif;
 }
 
+.grand-sale span {
+  display: block;
+  font-size: 110px;
+  line-height: 0.9;
+  letter-spacing: 6px;
+  color: #ffe600;
+  -webkit-text-stroke: 8px #ff2f92;
+  text-stroke: 8px #ff2f92;
+  text-shadow:
+    3px 3px 0 #ff2f92,
+    6px 6px 0 #e91e63,
+    9px 9px 0 #9c27b0,
+    12px 12px 0 #6a1b9a,
+    15px 15px 0 #4a148c;
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    text-shadow:
+      3px 3px 0 #ff2f92,
+      6px 6px 0 #e91e63,
+      9px 9px 0 #9c27b0,
+      12px 12px 0 #6a1b9a,
+      15px 15px 0 #4a148c,
+      0 0 10px #ff2f92,
+      0 0 20px #ff2f92;
+  }
+  to {
+    text-shadow:
+      3px 3px 0 #ff2f92,
+      6px 6px 0 #e91e63,
+      9px 9px 0 #9c27b0,
+      12px 12px 0 #6a1b9a,
+      15px 15px 0 #4a148c,
+      0 0 25px #ff2f92,
+      0 0 50px #ff2f92;
+  }
+}
+
+.grand-sale span:nth-child(1) {
+  animation:
+    slideInTop 1s ease-out forwards,
+    glow 2s ease-in-out infinite alternate;
+}
+
+.grand-sale span:nth-child(2) {
+  animation:
+    slideInBottom 1s ease-out forwards,
+    glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes slideInTop {
+  0% {
+    transform: translateY(-200px) scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInBottom {
+  0% {
+    transform: translateY(200px) scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+
+.loop .grand-sale span {
+  animation:
+    glow 2s ease-in-out infinite alternate,
+    slideInTop 1s ease-out,
+    fadeOut 1s ease-in 4s forwards;
+}
 .exclusive-offers-section .grand-sale-word {
   display: block;
   font-family: "Arial Black", "Montserrat", "Roboto", sans-serif;
@@ -394,15 +470,18 @@ body.about-bg-active {
   font-weight: 900;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  background: linear-gradient(180deg, #f5d0fe 0%, #e879f9 35%, #c026d3 64%, #a21caf 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-family: 'Arial Black', sans-serif;
+  font-size: 100px;
+  line-height: 0.9;
+  text-align: center;
+  color: #ffe600;
+  -webkit-text-stroke: 6px #ff2f92;
+  text-stroke: 6px #ff2f92;
   text-shadow:
-    0 3px 0 rgba(76, 29, 149, 0.45),
-    0 0 12px rgba(217, 70, 239, 0.85),
-    0 0 24px rgba(192, 38, 211, 0.7);
-  animation: slideIn 1.8s ease-out, glow 1.6s infinite alternate;
+    4px 4px 0 #d81b60,
+    8px 8px 0 #8e24aa,
+    12px 12px 0 #6a1b9a;
+  letter-spacing: 5px;
 }
 
 .exclusive-offers-section .offer-copy {

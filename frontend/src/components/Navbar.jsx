@@ -41,6 +41,12 @@ const DEFAULT_MENU_DATA = {
 const NAVBAR_GRADIENT_CLASS = "bg-[linear-gradient(90deg,#a8eb12_0%,#00bf72_25%,#008793_50%,#004d7a_75%,#051937_100%)]";
 const ACTIVE_NAV_CLASS = "text-red-400 animate-pulse [text-shadow:0_0_10px_rgba(248,113,113,0.9)]";
 const FAQ_ACTIVE_NAV_CLASS = "text-[#ff4fa3] animate-pulse [text-shadow:0_0_10px_rgba(255,79,163,0.9)]";
+const LANGUAGE_OPTIONS = [
+  { value: "en", label: "English" },
+  { value: "it", label: "Italiano" },
+  { value: "es", label: "Espanol" },
+  { value: "de", label: "Deutsch" },
+];
 
 const sanitizeMenuSection = (value, fallback) => {
   if (!Array.isArray(value)) return fallback;
@@ -672,9 +678,13 @@ export default function Navbar() {
             value={lang}
             onChange={(e) => setLang(e.target.value)}
             aria-label="Language"
+            data-i18n-skip
           >
-            <option value="en">{t("English")}</option>
-            <option value="it">{t("Italian")}</option>
+            {LANGUAGE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -835,9 +845,13 @@ export default function Navbar() {
               value={lang}
               onChange={(e) => setLang(e.target.value)}
               aria-label="Language"
+              data-i18n-skip
             >
-              <option value="en">{t("English")}</option>
-              <option value="it">{t("Italian")}</option>
+              {LANGUAGE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
 
