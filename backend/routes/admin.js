@@ -8,6 +8,10 @@ const auth = require("../middleware/auth");
 const { body, validationResult } = require("express-validator");
 const User = require("../models/User");
 const { sendMail } = require("../utils/mailer");
+const {
+  notifySubscribersAboutOffer,
+  notifySubscribersAboutCoupon,
+} = require("../utils/notifications");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -500,6 +504,11 @@ router.post("/coupons", auth, async (req, res) => {
     code: String(req.body.code || "").toUpperCase(),
   };
   const coupon = await Coupon.create(data);
+  try {
+    await notifySubscribersAboutCoupon(coupon);
+  } catch (err) {
+    console.error("Coupon subscriber notification failed:", err.message);
+  }
   res.json(coupon);
 });
 
@@ -602,6 +611,11 @@ router.post("/offers", auth, async (req, res) => {
   });
 
   const offer = await Offer.findById(created._id).populate("productIds").lean();
+  try {
+    await notifySubscribersAboutOffer(offer);
+  } catch (err) {
+    console.error("Offer subscriber notification failed:", err.message);
+  }
   return res.json({ success: true, offer });
 });
 
