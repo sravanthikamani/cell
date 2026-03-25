@@ -10,9 +10,11 @@ import {
 } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
+import { useI18n } from "../context/I18nContext";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const { t } = useI18n();
 
   return (
     <footer className="bg-slate-900 text-slate-100">
@@ -23,7 +25,7 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-bold mb-4">HITECH</h3>
             <p className="text-slate-300 text-sm mb-4">
-              Your trusted destination for premium electronics and accessories.
+              {t("Your trusted destination for premium electronics and accessories.")}
             </p>
             <div className="flex gap-4">
               <a
@@ -63,26 +65,26 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
+            <h4 className="text-lg font-semibold mb-4">{t("Quick Links")}</h4>
             <ul className="space-y-2">
               <li>
                 <Link to="/" className="text-slate-300 hover:text-white transition">
-                  Home
+                  {t("Home")}
                 </Link>
               </li>
               <li>
                 <Link to="/products" className="text-slate-300 hover:text-white transition">
-                  Products
+                  {t("Products")}
                 </Link>
               </li>
               <li>
                 <Link to="/about" className="text-slate-300 hover:text-white transition">
-                  About Us
+                  {t("About Us")}
                 </Link>
               </li>
               <li>
                 <Link to="/faq" className="text-slate-300 hover:text-white transition">
-                  FAQ
+                  {t("FAQ")}
                 </Link>
               </li>
             </ul>
@@ -90,34 +92,40 @@ const Footer = () => {
 
           {/* Support */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Support</h4>
+            <h4 className="text-lg font-semibold mb-4">{t("Support")}</h4>
             <ul className="space-y-2">
               <li>
                 <Link to="/warranty" className="text-slate-300 hover:text-white transition">
-                  Warranty
+                  {t("Warranty")}
                 </Link>
               </li>
               <li>
                 <Link to="/orders" className="text-slate-300 hover:text-white transition">
-                  Shipping & Returns
+                  {t("Shipping & Returns")}
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-slate-300 hover:text-white transition">
-                  Terms of Service
-                </a>
+                <Link
+                  to="/terms-of-service"
+                  className="text-slate-300 hover:text-white transition"
+                >
+                  {t("Terms of Service")}
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-slate-300 hover:text-white transition">
-                  Privacy Policy
-                </a>
+                <Link
+                  to="/privacy-policy"
+                  className="text-slate-300 hover:text-white transition"
+                >
+                  {t("Privacy Policy")}
+                </Link>
               </li>
             </ul>
           </div>
 
           {/* Contact */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Contact Us</h4>
+            <h4 className="text-lg font-semibold mb-4">{t("Contact Us")}</h4>
             <ul className="space-y-3">
               <li className="flex items-center gap-2">
                 <Phone size={16} />
@@ -127,7 +135,7 @@ const Footer = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="ml-2 hover:opacity-80"
-                  title="Chat on WhatsApp"
+                  title={t("Chat on WhatsApp")}
                   style={{ display: 'flex', alignItems: 'center' }}
                 >
                   <FontAwesomeIcon icon={faWhatsapp} style={{ color: '#25D366', fontSize: 22 }} />
@@ -156,19 +164,8 @@ const Footer = () => {
         <div className="border-t border-slate-700 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-slate-400 text-sm">
-              © {currentYear} HITECH. All rights reserved.
+              © {currentYear} HITECH. {t("All rights reserved.")}
             </p>
-            <div className="flex gap-6 mt-4 md:mt-0">
-              <a href="#" className="text-slate-400 hover:text-white text-sm transition">
-                Privacy
-              </a>
-              <a href="#" className="text-slate-400 hover:text-white text-sm transition">
-                Terms
-              </a>
-              <a href="#" className="text-slate-400 hover:text-white text-sm transition">
-                Cookies
-              </a>
-            </div>
           </div>
         </div>
       </div>
