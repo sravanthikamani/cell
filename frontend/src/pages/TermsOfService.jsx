@@ -1,15 +1,16 @@
 import Seo from "../components/Seo";
+import Footer from "../components/Footer";
 
 export default function TermsOfService() {
   return (
-    <div className="bg-slate-50 min-h-screen py-10 px-4">
+    <div className="bg-slate-50 min-h-screen flex flex-col w-full py-0 px-0">
       <Seo
         title="Terms of Service"
         description="Read the Terms of Service for using the HI-TECH website, products, repairs, and support services."
         canonicalPath="/terms-of-service"
       />
 
-      <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl p-6 md:p-10">
+      <div className="flex-1 w-full bg-white rounded-3xl shadow-xl p-6 md:p-10">
         <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900">
           Terms of Service
         </h1>
@@ -130,6 +131,7 @@ export default function TermsOfService() {
           </section>
         </div>
       </div>
+      {/* <Footer /> */}
     </div>
   );
 }

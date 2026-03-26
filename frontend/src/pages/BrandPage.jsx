@@ -51,7 +51,7 @@ export default function BrandPage() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto p-10">
+    <div className="w-full h-screen p-10">
       <button
         type="button"
         onClick={() => navigate("/")}

@@ -13,7 +13,7 @@ export default function SessionTimeout() {
   }, [navigate]);
 
   return (
-    <div className="max-w-xl mx-auto p-10">
+    <div className="w-full h-screen p-10">
       <Seo
         title="Session Timed Out"
         description="Your session has timed out due to inactivity."

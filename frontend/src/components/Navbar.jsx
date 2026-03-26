@@ -38,7 +38,7 @@ const DEFAULT_MENU_DATA = {
   ],
 };
 
-const NAVBAR_GRADIENT_CLASS = "bg-[linear-gradient(90deg,#a8eb12_0%,#00bf72_25%,#008793_50%,#004d7a_75%,#051937_100%)]";
+const NAVBAR_GRADIENT_CLASS = "bg-white";
 const ACTIVE_NAV_CLASS = "text-red-400 animate-pulse [text-shadow:0_0_10px_rgba(248,113,113,0.9)]";
 const FAQ_ACTIVE_NAV_CLASS = "text-[#ff4fa3] animate-pulse [text-shadow:0_0_10px_rgba(255,79,163,0.9)]";
 const LANGUAGE_OPTIONS = [
@@ -99,7 +99,7 @@ const Dropdown = ({
         onClick={() =>
           setOpenDropdown(openDropdown === dropdownKey ? null : dropdownKey)
         }
-        className={`flex items-center gap-1 hover:text-blue-600 ${isActive ? ACTIVE_NAV_CLASS : ""}`}
+        className={`flex items-center gap-1 hover:text-blue-600 ${isActive ? ACTIVE_NAV_CLASS : "navbar-main-item"}`}
         aria-expanded={openDropdown === dropdownKey}
         aria-haspopup="menu"
       >
@@ -204,6 +204,7 @@ const FaqBubbleIcon = ({ size = 22, className = "" }) => (
   <FontAwesomeIcon icon={faCircleQuestion} className={className} style={{ fontSize: `${size}px` }} />
 );
 
+
 export default function Navbar() {
   //const { cartCount } = useCart();
   const cartContext = useCart() || {};
@@ -217,6 +218,12 @@ export default function Navbar() {
 
   // Icon color
   const iconColor = "#ffffff";
+
+  // Force re-render on login/logout
+  const [authVersion, setAuthVersion] = useState(0);
+  useEffect(() => {
+    setAuthVersion((v) => v + 1);
+  }, [user, token]);
 
   const [menuData, setMenuData] = useState(DEFAULT_MENU_DATA);
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -452,13 +459,13 @@ export default function Navbar() {
   };
 
   const desktopNavClass = ({ isActive }) =>
-    isActive ? ACTIVE_NAV_CLASS : "";
+    isActive ? ACTIVE_NAV_CLASS : "navbar-main-item";
   const desktopRelativeNavClass = ({ isActive }) =>
-    `relative ${isActive ? ACTIVE_NAV_CLASS : ""}`.trim();
+    `relative ${isActive ? ACTIVE_NAV_CLASS : "navbar-main-item"}`.trim();
   const mobileNavClass = ({ isActive }) =>
-    `block py-2 text-base font-medium capitalize ${isActive ? "text-red-500 animate-pulse [text-shadow:0_0_8px_rgba(239,68,68,0.5)]" : "text-gray-800"}`;
+    `block py-2 text-base font-medium capitalize ${isActive ? "text-red-500 animate-pulse [text-shadow:0_0_8px_rgba(239,68,68,0.5)]" : "text-black"}`;
   const mobileFaqNavClass = ({ isActive }) =>
-    `flex items-center gap-2 py-2 text-base font-medium capitalize ${isActive ? "text-[#ff4fa3] animate-pulse [text-shadow:0_0_8px_rgba(255,79,163,0.6)]" : "text-gray-800"}`;
+    `flex items-center gap-2 py-2 text-base font-medium capitalize ${isActive ? "text-[#ff4fa3] animate-pulse [text-shadow:0_0_8px_rgba(255,79,163,0.6)]" : "text-black"}`;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full">
@@ -479,7 +486,7 @@ export default function Navbar() {
         </button>
       </div>
 
-      <div className={`flex items-center justify-between px-4 lg:px-6 py-2 lg:py-4 shadow-md sticky top-0 z-40 text-white ${NAVBAR_GRADIENT_CLASS}`}>
+      <div className={`flex items-center justify-between px-4 lg:px-6 py-2 lg:py-4 shadow-md sticky top-0 z-40 text-black ${NAVBAR_GRADIENT_CLASS}`}>
         <Link to="/">
           <img 
             src="/images/logo.png"
@@ -580,7 +587,7 @@ export default function Navbar() {
               onClick={() => setGlobalSearchOpen((open) => !open)}
               aria-label={t("Search")}
             >
-              <Search size={20} color={iconColor} />
+              <Search size={20} color="#2563eb" />
             </button>
 
             {globalSearchOpen && (
@@ -665,7 +672,7 @@ export default function Navbar() {
           )}
 
           <Link to="/cart" className="relative">
-            <ShoppingBag color={iconColor} />
+            <ShoppingBag color="#2563eb" />
             {cartCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 rounded-full">
                 {cartCount}
@@ -705,7 +712,7 @@ export default function Navbar() {
           <div className="py-1">
               <button
                 type="button"
-                className="w-full flex items-center justify-between py-1.5 text-base font-medium text-gray-800"
+                className="w-full flex items-center justify-between py-1.5 text-base font-medium text-black"
                 onClick={() =>
                   setOpenDropdown(openDropdown === "mobile-device" ? null : "mobile-device")
                 }
@@ -736,7 +743,7 @@ export default function Navbar() {
           <div className="py-1">
               <button
                 type="button"
-                className="w-full flex items-center justify-between py-1.5 text-base font-medium text-gray-800"
+                className="w-full flex items-center justify-between py-1.5 text-base font-medium text-black"
                 onClick={() =>
                   setOpenDropdown(openDropdown === "mobile-category" ? null : "mobile-category")
                 }
@@ -799,7 +806,7 @@ export default function Navbar() {
             <div className="py-1">
               <button
                 type="button"
-                className="w-full flex items-center justify-between py-1.5 text-base font-medium text-gray-800"
+                className="w-full flex items-center justify-between py-1.5 text-base font-medium text-black"
                 onClick={() =>
                   setOpenDropdown(openDropdown === "mobile-admin" ? null : "mobile-admin")
                 }
@@ -863,7 +870,7 @@ export default function Navbar() {
                   setMobileOpen(false);
                   navigate("/login");
                 }}
-                className="w-full text-left py-2 text-base font-medium text-gray-800"
+                className="w-full text-left py-2 text-base font-medium text-black"
               >
                 {t("Login")}
               </button>

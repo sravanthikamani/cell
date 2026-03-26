@@ -5,6 +5,7 @@ import { useI18n } from "../context/I18nContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBackward } from "@fortawesome/free-solid-svg-icons";
 import Seo from "../components/Seo";
+import Sidebar from "../components/Sidebar";
 
 export default function CatalogPage() {
     const backAccentColor = "#77ea2f";
@@ -36,7 +37,9 @@ export default function CatalogPage() {
   const title = `${t(type || "").toUpperCase()} | ${t(group || "").toUpperCase()} | HI-TECH`;
 
   return (
-    <div className="max-w-6xl mx-auto p-10">
+    <div className="min-h-screen flex flex-col md:flex-row">
+      <Sidebar />
+      <div className="flex-1 max-w-6xl mx-auto p-10">
       <button
         type="button"
         onClick={() => navigate("/")}
@@ -89,6 +92,7 @@ export default function CatalogPage() {
             {t(brand)}
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

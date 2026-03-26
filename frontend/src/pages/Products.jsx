@@ -182,10 +182,10 @@ export default function Products() {
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat"
+      className="min-h-screen w-full bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url(${productsBg})` }}
     >
-      <div className="max-w-6xl mx-auto p-6 md:p-10">
+      <div className="w-full h-full p-6 md:p-10">
       <Seo
         title={hasSearchQuery ? `Search: ${q.trim()}` : "Products"}
         description={

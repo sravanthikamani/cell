@@ -2,14 +2,14 @@ import Seo from "../components/Seo";
 
 export default function PrivacyPolicy() {
   return (
-    <div className="bg-slate-50 min-h-screen py-10 px-4">
+    <div className="bg-slate-50 min-h-screen w-full py-10 px-0">
       <Seo
         title="Privacy Policy"
         description="Read how HI-TECH collects, uses, stores, and protects customer and subscriber information."
         canonicalPath="/privacy-policy"
       />
 
-      <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl p-6 md:p-10">
+      <div className="w-full bg-white rounded-none shadow-none p-4 md:p-8">
         <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900">
           Privacy Policy
         </h1>

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { normalizeAuthUser } from "../lib/auth";
 import { API_BASE } from "../lib/api";
@@ -92,8 +92,12 @@ export function AuthProvider({ children }) {
     };
   }, [token]);
 
+  const value = useMemo(
+    () => ({ user, token, login, logout }),
+    [user, token]
+  );
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
