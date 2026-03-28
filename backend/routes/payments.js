@@ -213,7 +213,7 @@ router.post(
       } else {
         intentParams = {
           ...intentParams,
-          automatic_payment_methods: { enabled: true },
+          payment_method_types: ["card"],
         };
       }
 

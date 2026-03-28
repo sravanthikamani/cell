@@ -62,6 +62,7 @@ export default function Profile() {
       if (!raw) return;
       const parsed = JSON.parse(raw);
       localStorage.setItem("user", JSON.stringify({ ...parsed, ...patch }));
+      window.dispatchEvent(new Event("auth:changed"));
     } catch {
       // ignore local storage sync errors
     }

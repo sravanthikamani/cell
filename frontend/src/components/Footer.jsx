@@ -164,7 +164,7 @@ const Footer = () => {
         <div className="border-t border-slate-700 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-slate-400 text-sm">
-              © {currentYear} HITECH. {t("All rights reserved.")}
+              Copyright © HI-TECH, {currentYear}. All Rights Reserved. Website by Asiduo Solutions
             </p>
           </div>
         </div>

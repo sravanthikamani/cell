@@ -117,7 +117,7 @@ export default function ProductPage() {
     }
 
     await refreshCart();
-    alert(t("Added to cart"));
+    window.location.reload();
   };
 
   const submitReview = async () => {
@@ -241,8 +241,7 @@ export default function ProductPage() {
       },
       body: JSON.stringify({ productId: product._id }),
     });
-    setIsWishlisted(!isWishlisted);
-    window.dispatchEvent(new Event("wishlist:changed"));
+    window.location.reload();
   };
 
   const avgRating =
@@ -276,9 +275,6 @@ export default function ProductPage() {
 
     return [];
   })();
-
-  // Log actual structure for debugging
-  console.log(product?.specs);
 
   const colorImageMap = (product?.colorImageMap && typeof product.colorImageMap === "object")
     ? product.colorImageMap

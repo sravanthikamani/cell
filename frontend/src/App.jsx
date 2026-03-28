@@ -41,7 +41,7 @@ const Offers = lazy(() => import("./pages/Offers"));
 export default function App() {
   const { user, token } = useAuth();
   return (
-    <CartProvider user={user} token={token}>
+    <>
       <UrlNormalizer />
       <Navbar />
       <main className="pt-36 md:pt-40 app-content" id="main-content">
@@ -79,6 +79,6 @@ export default function App() {
         </Suspense>
       </main>
       <Footer />
-    </CartProvider>
+    </>
   );
 }

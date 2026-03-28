@@ -34,9 +34,8 @@ export default function CategoryPage() {
         setLoading(false);
       });
   }, [type]);
-
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
+    <div key={type} className="min-h-screen flex flex-col md:flex-row">
       <Sidebar />
       <div className="flex-1 p-8">
         <button

@@ -29,6 +29,7 @@ export function AuthProvider({ children }) {
     setToken(nextToken);
     localStorage.setItem("user", JSON.stringify(nextUser));
     localStorage.setItem("token", nextToken);
+    window.dispatchEvent(new Event("auth:changed"));
     sessionStorage.removeItem("session_timeout");
   };
 
@@ -37,6 +38,7 @@ export function AuthProvider({ children }) {
     setToken(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    window.dispatchEvent(new Event("auth:changed"));
 
     if (reason === "timeout") {
       sessionStorage.setItem("session_timeout", "1");
@@ -45,7 +47,7 @@ export function AuthProvider({ children }) {
     }
 
     sessionStorage.removeItem("session_timeout");
-    navigate("/", { replace: true });
+    window.location.assign("/");
   };
 
   useEffect(() => {
@@ -84,6 +86,7 @@ export function AuthProvider({ children }) {
         const nextUser = normalizeAuthUser(data, token);
         setUser(nextUser);
         localStorage.setItem("user", JSON.stringify(nextUser));
+        window.dispatchEvent(new Event("auth:changed"));
       })
       .catch(() => {});
 

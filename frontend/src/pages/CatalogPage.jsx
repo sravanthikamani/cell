@@ -19,6 +19,14 @@ export default function CatalogPage() {
       .trim()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
+  const formatSegmentLabel = (value = "") =>
+    String(value)
+      .split("-")
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  const groupLabel = formatSegmentLabel(group);
+  const typeLabel = formatSegmentLabel(type);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/catalog`)
@@ -34,10 +42,10 @@ export default function CatalogPage() {
       });
   }, [group, type]);
 
-  const title = `${t(type || "").toUpperCase()} | ${t(group || "").toUpperCase()} | HI-TECH`;
+  const title = `${t(typeLabel).toUpperCase()} | ${t(groupLabel).toUpperCase()} | HI-TECH`;
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
+    <div key={`${group}-${type}`} className="min-h-screen flex flex-col md:flex-row">
       <Sidebar />
       <div className="flex-1 max-w-6xl mx-auto p-10">
       <button
@@ -54,12 +62,12 @@ export default function CatalogPage() {
       </button>
       <Seo
         title={title}
-        description={`${t("Browse all products")}: ${t(type)} / ${t(group)} | HI-TECH`}
+        description={`${t("Browse all products")}: ${t(typeLabel)} / ${t(groupLabel)} | HI-TECH`}
         canonicalPath={`/${normalizeSegment(group)}/${normalizeSegment(type)}`}
       />
 
       <h1 className="text-3xl font-bold mb-6 capitalize">
-        {t(type)}
+        {t(typeLabel)}
       </h1>
 
       {Object.keys(brands).length === 0 && (

@@ -166,8 +166,8 @@ export default function Products() {
       return;
     }
 
-    await refreshCart(); // ✅ cart icon updates
-    alert(t("Added to cart"));
+    await refreshCart();
+    window.location.reload();
   };
 
   const clearFilters = () => {
@@ -430,6 +430,3 @@ export default function Products() {
     </div>
   );
 }
-
-
-

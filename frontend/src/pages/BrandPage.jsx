@@ -148,6 +148,7 @@ export default function BrandPage() {
                     return;
                   }
                   await refreshCart();
+                  window.location.reload();
                 }}
                 className="inline-flex items-center justify-center rounded-full p-2 bg-blue-600 hover:bg-blue-700 text-white"
                 aria-label={t("Add to Cart")}
