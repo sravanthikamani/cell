@@ -15,18 +15,19 @@ export default function Login() {
   const navigate = useNavigate();
   const { t } = useI18n();
   const googleBtnRef = useRef(null);
+  const googleInitRef = useRef(false);
 
+  // Only initialize Google once per page load
   const renderGoogleButton = () => {
     if (!googleClientId || !googleBtnRef.current || !window.google?.accounts?.id) return;
-
-    googleBtnRef.current.innerHTML = "";
+    if (googleInitRef.current) return;
     window.google.accounts.id.initialize({
       client_id: googleClientId,
       callback: async ({ credential }) => {
         if (!credential) return;
         const ok = await socialLogin("google", { credential });
         if (!ok) {
-          renderGoogleButton();
+          // Optionally, you can re-render the button here if needed
         }
       },
     });
@@ -35,6 +36,7 @@ export default function Login() {
       size: "large",
       width: 320,
     });
+    googleInitRef.current = true;
     setGoogleReady(true);
   };
 
@@ -67,7 +69,7 @@ export default function Login() {
         return false;
       }
       login(data);
-      navigate("/");
+      window.location.assign("/");
       return true;
     } catch (err) {
       console.error(`${provider} login failed:`, err);
@@ -81,20 +83,27 @@ export default function Login() {
   useEffect(() => {
     if (!googleClientId || !googleBtnRef.current) return;
 
-    const existing = document.querySelector("script[data-google-gsi]");
-
-    if (existing) {
+    // Only add the script if it doesn't exist
+    if (!window.google?.accounts?.id) {
+      const existing = document.querySelector("script[data-google-gsi]");
+      if (!existing) {
+        const script = document.createElement("script");
+        script.src = "https://accounts.google.com/gsi/client";
+        script.async = true;
+        script.defer = true;
+        script.dataset.googleGsi = "true";
+        script.onload = renderGoogleButton;
+        document.body.appendChild(script);
+      } else {
+        existing.onload = renderGoogleButton;
+      }
+    } else {
       renderGoogleButton();
-      return;
     }
-
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.defer = true;
-    script.dataset.googleGsi = "true";
-    script.onload = renderGoogleButton;
-    document.body.appendChild(script);
+    // Cleanup: reset ref if component unmounts (SPA navigation)
+    return () => {
+      googleInitRef.current = false;
+    };
   }, [googleClientId]);
 
   const handleGoogleLogin = () => {
@@ -106,15 +115,7 @@ export default function Login() {
       alert("Google login is still loading. Please try again.");
       return;
     }
-
-    renderGoogleButton();
-
-    const googleButton = googleBtnRef.current?.querySelector("div[role='button'], iframe");
-    if (googleButton && typeof googleButton.click === "function") {
-      googleButton.click();
-      return;
-    }
-
+    // Only prompt, don't re-initialize or re-render
     window.google.accounts.id.prompt();
   };
 
@@ -173,7 +174,7 @@ export default function Login() {
     const data = await res.json();
     if (data.token) {
       login(data);
-      navigate("/");
+      window.location.assign("/");
     } else {
       alert(data.error || t("Login failed"));
     }
@@ -215,17 +216,7 @@ export default function Login() {
 
       <div className="my-4 text-center text-sm text-gray-500">or</div>
 
-      <button
-        type="button"
-        onClick={handleGoogleLogin}
-        disabled={socialLoading || !googleClientId}
-        className="w-full bg-white border border-slate-300 text-slate-800 py-2 mb-3 disabled:opacity-60"
-      >
-        {socialLoading ? "Please wait..." : "Continue with Google"}
-      </button>
-
-      <div ref={googleBtnRef} className="hidden" aria-hidden="true" />
-
+      <div ref={googleBtnRef} className="flex justify-center my-3" />
       {!googleReady && googleClientId && (
         <div className="mb-3 text-center text-xs text-slate-500">
           Loading Google sign-in...

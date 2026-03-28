@@ -205,11 +205,8 @@ const FaqBubbleIcon = ({ size = 22, className = "" }) => (
 );
 
 export default function Navbar() {
-  //const { cartCount } = useCart();
-  const cartContext = useCart() || {};
-  const { cartCount = 0 } = cartContext;
-  const authContext = useAuth() || {};
-  const { user = null, token = null, logout = () => {} } = authContext;
+  const { cartCount = 0 } = useCart();
+  const { user = null, token = null, logout = () => {} } = useAuth();
   const i18nContext = useI18n() || {};
   const { lang = 'en', setLang = () => {}, t = (x) => x } = i18nContext;
   const [wishlistCount, setWishlistCount] = useState(0);
@@ -452,9 +449,9 @@ export default function Navbar() {
   };
 
   const desktopNavClass = ({ isActive }) =>
-    isActive ? ACTIVE_NAV_CLASS : "";
+    `transition-colors duration-200 hover:text-white ${isActive ? ACTIVE_NAV_CLASS : "text-white/95"}`.trim();
   const desktopRelativeNavClass = ({ isActive }) =>
-    `relative ${isActive ? ACTIVE_NAV_CLASS : ""}`.trim();
+    `relative transition-colors duration-200 hover:text-white ${isActive ? ACTIVE_NAV_CLASS : "text-white/95"}`.trim();
   const mobileNavClass = ({ isActive }) =>
     `block py-2 text-base font-medium capitalize ${isActive ? "text-red-500 animate-pulse [text-shadow:0_0_8px_rgba(239,68,68,0.5)]" : "text-gray-800"}`;
   const mobileFaqNavClass = ({ isActive }) =>
@@ -484,11 +481,11 @@ export default function Navbar() {
           <img 
             src="/images/logo.png"
             alt="CELL Logo"
-            className="h-12 lg:h-20 object-contain bg-transparent"
+            className="h-12 lg:h-16 object-contain bg-transparent"
           />
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-4 lg:gap-8 text-sm font-semibold text-white/95">
+        <nav className="hidden lg:flex items-center gap-4 lg:gap-7 text-[11px] xl:text-sm font-semibold tracking-[0.01em] text-white/95">
           <NavLink to="/" className={desktopNavClass}>
             {t("HOME")}
           </NavLink>
@@ -559,10 +556,10 @@ export default function Navbar() {
 
         </nav>
 
-        <div className="hidden lg:flex items-center gap-6">
+        <div className="hidden lg:flex items-center gap-5 shrink-0">
           <NavLink
             to="/faq"
-            className={({ isActive }) => `group cursor-pointer transition hover:scale-110 ${isActive ? FAQ_ACTIVE_NAV_CLASS : ""}`}
+            className={({ isActive }) => `group cursor-pointer transition hover:scale-110 ${isActive ? FAQ_ACTIVE_NAV_CLASS : "text-white"}`}
             aria-label={t("FAQ")}
             title={t("FAQ")}
           >
@@ -576,7 +573,7 @@ export default function Navbar() {
           >
             <button
               type="button"
-              className="cursor-pointer hover:text-white/80"
+              className="cursor-pointer text-white hover:text-white/80"
               onClick={() => setGlobalSearchOpen((open) => !open)}
               aria-label={t("Search")}
             >
@@ -654,27 +651,27 @@ export default function Navbar() {
           {!user ? (
             <button
               onClick={() => navigate("/login")}
-              className="text-sm font-semibold hover:text-blue-600"
+              className="inline-flex min-w-[92px] items-center justify-center rounded-full border border-white bg-white px-4 py-1.5 text-sm font-bold text-blue-700 shadow-sm transition hover:bg-slate-100"
             >
               {t("Login")}
             </button>
           ) : (
-            <button onClick={() => logout("manual")} className="px-3 py-1 bg-white text-blue-700 rounded-full text-sm font-bold border border-white">
+            <button onClick={() => logout("manual")} className="inline-flex min-w-[92px] items-center justify-center rounded-full border border-white bg-white px-4 py-1.5 text-sm font-bold text-blue-700 shadow-sm transition hover:bg-slate-100">
               {t("Logout")}
             </button>
           )}
 
-          <Link to="/cart" className="relative">
+          <Link to="/cart" className="relative text-white hover:text-white/80" aria-label={t("Cart")} title={t("Cart")}>
             <ShoppingBag color={iconColor} />
             {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 rounded-full">
+              <span className="absolute -top-2 -right-2 flex h-5 min-w-[1.35rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-bold text-white shadow-sm">
                 {cartCount}
               </span>
             )}
           </Link>
 
           <select
-            className="text-xs border rounded px-2 py-1 bg-white text-slate-800"
+            className="rounded border border-white/60 bg-white px-2 py-1 text-xs text-slate-800 shadow-sm"
             value={lang}
             onChange={(e) => setLang(e.target.value)}
             aria-label="Language"

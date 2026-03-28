@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import Footer from "../components/Footer";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
@@ -530,8 +531,8 @@ const [features, setFeatures] = useState([]);
     .filter(Boolean);
 
   return (
-    <div className="admin-page-bg">
-      <div className="w-full mx-auto px-4 md:px-8 lg:px-10 py-6 md:py-10">
+    <div className="admin-page-bg min-h-screen flex flex-col">
+      <div className="flex-1 w-full px-4 md:px-8 lg:px-10 py-6 md:py-10">
       <h1 className="text-2xl font-bold mb-4 text-center text-[#000080]">{t("Admin - Add Product")}</h1>
 
       <div className="grid grid-cols-1 gap-6 items-start">
@@ -539,7 +540,7 @@ const [features, setFeatures] = useState([]);
 
       <div
         ref={productFormRef}
-        className="card p-4 w-full max-w-[700px] mx-auto"
+        className="card p-4 w-full h-full"
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
@@ -626,7 +627,7 @@ const [features, setFeatures] = useState([]);
           <input className={`${fieldClass} md:col-span-2`} placeholder="Color Images (name:url, name:url)" value={form.colorImageMapInput} onChange={e => setForm({ ...form, colorImageMapInput: e.target.value })} />
           <input className={fieldClass} placeholder="Feature Name" value={featureName} onChange={e => setFeatureName(e.target.value)} />
           <input className={fieldClass} placeholder="Feature Description" value={featureDescription} onChange={e => setFeatureDescription(e.target.value)} />
-          <button type="button" className={actionBtnClass} onClick={() => {
+          <button type="button" className={`w-full sm:w-auto sm:min-w-[160px] sm:mx-auto block mt-3 ${primaryBtnClass}`} onClick={() => {
             if (!featureName.trim() || !featureDescription.trim()) return;
             setFeatures(f => [...f, { name: featureName.trim(), description: featureDescription.trim() }]);
             setFeatureName("");
@@ -1223,6 +1224,7 @@ const [features, setFeatures] = useState([]);
         </div>
       )}
       </div>
+      {/* <Footer /> */}
     </div>
   );
 }

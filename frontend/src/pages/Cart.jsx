@@ -41,8 +41,8 @@ export default function Cart() {
 
   // ✅ SAFE NOW
 
-  const updateQty = (productId, qty, variant) => {
-    fetch(`${API_BASE}/api/cart/update`, {
+  const updateQty = async (productId, qty, variant) => {
+    const res = await fetch(`${API_BASE}/api/cart/update`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -54,14 +54,15 @@ export default function Cart() {
         qty,
         variant,
       }),
-    }).then(() => {
-      fetchCart();
-      refreshCart(); // ✅ UPDATE ICON
     });
+    if (!res.ok) return;
+    await fetchCart();
+    await refreshCart();
+    window.location.reload();
   };
 
-  const removeItem = (productId, variant) => {
-    fetch(`${API_BASE}/api/cart/remove`, {
+  const removeItem = async (productId, variant) => {
+    const res = await fetch(`${API_BASE}/api/cart/remove`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -72,10 +73,11 @@ export default function Cart() {
         productId,
         variant,
       }),
-    }).then(() => {
-      fetchCart();
-      refreshCart(); // ✅ UPDATE ICON
     });
+    if (!res.ok) return;
+    await fetchCart();
+    await refreshCart();
+    window.location.reload();
   };
 
   if (!cart) {
@@ -176,7 +178,19 @@ export default function Cart() {
             {t("Total:")} {formatCurrency(total, lang)}
           </div>
 
-          <button onClick={() => navigate("/checkout")} className="mt-6 btn-primary">
+          <button
+            onClick={() =>
+              navigate("/checkout", {
+                state: {
+                  cartSummary: {
+                    subtotal: total,
+                    items: cart.items,
+                  },
+                },
+              })
+            }
+            className="mt-6 btn-primary"
+          >
             {t("Proceed to Checkout")}
           </button>
         </div>

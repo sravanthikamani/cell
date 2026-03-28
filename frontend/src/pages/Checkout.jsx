@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import StripeWrapper from "../components/StripeWrapper";
@@ -8,6 +8,7 @@ import { useI18n } from "../context/I18nContext";
 import { formatCurrency } from "../lib/format";
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import Seo from "../components/Seo";
+import { getUserId } from "../lib/user";
 
 const emptyAddress = {
   name: "",
@@ -72,10 +73,11 @@ function CheckoutForm({
   shippingOption,
   selectedAddress,
   onOrderSuccess,
+  userId,
 }) {
   const stripe = useStripe();
   const elements = useElements();
-  const { token, user } = useAuth();
+  const { token } = useAuth();
   const { t } = useI18n();
   const [errorMsg, setErrorMsg] = useState("");
   const [isPaying, setIsPaying] = useState(false);
@@ -94,7 +96,7 @@ function CheckoutForm({
     setIsPaying(true);
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
-      confirmParams: { return_url: `${window.location.origin}/order-confirmation` },
+      confirmParams: { return_url: window.location.origin },
       redirect: "if_required",
     });
 
@@ -113,7 +115,7 @@ function CheckoutForm({
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          userId: user?.id,
+          userId,
           address: selectedAddress,
           paymentMethod,
           paymentId: paymentIntent?.id,
@@ -152,6 +154,7 @@ function CheckoutForm({
 
 export default function Checkout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, token } = useAuth();
   const { refreshCart } = useCart();
   const { t, lang } = useI18n();
@@ -170,6 +173,12 @@ export default function Checkout() {
     shipping: 0,
     total: 0,
   });
+  const [cartItems, setCartItems] = useState(
+    Array.isArray(location.state?.cartSummary?.items)
+      ? location.state.cartSummary.items
+      : []
+  );
+  const navigationSubtotal = Number(location.state?.cartSummary?.subtotal || 0);
 
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressIndex, setSelectedAddressIndex] = useState(0);
@@ -187,11 +196,62 @@ export default function Checkout() {
   const paypalCurrency = String(import.meta.env.VITE_PAYPAL_CURRENCY || "EUR")
     .trim()
     .toUpperCase();
+  const userId = getUserId(user);
+  const fallbackTaxRate = Number(import.meta.env.VITE_TAX_RATE || 10);
+  const fallbackStandardShipping = Number(
+    import.meta.env.VITE_SHIPPING_STANDARD || 0
+  );
+  const fallbackExpressShipping = Number(
+    import.meta.env.VITE_SHIPPING_EXPRESS || fallbackStandardShipping + 3
+  );
 
   const selectedAddress = useMemo(() => {
     if (addingAddress) return newAddress;
     return addresses[selectedAddressIndex] || emptyAddress;
   }, [addingAddress, newAddress, addresses, selectedAddressIndex]);
+
+  const cartSubtotal = useMemo(
+    () => {
+      const computedSubtotal = (cartItems || []).reduce((sum, item) => {
+        const price = Number(item?.price ?? item?.productId?.price ?? 0);
+        const qty = Number(item?.qty || 0);
+        return sum + price * qty;
+      }, 0);
+
+      return computedSubtotal > 0 ? computedSubtotal : navigationSubtotal;
+    },
+    [cartItems, navigationSubtotal]
+  );
+
+  const summaryTotals = useMemo(() => {
+    if ((totals.subtotal || 0) > 0 || (totals.total || 0) > 0) {
+      return totals;
+    }
+
+    const shipping =
+      shippingOption === "express"
+        ? fallbackExpressShipping
+        : shippingOption === "pickup"
+          ? 0
+          : fallbackStandardShipping;
+    const tax = totals.tax || Math.round((cartSubtotal * fallbackTaxRate) / 100);
+    const total = cartSubtotal + tax + shipping;
+
+    return {
+      subtotal: cartSubtotal,
+      discount: 0,
+      tax,
+      shipping,
+      total,
+    };
+  }, [
+    cartSubtotal,
+    fallbackExpressShipping,
+    fallbackStandardShipping,
+    fallbackTaxRate,
+    shippingOption,
+    totals,
+  ]);
 
   useEffect(() => {
     document.body.classList.add("checkout-bg-active");
@@ -231,7 +291,7 @@ export default function Checkout() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          userId: user?.id,
+          userId,
           couponCode: code,
           paymentMethod: method,
           shippingOption: shipping,
@@ -303,11 +363,22 @@ export default function Checkout() {
   }, [user, token]);
 
   useEffect(() => {
+    if (!userId || !token) return;
+
+    fetch(`${API_BASE}/api/cart/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setCartItems(Array.isArray(data?.items) ? data.items : []))
+      .catch(() => setCartItems([]));
+  }, [token, userId]);
+
+  useEffect(() => {
     if (!user || !token) return;
     createIntent(couponCode, paymentMethod, shippingOption).catch((e) => {
       setPaymentInitError(e.message || "Failed to initialize payment");
     });
-  }, [user, token, paymentMethod, shippingOption]);
+  }, [paymentMethod, shippingOption, token, userId]);
 
   useEffect(() => {
     if (paymentMethod !== "paypal") return;
@@ -357,7 +428,7 @@ export default function Checkout() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            userId: user?.id,
+            userId,
             couponCode,
             shippingOption,
           }),
@@ -384,7 +455,7 @@ export default function Checkout() {
               Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
-              userId: user?.id,
+              userId,
               address: selectedAddress,
               paymentMethod: "paypal",
               paypalOrderId: data?.orderID,
@@ -428,7 +499,7 @@ export default function Checkout() {
     paymentMethod,
     paypalSdkReady,
     token,
-    user,
+    userId,
     couponCode,
     shippingOption,
     selectedAddress,
@@ -577,20 +648,20 @@ export default function Checkout() {
 
       <div className="card p-4 mb-4 animate-fade-up">
         <div className="font-semibold mb-2">Order Summary</div>
-        <div className="text-sm">{t("Subtotal:")} {formatCurrency(totals.subtotal, lang)}</div>
-        {totals.discount > 0 && (
+        <div className="text-sm">{t("Subtotal:")} {formatCurrency(summaryTotals.subtotal, lang)}</div>
+        {summaryTotals.discount > 0 && (
           <div className="text-sm text-green-700">
-            {t("Discount:")} -{formatCurrency(totals.discount, lang)}
+            {t("Discount:")} -{formatCurrency(summaryTotals.discount, lang)}
           </div>
         )}
-        {totals.tax > 0 && (
-          <div className="text-sm">{t("Tax:")} {formatCurrency(totals.tax, lang)}</div>
+        {summaryTotals.tax > 0 && (
+          <div className="text-sm">{t("Tax:")} {formatCurrency(summaryTotals.tax, lang)}</div>
         )}
-        {totals.shipping > 0 && (
-          <div className="text-sm">{t("Shipping:")} {formatCurrency(totals.shipping, lang)}</div>
+        {summaryTotals.shipping > 0 && (
+          <div className="text-sm">{t("Shipping:")} {formatCurrency(summaryTotals.shipping, lang)}</div>
         )}
         <div className="font-semibold mt-2">
-          {t("Total:")} {formatCurrency(totals.total, lang)}
+          {t("Total:")} {formatCurrency(summaryTotals.total, lang)}
         </div>
       </div>
 
@@ -630,16 +701,6 @@ export default function Checkout() {
               onChange={(e) => setPaymentMethod(e.target.value)}
             />
             Card
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="paymentMethod"
-              value="klarna"
-              checked={paymentMethod === "klarna"}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-            />
-            Klarna
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input
@@ -685,6 +746,7 @@ export default function Checkout() {
                   shippingOption={shippingOption}
                   selectedAddress={selectedAddress}
                   onOrderSuccess={handleOrderSuccess}
+                  userId={userId}
                 />
               </StripeWrapper>
             )}

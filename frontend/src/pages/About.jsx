@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { useI18n } from "../context/I18nContext";
 import Seo from "../components/Seo";
+import Footer from "../components/Footer";
 import {
   Smartphone,
   Tablet,
@@ -40,13 +41,13 @@ export default function About() {
   }, []);
 
   return (
-    <div className="about-page-bg min-h-screen py-10 px-2">
+    <div className="about-page-bg min-h-screen flex flex-col py-10 px-2">
       <Seo
           title={t("About Us")}
           description="Hitech Cinisello is a modern electronics brand delivering smartphones, accessories, and innovative tech products with quality and trust."
         canonicalPath="/about"
       />
-      <div className="max-w-4xl mx-auto bg-white/90 rounded-3xl shadow-2xl p-6 md:p-12 animate-slide-in-left">
+      <div className="flex-1 max-w-6xl mx-auto bg-white/90 rounded-3xl shadow-2xl p-6 md:p-12 animate-slide-in-left w-full flex flex-col">
         <h1 className="text-3xl font-extrabold mb-3 text-center text-blue-900 tracking-tight drop-shadow-lg flex items-center justify-center gap-3">
           <Rocket className="inline-block text-pink-500 animate-bounce" size={32} /> About Us
         </h1>
@@ -54,20 +55,20 @@ export default function About() {
           Hitech Cinisello is your trusted destination for the latest gadgets and professional repair services. We combine technology, expertise, and customer care to keep you connected and empowered.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-          <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 p-5 shadow-lg">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 p-5 shadow-lg border-2 border-transparent hover:border-blue-500 transition-colors">
             <h2 className="text-lg font-bold mb-2 flex items-center gap-2 text-blue-800"><Smartphone className="text-blue-500" /> Smartphones</h2>
             <p className="mb-1 text-gray-700 text-sm">Discover the latest smartphones from top brands with advanced features, powerful performance, and stylish designs. From budget-friendly models to flagship devices, we have something for everyone.</p>
           </div>
-          <div className="rounded-2xl bg-gradient-to-br from-pink-50 to-pink-100 p-5 shadow-lg">
+          <div className="rounded-2xl bg-gradient-to-br from-pink-50 to-pink-100 p-5 shadow-lg border-2 border-transparent hover:border-blue-500 transition-colors">
             <h2 className="text-lg font-bold mb-2 flex items-center gap-2 text-pink-800"><Tablet className="text-pink-500" /> Tablets</h2>
             <p className="mb-1 text-gray-700 text-sm">Stay productive and entertained with our range of tablets perfect for students, professionals, and multimedia lovers.</p>
           </div>
-          <div className="rounded-2xl bg-gradient-to-br from-violet-50 to-violet-100 p-5 shadow-lg">
+          <div className="rounded-2xl bg-gradient-to-br from-violet-50 to-violet-100 p-5 shadow-lg border-2 border-transparent hover:border-blue-500 transition-colors">
             <h2 className="text-lg font-bold mb-2 flex items-center gap-2 text-violet-800"><Watch className="text-violet-500" /> Smartwatches</h2>
             <p className="mb-1 text-gray-700 text-sm">Track your fitness, stay connected, and enhance your lifestyle with modern smartwatches featuring health monitoring and smart notifications.</p>
           </div>
-          <div className="rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 p-5 shadow-lg">
+          <div className="rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 p-5 shadow-lg border-2 border-transparent hover:border-blue-500 transition-colors">
             <h2 className="text-lg font-bold mb-2 flex items-center gap-2 text-yellow-800"><Headphones className="text-yellow-500" /> Audio Devices</h2>
             <p className="mb-1 text-gray-700 text-sm">Experience superior sound quality with our collection of earphones, headphones, Bluetooth speakers, and more.</p>
           </div>
@@ -159,6 +160,7 @@ export default function About() {
           </div>
         </div>
       </div>
+      {/* <Footer /> */}
     </div>
   );
 }

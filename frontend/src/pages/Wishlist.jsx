@@ -39,8 +39,7 @@ export default function Wishlist() {
       body: JSON.stringify({ productId }),
     });
     if (!res.ok) return;
-    setItems((list) => list.filter((p) => p._id !== productId));
-    window.dispatchEvent(new Event("wishlist:changed"));
+    window.location.reload();
   };
 
   const addToCart = async (productId) => {
@@ -58,6 +57,7 @@ export default function Wishlist() {
       return;
     }
     await refreshCart();
+    window.location.reload();
   };
 
   return (

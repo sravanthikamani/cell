@@ -6,7 +6,7 @@ import { formatCurrency } from "../lib/format";
 import Seo from "../components/Seo";
 
 export default function Home() {
-  const homeBg = "/images/homebg.jpg";
+  const homeBg = "/images/home-bg.jpg";
   const confettiColors = ["#fde047", "#fb7185", "#60a5fa", "#34d399", "#f97316", "#a78bfa", "#22d3ee", "#facc15"];
   const confettiPieces = Array.from({ length: 24 }, (_, i) => {
     const direction = i % 2 === 0 ? 1 : -1;
@@ -449,19 +449,22 @@ export default function Home() {
           {
             title: t("Fast Shipping"),
             desc: t("Reliable delivery with tracking on every order."),
+            bg: "bg-gradient-to-r from-[#c6ffdd] via-[#fbd786] to-[#f7797d]",
           },
           {
             title: t("Secure Payments"),
             desc: t("Stripe-powered checkout with full encryption."),
+            bg: "bg-gradient-to-r from-[#1f4037] to-[#99f2c8]",
           },
           {
             title: t("Quality Promise"),
             desc: t("Curated gadgets with verified quality checks."),
+            bg: "bg-gradient-to-r from-[#c0c0aa] to-[#1cefff]",
           },
         ].map((v) => (
-          <div key={v.title} className="card p-5">
+          <div key={v.title} className={`card p-5 text-white ${v.bg}`} style={{borderRadius:'1rem'}}>
             <div className="font-semibold">{v.title}</div>
-            <div className="text-sm text-gray-600 mt-2">{v.desc}</div>
+            <div className="text-sm mt-2">{v.desc}</div>
           </div>
         ))}
       </div>
